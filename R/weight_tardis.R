@@ -1,5 +1,5 @@
 #' weight_tgraph
-#' 
+#'
 #' Generate a custom weighting scheme for a TARDIS analysis. Internally,
 #' weight_tgraph generates two data.frames, origin and dest, which respectively
 #' record the landscape properties for each pair of origin and destination
@@ -11,15 +11,15 @@
 #' elevation is gained or lost along an edge. All subsequent columns in both
 #' data.frames record the cell characteristics as supplied by the user. The
 #' columns in these data.frames can then be used to calculate weights with a
-#' custom, user-supplied weighting function. 
-#' 
+#' custom, user-supplied weighting function.
+#'
 #' Crucially, all returned weights must be finite and greater than zero, or NA,
 #' as negative weights are not meaningful for downstream methods and weights
 #' of zero are reserved for the interlayer edges. Thus, the mathematics of the
 #' function should be carefully considered as it may be very easy to create
 #' values of zero based on numeric differences in characteristics between
 #' adjacent cells, then produce Inf by zero division. NA values are permitted
-#' to allow the designation of impermeable edges (for example to restrict 
+#' to allow the designation of impermeable edges (for example to restrict
 #' movement above a certain threshold cost). Such values, however, may
 #' introduce inaccessible islands into a landscape even after resolution of
 #' mask islands by create_tardis, which may lead to certain functions like
@@ -28,7 +28,7 @@
 #' of cells without accessible edges and include these cells within the
 #' initial masking stage. This is a somewhat roundabout solution, but the
 #' inclusion of NA weights is preferable for flexible landscape specification.
-#' 
+#'
 #' @param tardis A object of class 'tardis' from create_tardis.
 #' @param vars A named list of RasterStacks where each stack has the same
 #' resolution, extent, number of layers and layer order as the original landscape
@@ -52,34 +52,44 @@
 #' @return A numeric vector of weights with as many elements as edges in x.
 #' @import raster
 #' @export
-#' 
-#' @details The core of the weighting function can have as many steps as th
-#' euser likes, but must consist of vectorised calculations that call on the
+#'
+#' @details The core of the weighting function can have as many steps as the
+#' user likes, but must consist of vectorised calculations that call on the
 #' columns in the data.frames origin and dest. The argument default exemplifies
 #' this and will return identical geographic distances to those in within x,
 #' using Pythagoras's theorem on the horizontal (origin$hdist) and vertical
 #' (origin$vdist) intercell distances. The user function can use one, the other,
-#' or any combination of origin and dest columns in any order. Weights are
-#' iteratively calculated for each landscape layer in tardis, with the index
-#' of the landscape layer internally supplied to the argument lnum to allow the
-#' user to design weighting rules that can vary through time. The function can
-#' additionally take a dots argument to allow data to be supplied to the
-#' weighting function from the global environment, for example an object with
-#' elements to be used in conjunction with lnum.
+#' or any combination of origin and dest columns in any order.
+#'
+#' Weights are iteratively calculated for each landscape layer in tardis, with
+#' the index of the landscape layer internally supplied to the argument lnum to
+#' allow the user to design weighting rules that can vary through time. The
+#' function can additionally take a dots argument to allow data to be supplied
+#' to the weighting function from the global environment, for example an object
+#' with elements to be used in conjunction with lnum.
+#'
+#' The weight_tardis function is heavily inspired by the weighting function
+#' used in the gen3sis R package by Oskar Hagen. A major difference between
+#' tardis and gen3sis, however, is that the former considers a landscape as a
+#' lattice graph where only adjacent cell connections are considered. This
+#' produces a sparse distance matrix to which graph algorithms can be applied,
+#' rather than the dense distance matrix used by gen3sis, where all intercell
+#' connections are given, but without consideration of the intervening space
+#' those connections span through.
 
 weight_tardis <- function(tardis, vars, wfun = function(origin, dest, lnum, ...) {sqrt(origin$hdist^2 + abs(origin$vdist)^2)}, mfun = NULL, verbose = TRUE, ...) {
-  
+
   # tardis = test
   # vars = list(elev = foo)
   # wfun = function(origin, dest, lnum, ...) {sqrt(origin$hdist^2 + abs(origin$vdist)^2)}
   # mfun = NULL
   # verbose = T
-  
+
   if(!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
   }
   if(!class(tardis) == "tardis")
-    
+
     if(!is.list(vars)) {
       stop("Supply vars as a named list of raster stacks")
     }
@@ -96,7 +106,7 @@ weight_tardis <- function(tardis, vars, wfun = function(origin, dest, lnum, ...)
   if(!(all(unlist(lapply(vars, isLonLat))))) {
     stop("x should be in geographic (long-lat) projection")
   }
-  
+
   if(!is.null(tardis$tdat)) {
     layers <- length(tardis$tdat) - 1
   } else {
@@ -119,18 +129,18 @@ weight_tardis <- function(tardis, vars, wfun = function(origin, dest, lnum, ...)
       stop("mfun should be a user-supplied function. See documentation for required function signature")
     }
   }
-  
+
   src <- ceiling(tardis$edges[,1] / prod(tardis$gdat[1:2]))
   dst <- ceiling(tardis$edges[,2] / prod(tardis$gdat[1:2]))
   wts <- rep(0, length(src))
-  
+
   for(i in 1:layers) {
-    
+
     if(verbose) {
       cat(paste0("Weighting layer [", i, "/", layers, "]\r"))
       if(i == layers) {cat("\n")}
     }
-    
+
     links <- tardis$edges[which(src == i & src == dst),]
     links[,1:2] <- links[,1:2] - ((i - 1) * prod(tardis$gdat[1:2]))
     origin <- lapply(vars, function(y) {y[[i]][links[,1]]})
@@ -138,7 +148,7 @@ weight_tardis <- function(tardis, vars, wfun = function(origin, dest, lnum, ...)
     dest <- lapply(vars, function(y) {y[[i]][links[,2]]})
     dest <- cbind.data.frame(links[,2], links[,3:4], do.call(cbind.data.frame, dest))
     colnames(origin) <- colnames(dest) <- c("cell", "hdist", "vdist", names(vars))
-    
+
     weight <- try(wfun(origin = origin, dest = dest, lnum = i))
     if(class(weight)[1] == "try-error") {
       stop(paste0("An error occurred in wfun() for  layer ", i, "/", length(x[[1]]), ". Check that the column names in wfun() match the names of vars, along with 'hdist' and 'vdist'"))
@@ -152,10 +162,10 @@ weight_tardis <- function(tardis, vars, wfun = function(origin, dest, lnum, ...)
     if(any(weight < 0)) {
       stop(paste0("wfun() resulted in a negative value in layer ", i, "/", length(x[[1]]), ". Ensure the function and data returns positive real numbers"))
     }
-    
+
     mlink <- which(!tardis$gdat[2] %% abs(links[,1] - links[,2]) %in% c(0, 1, tardis$gdat[2]))
     if(!is.null(mfun) & length(mlink) != 0) {
-      
+
       mweight <- try(mfun(origin = origin[mlink,], dest = dest[mlink,], lnum = i))
       if(class(mweight)[1] == "try-error") {
         stop(paste0("An error occurred in mfun() for  layer ", i, "/", length(x[[1]]), ". Check that the column names in mfunc() match the names of vars, along with 'hdist' and 'vdist'"))
@@ -173,11 +183,11 @@ weight_tardis <- function(tardis, vars, wfun = function(origin, dest, lnum, ...)
     }
     wts[which(src == i & src == dst)] <- weight
   }
-  
+
   if(any(is.na(wts))) {
     warning("Some weights are NA. This is permissible, but may produce inaccessible islands. Consider checking with resistance_surface()")
   }
-  
+
   # return weighting vector
   return(wts)
 }
