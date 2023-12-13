@@ -6,4 +6,6 @@ rm(list = ls())
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 # GENERATE
-usethis::create_package("./")
+#usethis::create_package("./")
+#usethis::use_git()
+usethis::use_github()
