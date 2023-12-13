@@ -18,15 +18,17 @@ library(concaveman)
 library(ape)
 library(Matrix)
 library(akima)
+library(terra)
 
 # functions
-lapply(list.files("./")[-1], source)
+lapply(list.files("./R", full.names = T), source)
 
 # map data
-gal <- stack(readRDS("galapagos/Karnauskas_etal_FinalModelOutput_Bathymetry/galap_hr.RData"))
-gal <- stack(crop(gal, extent(-92, -88, -2, 1)))
-gal_m <- stack(reclassify(stack(gal), rcl = c(-Inf, 0, NA, 0, Inf, 1), right = F))
-gal_l <- stack(reclassify(stack(gal), rcl = c(-Inf, 0, NA), right = F))
+load("data/Chelonoides_tree.rda")
+gal <- terra::rast(lapply(readRDS("data-raw/galap_hr.RData"), terra::rast))
+gal <- crop(gal, extent(-92, -88, -2, 1))
+gal_m <- classify((gal), rcl = matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
+gal_l <- classify((gal), rcl = matrix(c(-Inf, 0, NA), ncol = 3, byrow = T), right = F)
 org <- rbind(c(-89, -1.05, 2), c(-89.5, -0.7, 2))
 dst <- rbind(c(-91.2, -1, 0), c(-91.6, -0.4, 0))
 
@@ -71,11 +73,11 @@ rt <- cbind.data.frame(lng = rep(-89.5, 13), lat = rep(-0.9, 13), age = rep(1.5,
 
 test <- link_mask(gal_m)
 test2 <- create_tardis(gal, times = c(seq(2.25, 0, -0.5), 0), mask = gal_m)
-test_weight <- weight_tardis(test2, vars = list(elev = stack(reclassify(gal, c(-Inf, 0, 0)))),
+test_weight <- weight_tardis(test2, vars = list(elev = classify(gal, cbind(-Inf, 0, 0))),
                              wfun = function(origin, dest, lnum, ...) {(origin$hdist^2 + abs(origin$vdist)^2)},
                              mfun = function(origin, dest, lnum, ...) {(origin$hdist^2 + abs(origin$vdist)^2) * 10})
 rst <- resistance_surface(test2)
-lapply(1:nlayers(gal_m), function(x) {plot(gal_m[[x]]); plot(test[[x]], add = T)})
+lapply(1:nlyr(gal_m), function(x) {plot(gal_m[[x]]); plot(test[[x]], add = T)})
 
 
 pts <- stp(test2, rbind(org, dst))
@@ -121,18 +123,18 @@ dev.off()
 
 
 phylo_path <- function(tree, paths, nodes) {
-  
+
   # tree <- arch_tree
   # paths <- tres4
   # nodes <- c(393, which(arch_tree$tip.label == "Hyperodapedon"))
-  
+
   if(!exists("tree")) {
     stop("Please supply tree as an object of class 'phylo'")
   }
   if(class(tree) != "phylo") {
     stop("Please supply tree as an object of class 'phylo'")
   }
-  
+
   if(!exists("paths")) {
     stop("Supply paths as the output of tardis()")
   }
@@ -142,7 +144,7 @@ phylo_path <- function(tree, paths, nodes) {
   if(!all(names(paths) %in% c("cells", "paths", "values"))) {
     stop("Supply paths as the output of tardis()")
   }
-  
+
   if(!exists("nodes")) {
     stop("Please supply nodes as a vector of two or more internal and/or tip node ids")
   }
@@ -163,7 +165,7 @@ phylo_path <- function(tree, paths, nodes) {
   if(length(paths$cells) != Nedge(tree)) {
     stop("The number of paths is not equal to the number of edges in the tree")
   }
-  
+
   if(any(nodes <= Ntip(tree)) & !((Ntip(tree) + 1) %in% nodes)) {
     nodes <- c(getMRCA(tree, nodes), nodes)
   }
@@ -190,13 +192,13 @@ tardis <- test2
 tstep <- seq(tardis$tdat[1], rev(tardis$tdat)[1], -0.1)
 i=15
 for(i in 1:length(tstep)) {
-  
+
   trange <- c((sum(tstep[i] <= tardis$tdat) - 1) * prod(tardis$gdat[1:2]) + 1,
                sum(tstep[i] <= tardis$tdat) * prod(tardis$gdat[1:2]))
-  
+
   # weights
   weights <- tardis$edges[,5]
-  
+
   # remove NA
   if(any(is.na(weights))) {
     tardis$tgraph$src <- tardis$tgraph$src[which(!is.na(weights))]
@@ -207,7 +209,7 @@ for(i in 1:length(tstep)) {
   }
   tardis$tgraph$attrib$aux <- tardis$edges[!is.na(weights),5]
   tardis$edges[,5] <- weights[!is.na(weights)]
-  
+
   # time slice
   grp <- tardis$tgraph
   inbin <- which(tardis$edges[,1] >= trange[1] & tardis$edges[,1] <= trange[2] & tardis$edges[,5] != 0)
@@ -217,7 +219,7 @@ for(i in 1:length(tstep)) {
   cst <- tardis$edges[inbin,5]
   grp$data <- data.frame(from = grp$dict$id[match(src, grp$dict$ref)], to = grp$dict$id[match(dst, grp$dict$ref)], dist = cst)
   grp$dict <- grp$dict[which(grp$dict$id %in% grp$data$from),]
-  
+
   grp$dict$id <- grp$dict$id - grp$data$from[1]
   grp$data$to <- grp$data$to - grp$data$from[1]
   grp$data$from <- grp$data$from - grp$data$from[1]
@@ -225,18 +227,18 @@ for(i in 1:length(tstep)) {
   # cppRouting graph and sparse matrix
   grp <- grp[1:5]
   adj_mat <- sparseMatrix(i = grp$data$from + 1, j = grp$data$to + 1, x = grp$data$dist, symmetric = F)
-  
-  
+
+
   #smp <- sample(grp$dict$ref, 10)
   taxon <- setNames(ceiling(rnorm(10, 50)), smp)
   tmprast <- raster(nrows = tardis$gdat[1], ncols = tardis$gdat[2])
   tmprast <- gal_m[[3]]
   tmprast[as.numeric(names(taxon)) %% prod(tardis$gdat[1:2])] <- 2
   plot(tmprast)
-  
+
   samprast <- raster(nrows = tardis$gdat[1], ncols = tardis$gdat[2])
   for(j in 1:20) {
-    
+
     tmprast <- samprast
     loc <- as.numeric(names(taxon)) %% prod(tardis$gdat[1:2])
     tmprast[loc] <- 1
@@ -250,13 +252,13 @@ for(i in 1:length(tstep)) {
     }))
     pop <- ceiling(rnorm(length(dest), mean = 50))
     taxon <- tapply(c(taxon, pop), c(names(taxon), dest), sum)
-    
+
     tmprast <- gal_m[[3]]
     tmprast[as.numeric(names(taxon)) %% prod(tardis$gdat[1:2])] <- 2
     plot(tmprast)
   }
-  
-  
+
+
   tmprast <- samprast
   loc <- as.numeric(names(taxon)) %% prod(tardis$gdat[1:2])
   tmprast[loc] <- 1
@@ -267,7 +269,7 @@ for(i in 1:length(tstep)) {
   pioneer2 <- as.numeric(pioneer) %% prod(tardis$gdat[1:2])
 
   res <- do.call(rbind, lapply(1:nrow(pdm), function(x) {tapply(pdm[x,], tmprast[pioneer2], min)}))
-  
+
   pdm <- hclust(as.dist(pdm))
   pops <- cutree(pdm, h = 10000)
 
@@ -287,27 +289,27 @@ source("C:/Users/jf15558/OneDrive - University of Bristol/Documents/func.txt")
 # map data (source: https://doi.plutof.ut.ee/doi/10.15156/BIO/786389)
 if(TRUE) {
   foo <- lapply(rev(gtools::mixedsort(list.files("galapagos/Karnauskas_etal_FinalModelOutput_Bathymetry/", pattern = "txt", full.names = T))), function(x) {
-    
-    
+
+
     x <- rev(gtools::mixedsort(list.files("galapagos/Karnauskas_etal_FinalModelOutput_Bathymetry/", pattern = "txt", full.names = T)))[1]
-    
+
 dat$v7 <- 1:nrow(dat)
 
 dat <- dat[order(dat$V1, dat$V2, method = "radix", decreasing = c(FALSE, FALSE)),]
-    
+
     dat <- read.table(x)
     xy <- as.matrix(dat[,1:2])
     v <- dat$V5
     i <- !is.na(v)
     xy <- xy[i,]
     v2 <- v[i]
-    
-    
-    
+
+
+
     #ob <- raster(nrows = length(unique(dat$V2)), ncols = nrow(dat) / length(unique(dat$V2)))
     #ob[] <- dat$V5
-    
-    
+
+
     ob <- interp(x = xy[,1], y = xy[,2], z = v2, xo = seq(min(xy[,1]), max(xy[,1]), 0.01),
                  yo = seq(min(xy[,2]), max(xy[,2]), 0.01))
     ob3 <- raster(t(ob$z[,ncol(ob$z):1]), xmn = min(ob$x) - 0.05, xmx = max(ob$x) + 0.05,
@@ -320,17 +322,17 @@ dat <- dat[order(dat$V1, dat$V2, method = "radix", decreasing = c(FALSE, FALSE))
   ob <- resample(ob, foo[[4]])
   foo2 <- c(foo, ob)
   saveRDS(foo2, "galapagos/Karnauskas_etal_FinalModelOutput_Bathymetry/galap_hr.RData")
-  
+
 }
 
 
 hexblender <- function(color1, color2, alpha = 0.5) {
-  
+
   # source https://rdrr.io/github/lawine90/elseR/src/R/hexBlender.R
-  
+
   col1_rgb <- colorspace::hex2RGB(color1)
   col2_rgb <- colorspace::hex2RGB(color2)
-  
+
   result_rgb <- colorspace::mixcolor(
     alpha,
     colorspace::RGB(col1_rgb@coords[,1],
@@ -339,7 +341,7 @@ hexblender <- function(color1, color2, alpha = 0.5) {
     colorspace::RGB(col2_rgb@coords[,1],
                     col2_rgb@coords[,2],
                     col2_rgb@coords[,3]))
-  
+
   result_hex <- grDevices::rgb(result_rgb@coords[,1]*255,
                                result_rgb@coords[,2]*255,
                                result_rgb@coords[,3]*255,
@@ -354,9 +356,9 @@ bathshader <- colorRamp(c("cornflowerblue", "lightskyblue1", "lightcyan1"))
 # data
 maps <- list()
 for(i in 1:nlayers(gal)) {
-  
+
   mp1 <- t(as.matrix(flip(gal[[i]])))
-  
+
   # topo colours
   bath <- topo <- mp1
   topo[which(topo  < 0)] <- NA
@@ -365,19 +367,19 @@ for(i in 1:nlayers(gal)) {
   bath <- bathshader(scalerfunc(bath))
   bath[which(!complete.cases(bath)),] <- topo[which(complete.cases(topo)),]
   elev <- rgb(bath, maxColorValue = 255)
-  
+
   # hill shade
   hill <- as.matrix(hillShade(terrain(raster(mp1, crs = crs(gal[[1]])), "slope"),
                               terrain(raster(mp1, crs = crs(gal[[1]])), "aspect")))
   hill[which(!is.finite(hill))] <- 0
-  
+
   hill <- hillshader(scalerfunc(hill))
   hill <- rgb(hill, maxColorValue = 255)
   hill[which(mp1 < 0)] <- "#FFFFFF"
-  
+
   # compound colour
   finalcol <- col2rgb(hexblender(hill, elev))
-  
+
   bar <- raster(ncol = ncol(gal), nrow = nrow(gal))
   bar[] <- 1
   bar2 <- stack(bar, bar, bar)

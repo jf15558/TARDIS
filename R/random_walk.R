@@ -7,7 +7,7 @@
 #' steps or a target distance to traverse. In the case of the latter, the
 #' walk is terminated at the closest distance to the target as the walks will
 #' not necessarily be able to precisely hit the target distance.
-#' 
+#'
 #' @param tardis An object of class 'tardis', produced by create_tardis
 #' @param weights If not NULL, a vector of weights to be used instead of the
 #' geographic distances in tardis. All entries must be >= 0
@@ -25,15 +25,15 @@
 #' constrained to the same time layer as its origin. TRUE by default.
 #' @param verbose A logical indicating whether function progress should be
 #' reported to the user.
-#' @return If restrict = TRUE (default), then a RasterStack with each stack
+#' @return If restrict = TRUE (default), then a SpatRaster with each stack
 #' #' layer recording the frequencies of cell visits. If restrict = FALSE,
-#' a list of RasterStacks, with each named layer recording the frequencies of
+#' a list of SpatRasters, with each named layer recording the frequencies of
 #' cells visited in each landscape layer through time
-#' @import raster igraph pbapply parallel
+#' @import terra igraph pbapply parallel
 #' @export
 
 random_walk <- function(tardis, weights = NULL, origin, mode = "steps", rwlen = 1000, restrict = TRUE, verbose = TRUE) {
-  
+
   # tardis = test
   # weights = NULL
   # origin = pts[3:4,]
@@ -41,16 +41,16 @@ random_walk <- function(tardis, weights = NULL, origin, mode = "steps", rwlen = 
   # mode = "steps"
   # restrict = T
   # verbose = T
-  
+
   if(!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
   }
   if(!class(tardis) == "tardis") {
     stop("Supply tardis as the output of create_tardis")
   }
-  
+
   if(!is.null(weights)) {
-    
+
     if(!is.atomic(weights)) {
       stop("weights must be a vector")
     }
@@ -66,18 +66,18 @@ random_walk <- function(tardis, weights = NULL, origin, mode = "steps", rwlen = 
   } else {
     weights <- tardis$edges[,5]
   }
-  
+
   if(!class(origin)[1] == c("sf")) {
     stop("Supply origin as the output of stp")
   }
-  
+
   if(length(mode) != 1 | !is.atomic(mode) | !is.character(mode)) {
     stop("mode should be a single character string, one of 'steps' or 'cost'")
   }
   if(!mode %in% c("steps", "cost")) {
     stop("mode should be a single character string, one of 'steps' or 'cost'")
   }
-  
+
   if(!is.atomic(rwlen) | !is.numeric(rwlen)) {
     stop("If not NULL, rwlen should be a single positive, finite numeric, or a vector of the same with as many rows as origin")
   }
@@ -90,30 +90,30 @@ random_walk <- function(tardis, weights = NULL, origin, mode = "steps", rwlen = 
   if(!all(is.finite(rwlen) | rwlen <= 0)) {
     stop("If not NULL, rwlen should be a single positive, finite numeric, or a vector of the same with as many rows as origin")
   }
-  
+
   # get cell id from geographic position and age
-  origin$cell <- cellFromXY(raster(nrows = tardis$gdat[1], ncols = tardis$gdat[2], ext = extent(tardis$gdat[5:8])), st_coordinates(origin)) +
+  origin$cell <- cellFromXY(rast(nrows = tardis$gdat[1], ncols = tardis$gdat[2], ext = ext(tardis$gdat[5:8])), st_coordinates(origin)) +
     (prod(tardis$gdat[1:2]) * (origin$bin - 1))
-  
+
   # check point accessibility to ensure they come from the correct tardis object
   if(!all(origin$cell %in% tardis$edges[,1])) {
     stop("One or more points in origin do not correspond to cells in tardis. Ensure that the correct tardis object is supplied for origin")
   }
-  
+
   # get igraph version of graph (edge weights are conductive, rather than resistive as in cppRouting)
   if(verbose) {cat("Building graph\n")}
   tardis$edges <- tardis$edges[which(!is.na(weights)),]
   ig <- graph_from_edgelist(as.matrix(tardis$edges[,1:2]))
   E(ig)$weight <- 1 / weights
   true_w <- tardis$edges[which(!is.na(weights)),5]
-  
+
   det_list <- list()
-  for(i in 1:nrow(origin)) { 
-    
+  for(i in 1:nrow(origin)) {
+
     if(verbose) {cat(paste0("Running random walks [", i, "/", nrow(origin), "]\r"))
       if(i == nrow(origin)) {cat("\n")}
     }
-    
+
     if(restrict) {
       rng <- c(origin$cell[i] %/% prod(tardis$gdat[1:2]), (origin$cell[i] %/% prod(tardis$gdat[1:2]) + 1)) * prod(tardis$gdat[1:2])
       grp <- delete.edges(ig, which(tardis$edges[,1] < rng[1] + 1 | tardis$edges[,2] > rng[2]))
@@ -127,7 +127,7 @@ random_walk <- function(tardis, weights = NULL, origin, mode = "steps", rwlen = 
     } else {
       steps <- rwlen[i]
     }
-    
+
     fail <- 1
     while(fail) {
       rw <- as.vector(igraph::random_walk(grp, start = as.character(origin$cell[i]), steps = steps))
@@ -139,25 +139,25 @@ random_walk <- function(tardis, weights = NULL, origin, mode = "steps", rwlen = 
         fail <- 0
       }
     }
-    
+
     # convert to counts and rasterize
     rwt <- rw %/% prod(tardis$gdat[1:2]) + 1
     rwp <- rw %% prod(tardis$gdat[1:2])
-    tmp <- raster(nrows = tardis$gdat[1], ncols = tardis$gdat[2], ext = extent(tardis$gdat[5:8]))
+    tmp <- rast(nrows = tardis$gdat[1], ncols = tardis$gdat[2], ext = ext(tardis$gdat[5:8]))
     out <- tapply(rwp, rwt, function(x) {
       ob <- tmp
       vl <- table(x)
       ob[as.numeric(names(vl))] <- as.vector(vl)
       ob
     })
-    out <- as(setNames(Reduce(stack, out), names(out)), "RasterStack")
+    out <- as(setNames(Reduce(c, out), names(out)), "SpatRaster")
     det_list[[i]] <- out
   }
-  
-  if(all(unlist(lapply(det_list, nlayers)) == 1)) {
-    det_list <- as(setNames(Reduce(stack, det_list), 1:nrow(origin)), "RasterStack")
+
+  if(all(unlist(lapply(det_list, nlyr)) == 1)) {
+    det_list <- as(setNames(Reduce(c, det_list), 1:nrow(origin)), "SpatRaster")
   }
-  
+
   # summarise and return
   return(det_list)
 }

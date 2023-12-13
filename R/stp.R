@@ -1,5 +1,5 @@
 #' stp
-#' 
+#'
 #' Check a set of space-time coordinates to determine whether they fall within
 #' an accessible cell within a TARDIS object. The function first checks whether
 #' all points fall within the spatial and temporal extents of the object. From
@@ -8,7 +8,7 @@
 #' accessible cell using great circle distances. Adjustment is performed using
 #' a rip of nearestLand() from seegSDM, up to a maximum of 10000 km, although
 #' it is expected that any adjustments will be nowhere near this large.
-#' 
+#'
 #' @param tardis A object of class 'tardis' from create_tardis.
 #' @param points A two or three column matrix giving the spatiotemporal coordinates.
 #' Column ordering is assumed to be longitude (decimal degrees), latitude (decimal
@@ -17,23 +17,23 @@
 #' reported to the user
 #' @return A three column data.frame containing the final point longitudes and
 #' latitudes, with the third column recording the point adjustment distance in
-#' metres. For unadjusted points, this will be zero. For points which could 
+#' metres. For unadjusted points, this will be zero. For points which could
 #' not be successfully adjusted, this will be NA.
-#' @import raster geosphere
+#' @importFrom geosphere distGeo
 #' @export
 
 stp <- function(tardis, points, verbose = TRUE) {
-  
+
   # x = test2
   # points = pairs
-  
+
   if(!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
   }
   if(class(tardis) != "tardis") {
     stop("Supply tardis as the output of create_tardis")
   }
-  
+
   if(!class(points)[1] %in% c("data.frame", "matrix")) {
     stop("Supply origin as a data.frame or matrix with two or three columns")
   }
@@ -47,19 +47,19 @@ stp <- function(tardis, points, verbose = TRUE) {
   if(!is.null(tardis$tdat) & ncol(points) < 3) {
     stop("If tardis contains multiple time layers, then points should contain longitude, latitude and time columns")
   }
-  
-  samprast <- raster(nrows = tardis$gdat[1], ncols = tardis$gdat[2], ext = extent(matrix(tardis$gdat[5:8], ncol = 2, byrow = T)))
+
+  samprast <- rast(nrows = tardis$gdat[1], ncols = tardis$gdat[2], ext = ext(tardis$gdat[5:8]))
   pcell <- cellFromXY(samprast, points[,1:2])
   pt <- unlist(lapply(points[,3], function(y) {sum(y < tardis$tdat[-1]) * prod(tardis$gdat[1:2])}))
   pt[which(points[,3] > tardis$tdat[1] | points[,3] < tardis$tdat[length(tardis$tdat)])] <- NA
   ptcell <- pcell + pt
   pmod <- rep(0, length(ptcell))
-  
+
   # static rip of seegSDM nearestLand()
   nearest_land <- function(points, raster, max_distance) {
-    
+
     nearest <- function(lis, raster) {
-      
+
       neighbours <- matrix(lis[[1]], ncol = 2)
       point <- lis[[2]]
       land <- !is.na(neighbours[, 2])
@@ -78,22 +78,22 @@ stp <- function(tardis, points, verbose = TRUE) {
     })
     return(t(sapply(neighbour_list, nearest, raster)))
   }
-  
+
   for(i in 1:length(ptcell)) {
-    
+
     if(verbose) {
       cat(paste0("Checking point [", i, "/", length(ptcell), "]\r"))
       if(i == length(ptcell)) {cat("\n")}
     }
-    
+
     if(!is.na(ptcell[i])) {
       if(!ptcell[i] %in% tardis$edges[,1]) {
-        
+
         # get cells in age range
         cls <- (pt[i] + 1):(pt[i] + prod(tardis$gdat[1:2]))
         # drop inaccessible cells
         cls <- cls[cls %in% tardis$edges[,1]] - pt[i]
-        
+
         # locate nearest accessible cell
         tmprast <- samprast
         tmprast[cls] <- 1
@@ -107,7 +107,7 @@ stp <- function(tardis, points, verbose = TRUE) {
       }
     }
   }
-  
+
   if(all(is.na(ptcell))) {
     stop("No points could be matched to accessible cells in tardis")
   }
@@ -117,7 +117,7 @@ stp <- function(tardis, points, verbose = TRUE) {
   if(any(is.na(pmod))) {
     warning("Some points could not be translated to accessible cells in tardis and were discarded")
   }
-  
+
   out <- cbind.data.frame(point = which(!is.na(ptcell)), bin = pt[!is.na(ptcell)] %/% prod(tardis$gdat[1:2]) + 1, mod = pmod[!is.na(ptcell)])
   st_geometry(out) <- st_sfc(lapply(pcell[!is.na(ptcell)], function(x) {st_point(xyFromCell(samprast, x))}), crs = "+proj=longlat")
   return(out)

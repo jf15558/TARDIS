@@ -1,7 +1,7 @@
-#' weight_tgraph
+#' weight_tardis
 #'
 #' Generate a custom weighting scheme for a TARDIS analysis. Internally,
-#' weight_tgraph generates two data.frames, origin and dest, which respectively
+#' weight_tardis generates two data.frames, origin and dest, which respectively
 #' record the landscape properties for each pair of origin and destination
 #' cells comprising the edges in a graph layer. The first three columns in both
 #' data.frames record the cell ID, the horizontal distance to its partner cell
@@ -30,14 +30,12 @@
 #' inclusion of NA weights is preferable for flexible landscape specification.
 #'
 #' @param tardis A object of class 'tardis' from create_tardis.
-#' @param vars A named list of RasterStacks where each stack has the same
+#' @param vars A named list of SpatRasters where each element has the same
 #' resolution, extent, number of layers and layer order as the original landscape
-#' data used to create tardis, with each stack representing a single property
-#' for that landscape (e.g., temperature). Alternatively, if tardis contains
-#' just one landscape layer, then a list of RasterLayers can be provided. List
-#' names are crucial as these are used to make their data accessible during
-#' weighting. Any names can be used, aside for 'cell', 'hdist' and 'vdist',
-#' which are reserved.
+#' data used to create tardis, and records a single property for that landscape
+#' (e.g., temperature). List names are crucial as these are used to make their
+#' data accessible during weighting. Any names can be used, aside for 'cell',
+#' hdist' and 'vdist' which are reserved.
 #' @param wfun A function to calculate the cost of traversal for the edges in
 #' each graph layer. This must have the signature:
 #' function(origin, dest, lnum, ...) {rules for weighting} - see @details
@@ -50,7 +48,7 @@
 #' reported to the user.
 #' @param ... Additional arguments supplied to wfun() if desired.
 #' @return A numeric vector of weights with as many elements as edges in x.
-#' @import raster
+#' @import terra
 #' @export
 #'
 #' @details The core of the weighting function can have as many steps as the
@@ -79,32 +77,33 @@
 
 weight_tardis <- function(tardis, vars, wfun = function(origin, dest, lnum, ...) {sqrt(origin$hdist^2 + abs(origin$vdist)^2)}, mfun = NULL, verbose = TRUE, ...) {
 
-  # tardis = test
-  # vars = list(elev = foo)
-  # wfun = function(origin, dest, lnum, ...) {sqrt(origin$hdist^2 + abs(origin$vdist)^2)}
-  # mfun = NULL
-  # verbose = T
+  tardis = test2
+  vars = list(elev = vars$elev)
+  wfun = function(origin, dest, lnum, ...) {sqrt(origin$hdist^2 + abs(origin$vdist)^2)}
+  mfun = NULL
+  verbose = T
 
   if(!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
   }
-  if(!class(tardis) == "tardis")
+  if(!inherits(tardis, "tardis")) {
+    stop("Supply tardis as the output of create_tardis")
+  }
+  if(!is.list(vars)) {
+    stop("Supply vars as a named list of SpatRasters")
+  }
 
-    if(!is.list(vars)) {
-      stop("Supply vars as a named list of raster stacks")
-    }
   if(is.null(names(vars))) {
-    stop("Supply vars as a named list of raster stacks")
+    stop("Supply vars as a named list of SpatRasters")
   }
   if(any(names(vars) %in% c("cell", "hdist", "vdist"))) {
     stop("The names cell, h_dist and v_dist are reserved for the geographic distances in x. Please revise names of vars")
   }
-  if(!all(unlist(lapply(vars, class)) %in% c("RasterStack", "RasterLayer"))) {
-    stop("One or more elements of vars is not a RasterStack or RasterLayer")
+  if(!all(unlist(lapply(vars, inherits, "SpatRaster")))) {
+    stop("One or more elements of vars is not a SpatRaster")
   }
-  vars <- lapply(vars, function(x) {if(class(x)[1] == "RasterLayer") {stack(x)} else {x}})
-  if(!(all(unlist(lapply(vars, isLonLat))))) {
-    stop("x should be in geographic (long-lat) projection")
+  if(!(all(unlist(lapply(vars, is.lonlat))))) {
+    stop("One or more elements of vars is not in geographic (long-lat) projection")
   }
 
   if(!is.null(tardis$tdat)) {
@@ -113,10 +112,10 @@ weight_tardis <- function(tardis, vars, wfun = function(origin, dest, lnum, ...)
     layers <- 1
   }
   if(!all(unlist(lapply(vars, function(x) {dim(x) == c(tardis$gdat[1:2], layers)})))) {
-    stop("Each RasterStack in vars match the extent, resolution and number of layers as the raster stack used to create tardis")
+    stop("Each SpatRaster in vars must match the extent, resolution and number of layers as the SpatRaster used to create tardis")
   }
-  if(!all(unlist(lapply(vars, function(x) {as.vector(extent(x)) == tardis$gdat[5:8]})))) {
-    stop("Each RasterStack in vars match the extent, resolution and number of layers as the raster stack used to create tardis")
+  if(!all(unlist(lapply(vars, function(x) {as.vector(ext(x)) == tardis$gdat[5:8]})))) {
+    stop("Each SpatRaster in vars must match the extent, resolution and number of layers as the SpatRaster used to create tardis")
   }
   if(any(unlist(lapply(vars, function(x) {any(is.na(x[]))})))) {
     stop("NA values are not permitted in vars. Please use dummy values if needed")

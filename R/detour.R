@@ -9,8 +9,8 @@
 #' SP(o,n) + SP(n,d) < SP(o,d) + t, where SP is the cost of access, o the origin
 #' node, d the destination node and t the extra cost. Any identified cells are
 #' then converted to coordinates and the concave hull for that set of coordinates
-#' calculated and returned. 
-#' 
+#' calculated and returned.
+#'
 #' @param tardis An object of class 'tardis', produced by create_tardis
 #' @param weights If not NULL, a vector of weights to be used instead of the
 #' geographic distances in tardis. All entries must be >= 0
@@ -28,28 +28,27 @@
 #' multipolygon for each path where a detour could be calculated. As least cost
 #' paths can extend across multiple time bins, the polygons in a multipolygon
 #' represent bin-specific segments of the overall detour.
-#' @import raster sf concaveman
+#' @import terra sf concaveman
 #' @export
 
 detour <- function(tardis, weights = NULL, paths, pindex = NULL, detour = 0.01, verbose = TRUE) {
-  
-  # tardis = test
-  # weights = NULL
-  # paths = test2
+
+  # tardis = test2
+  # weights = test_weight
+  # paths = test3
   # detour = 0.01
   # verbose = T
   # pindex = NULL
-  # clust = NULL
-  
+
   if(!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
   }
   if(!class(tardis) == "tardis") {
     stop("Supply tardis as the output of create_tardis")
   }
-  
+
   if(!is.null(weights)) {
-    
+
     if(!is.atomic(weights)) {
       stop("weights must be a vector")
     }
@@ -65,16 +64,16 @@ detour <- function(tardis, weights = NULL, paths, pindex = NULL, detour = 0.01, 
   } else {
     weights <- tardis$edges[,5]
   }
-  
+
   if(!class(paths)[1] == "sf") {
     stop("Supply paths as the output of lcp()")
   }
   if(!all(c("path", "bin", "order", "cost", "distance", "geometry") %in% names(paths))) {
     stop("Supply paths as the output of lcp()")
   }
-  
+
   if(!is.null(pindex)) {
-    
+
     if(!is.atomic(pindex) | !is.numeric(pindex)) {
       stop("If not NULL, pindex should be a vector of indexes of the paths for which detours will be calculated")
     }
@@ -82,11 +81,11 @@ detour <- function(tardis, weights = NULL, paths, pindex = NULL, detour = 0.01, 
       stop("One or more indices in pindex falls outside the range of paths")
     }
     pindex <- pindex[order(pindex)]
-    
+
   } else {
     pindex <- 1:max(paths$path)
   }
-  
+
   if(!is.atomic(detour) | !is.numeric(detour)) {
     stop("If not NULL, detour should be a single positive, finite numeric, or a vector of the same with as many elements as pindex")
   }
@@ -99,17 +98,17 @@ detour <- function(tardis, weights = NULL, paths, pindex = NULL, detour = 0.01, 
   if(!all(is.finite(detour) | detour <= 0)) {
     stop("If not NULL, detour should be a single positive, finite numeric, or a vector of the same with as many elements as pindex")
   }
-  
+
   # obtain start and end points, and costs
   paths <- paths[order(paths$path, paths$order, method = "radix"),]
-  cls <- tapply(paths$geometry, paths$path, function(x) {ob <- st_coordinates(x); ob[c(1, nrow(ob)),]})
-  org <- unlist(lapply(cls, function(x) {cellFromXY(raster(nrows = tardis$gdat[1], ncols = tardis$gdat[2], ext = extent(tardis$gdat[5:8])), x[1,])}))
-  dst <- unlist(lapply(cls, function(x) {cellFromXY(raster(nrows = tardis$gdat[1], ncols = tardis$gdat[2], ext = extent(tardis$gdat[5:8])), x[2,])}))
+  cls <- tapply(paths$geometry, paths$path, function(x) {ob <- st_coordinates(x); ob[c(1, nrow(ob)),1:2]})
+  org <- unlist(lapply(cls, function(x) {cellFromXY(rast(nrows = tardis$gdat[1], ncols = tardis$gdat[2], ext = ext(tardis$gdat[5:8])), x[1,,drop = F])}))
+  dst <- unlist(lapply(cls, function(x) {cellFromXY(rast(nrows = tardis$gdat[1], ncols = tardis$gdat[2], ext = ext(tardis$gdat[5:8])), x[2,,drop = F])}))
   org <- data.frame(cell = org, bin = tapply(paths$bin, paths$path, function(x) {x[1]}))
   dst <- data.frame(cell = dst, bin = tapply(paths$bin, paths$path, function(x) {rev(x)[1]}))
   org$cell <- org$cell + (prod(tardis$gdat[1:2]) * (org$bin - 1))
   dst$cell <- dst$cell + (prod(tardis$gdat[1:2]) * (dst$bin - 1))
-  
+
   # check point accessibility to ensure they come from the correct tardis object
   if(!all(c(org$cell %in% tardis$edges[,1], dst$cell %in% tardis$edges[,2]))) {
     stop("One or more points in paths do not correspond to cells in tardis. Ensure that the correct tardis object is supplied for paths")
@@ -120,7 +119,7 @@ detour <- function(tardis, weights = NULL, paths, pindex = NULL, detour = 0.01, 
   if(any(dst$bin < org$bin) & tardis$link.mode[2] == 1) {
     stop("tardis is linked forwards in time, but some paths terminate in older layers than their starting point")
   }
-  
+
   # initialise graph
   if(any(is.na(weights))) {
     tardis$tgraph$src <- tardis$tgraph$src[which(!is.na(weights))]
@@ -136,39 +135,39 @@ detour <- function(tardis, weights = NULL, paths, pindex = NULL, detour = 0.01, 
                                    to   = tardis$tgraph$dict$id[match(tardis$tgraph$dst, tardis$tgraph$dict$ref)],
                                    dist = tardis$edges[,5])
   tardis$tgraph <- tardis$tgraph[1:5]
-  
-  samprast <- raster(nrows = tardis$gdat[1], ncols = tardis$gdat[2], ext = extent(matrix(tardis$gdat[5:8], ncol = 2, byrow = T)))
+
+  samprast <- rast(nrows = tardis$gdat[1], ncols = tardis$gdat[2], ext = ext(tardis$gdat[5:8]))
   pweight <- tapply(paths$distance, INDEX = paths$path, sum)
   if(!is.null(weights)) {
     tardis$tgraph$data$dist <- weights
     pweight <- tapply(paths$cost, INDEX = paths$path, sum)
   }
-  
+
   det_list <- list()
   foo <- lapply(pindex, function(i) {
-    
+
     if(verbose) {cat(paste0("Running detours [", i, "/", length(pindex), "]\r"))
       if(i == length(pindex)) {cat("\n")}
     }
-    
+
     ob <- NULL
     if(pweight[i] > 0) {
       iso_cell <- as.numeric(suppressMessages(get_detour(tardis$tgraph, from = org$cell[i], to = dst$cell[i], extra = pweight[i] * detour[i]))[[1]])
-      
+
       if(length(iso_cell) > 0) {
-        
+
         iso_bin <- ceiling(iso_cell / prod(tardis$gdat[1:2]))
         iso_seq <- rep(1:length(rle(iso_bin)$length), rle(iso_bin)$length)
         iso_ids <- paste0(i, "_", rle(iso_bin)$values, "-", rle(iso_bin)$values)
-        
+
         iso_cell <- iso_cell - ((iso_bin - 1) * prod(tardis$gdat[1:2]))
         ob <- data.frame(path = rep(i, length(rle(iso_bin)$values)), bin = rle(iso_bin)$values, order = 1:length(iso_ids))
         rownames(ob) <- iso_ids
-        
+
         isochrone <- tapply(iso_cell, INDEX = iso_seq, function(y) {
           tmprast <- samprast
           tmprast[y] <- 1
-          tmprast <- clump(tmprast)
+          tmprast <- patches(tmprast)
           st_multipolygon(tapply(which(!is.na(tmprast[])), INDEX = tmprast[which(!is.na(tmprast[]))], function(z) {
             iso_crd <- xyFromCell(tmprast, z)
             pts <- cbind(c(iso_crd[,1] - res(tmprast)[1], iso_crd[,1] - res(tmprast)[1],
@@ -183,7 +182,7 @@ detour <- function(tardis, weights = NULL, paths, pindex = NULL, detour = 0.01, 
     }
     ob
   })
-  
+
   # finish up
   if(all(unlist(lapply(foo, is.null)))) {
     if(verbose) {warning("No detours were present for any of the paths at the supplied threshold(s), returning NULL")}
