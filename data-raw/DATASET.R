@@ -37,6 +37,7 @@ mod <- terra::crop(mod, terra::extent(past[[1]]))
 mod <- terra::resample(ob, past[[4]])
 galapagos <- terra::rast(lapply(c(past, mod), terra::rast))
 names(galapagos) <- c("2.25-1.75", "1.75-1.25", "1.25-0.75", "0.75-0.25", "0.25-0")
+galapagos <- terra::wrap(galapagos)
 
 # save
 usethis::use_data(galapagos, overwrite = TRUE)

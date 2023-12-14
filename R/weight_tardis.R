@@ -77,11 +77,11 @@
 
 weight_tardis <- function(tardis, vars, wfun = function(origin, dest, lnum, ...) {sqrt(origin$hdist^2 + abs(origin$vdist)^2)}, mfun = NULL, verbose = TRUE, ...) {
 
-  tardis = test2
-  vars = list(elev = vars$elev)
-  wfun = function(origin, dest, lnum, ...) {sqrt(origin$hdist^2 + abs(origin$vdist)^2)}
-  mfun = NULL
-  verbose = T
+  # tardis = test2
+  # vars = list(elev = vars$elev)
+  # wfun = function(origin, dest, lnum, ...) {sqrt(origin$hdist^2 + abs(origin$vdist)^2)}
+  # mfun = NULL
+  # verbose = T
 
   if(!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")

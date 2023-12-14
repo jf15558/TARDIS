@@ -29,7 +29,8 @@
 #' #' layer recording the frequencies of cell visits. If restrict = FALSE,
 #' a list of SpatRasters, with each named layer recording the frequencies of
 #' cells visited in each landscape layer through time
-#' @import terra igraph pbapply parallel
+#' @import terra igraph pbapply parallel stats
+#' @importFrom methods as
 #' @export
 
 random_walk <- function(tardis, weights = NULL, origin, mode = "steps", rwlen = 1000, restrict = TRUE, verbose = TRUE) {

@@ -21,7 +21,7 @@ library(akima)
 library(terra)
 
 # functions
-lapply(list.files("./R", full.names = T), source)
+#lapply(list.files("./R", full.names = T), source)
 
 # map data
 load("data/Chelonoides_tree.rda")

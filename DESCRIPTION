@@ -19,8 +19,10 @@ Imports:
     geosphere,
     igraph,
     Matrix,
+    methods,
     nngeo,
     parallel,
     pbapply,
     sf,
+    stats,
     terra

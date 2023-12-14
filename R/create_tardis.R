@@ -53,7 +53,7 @@
 #' reported. Useful when dealing with large rasters (high resolution and/or many
 #' layers)
 #' @return A spatiotemporal graph object of class 'tardis'.
-#' @import terra
+#' @import terra stats
 #' @importFrom geosphere distGeo
 #' @export
 
