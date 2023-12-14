@@ -27,8 +27,31 @@
 #' recording the frequencies of cell visits. If restrict = FALSE, a list of
 #' SpatRasters, with each named layer recording the frequencies of cells visited
 #' in each landscape layer through time
-#' @import terra igraph pbapply parallel
+#' @import terra pbapply parallel
 #' @export
+#'
+#' @examples
+#' #library(terra)
+#' #library(TARDIS)
+#'
+#' #data("galapagos")
+#' #gal <- unwrap(galapagos)
+#' #gal <- crop(gal, extent(-92, -88, -2, 1))
+#' #gal_m <- classify(gal, rcl = matrix(c(-Inf, 0, NA, 0, Inf, 1),
+#' #                                    ncol = 3, byrow = T), right = F)
+#' #gt <- create_tardis(gal, times = c(seq(2.25, 0, -0.5), 0), mask = gal_m)
+#'
+#' #vars = list(elev = classify(gal, cbind(-Inf, 0, 0)))
+#' #gtw <- weight_tardis(test2, vars = vars,
+#' #                     mfun = function(origin, dest, lnum, ...) {
+#' #                               (origin$hdist^2 + abs(origin$vdist)^2) * 10})
+#'
+#' #org <- rbind(c(-89, -1.05, 2), c(-89.5, -0.7, 2))
+#' #dst <- rbind(c(-91.2, -1, 0), c(-91.6, -0.4, 0))
+#' #pts <- stp(test2, rbind(org, dst))
+#'
+#' #foo <- lcp(tardis = gt, weights = gtw, pts[1:2,], pts[3:4,])
+#' #foo2 <- isochrone(tardis = gt, weights = gtw, foo)
 
 isochrone <- function(tardis, weights = NULL, origin, cost = 1e5, restrict = TRUE, verbose = TRUE) {
 
@@ -42,7 +65,7 @@ isochrone <- function(tardis, weights = NULL, origin, cost = 1e5, restrict = TRU
   if(!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
   }
-  if(!class(tardis) == "tardis") {
+  if(!inherits(tardis, "tardis")) {
     stop("Supply tardis as the output of create_tardis")
   }
 

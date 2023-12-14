@@ -21,8 +21,31 @@
 #' reported to the user.
 #' @return A list of vectors containing the layer-discrete commute times for
 #' each segment of the input least cost paths
-#' @import terra Matrix
+#' @import terra
+#' @importFrom Matrix sparseMatrix Diagonal
 #' @export
+#'
+#' @examples
+#' #library(terra)
+#' #library(TARDIS)
+#'
+#' #data("galapagos")
+#' #gal <- unwrap(galapagos)
+#' #gal <- crop(gal, extent(-92, -88, -2, 1))
+#' #gal_m <- classify(gal, rcl = matrix(c(-Inf, 0, NA, 0, Inf, 1),
+#' #                                    ncol = 3, byrow = T), right = F)
+#' #gt <- create_tardis(gal, times = c(seq(2.25, 0, -0.5), 0), mask = gal_m)
+#'
+#' #vars = list(elev = classify(gal, cbind(-Inf, 0, 0)))
+#' #gtw <- weight_tardis(test2, vars = vars,
+#' #                     mfun = function(origin, dest, lnum, ...) {
+#' #                               (origin$hdist^2 + abs(origin$vdist)^2) * 10})
+#'
+#' #org <- rbind(c(-89, -1.05, 2), c(-89.5, -0.7, 2))
+#' #dst <- rbind(c(-91.2, -1, 0), c(-91.6, -0.4, 0))
+#' #pts <- stp(test2, rbind(org, dst))
+#'
+#' #foo <- commute(tardis = gt, weights = gtw, pts[1:2,], pts[3:4,])
 
 commute <- function(tardis, weights = NULL, origin, dest, verbose = TRUE) {
 
@@ -35,7 +58,7 @@ commute <- function(tardis, weights = NULL, origin, dest, verbose = TRUE) {
   if(!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
   }
-  if(!class(tardis) == "tardis") {
+  if(!inherits(tardis, "tardis")) {
     stop("Supply tardis as the output of create_tardis")
   }
 
@@ -115,7 +138,7 @@ commute <- function(tardis, weights = NULL, origin, dest, verbose = TRUE) {
   srt <- tardis$tgraph$dict$id[match(srt, tardis$tgraph$dict$ref)] + 1
   end <- tardis$tgraph$dict$id[match(end, tardis$tgraph$dict$ref)] + 1
   allcls <- c(srt, end)
-  Lr <- Matrix::Diagonal(x = colSums(adj_mat)) - adj_mat
+  Lr <- Diagonal(x = colSums(adj_mat)) - adj_mat
   n <- max(Lr@Dim)
   Lr <- Lr[-n, -n]
   C <- 1e-300 * n

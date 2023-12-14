@@ -24,7 +24,7 @@ resistance_surface <- function(tardis, weights = NULL, verbose = T) {
   if(!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
   }
-  if(class(tardis) != "tardis") {
+  if(!inherits(tardis, "tardis")) {
     stop("Supply tardis as the output of create_tardis")
   }
 

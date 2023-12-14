@@ -99,3 +99,19 @@ rather than the dense distance matrix used by gen3sis, where all intercell
 connections are given, but without consideration of the intervening space
 those connections span through.
 }
+\examples{
+#library(terra)
+#library(TARDIS)
+
+#data("galapagos")
+#gal <- unwrap(galapagos)
+#gal <- crop(gal, extent(-92, -88, -2, 1))
+#gal_m <- classify(gal, rcl = matrix(c(-Inf, 0, NA, 0, Inf, 1),
+#                                    ncol = 3, byrow = T), right = F)
+#gt <- create_tardis(gal, times = c(seq(2.25, 0, -0.5), 0), mask = gal_m)
+
+#vars = list(elev = classify(gal, cbind(-Inf, 0, 0)))
+#gtw <- weight_tardis(test2, vars = vars,
+#                     mfun = function(origin, dest, lnum, ...) {
+#                               (origin$hdist^2 + abs(origin$vdist)^2) * 10})
+}

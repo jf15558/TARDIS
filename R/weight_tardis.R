@@ -74,6 +74,22 @@
 #' rather than the dense distance matrix used by gen3sis, where all intercell
 #' connections are given, but without consideration of the intervening space
 #' those connections span through.
+#'
+#' @examples
+#' #library(terra)
+#' #library(TARDIS)
+#'
+#' #data("galapagos")
+#' #gal <- unwrap(galapagos)
+#' #gal <- crop(gal, extent(-92, -88, -2, 1))
+#' #gal_m <- classify(gal, rcl = matrix(c(-Inf, 0, NA, 0, Inf, 1),
+#' #                                    ncol = 3, byrow = T), right = F)
+#' #gt <- create_tardis(gal, times = c(seq(2.25, 0, -0.5), 0), mask = gal_m)
+#'
+#' #vars = list(elev = classify(gal, cbind(-Inf, 0, 0)))
+#' #gtw <- weight_tardis(test2, vars = vars,
+#' #                     mfun = function(origin, dest, lnum, ...) {
+#' #                               (origin$hdist^2 + abs(origin$vdist)^2) * 10})
 
 weight_tardis <- function(tardis, vars, wfun = function(origin, dest, lnum, ...) {sqrt(origin$hdist^2 + abs(origin$vdist)^2)}, mfun = NULL, verbose = TRUE, ...) {
 
@@ -150,16 +166,16 @@ weight_tardis <- function(tardis, vars, wfun = function(origin, dest, lnum, ...)
 
     weight <- try(wfun(origin = origin, dest = dest, lnum = i))
     if(class(weight)[1] == "try-error") {
-      stop(paste0("An error occurred in wfun() for  layer ", i, "/", length(x[[1]]), ". Check that the column names in wfun() match the names of vars, along with 'hdist' and 'vdist'"))
+      stop(paste0("An error occurred in wfun() for  layer ", i, "/", layers, ". Check that the column names in wfun() match the names of vars, along with 'hdist' and 'vdist'"))
     }
     if(!is.vector(weight) | length(weight) != nrow(links)) {
-      stop(paste0("wfun() did not return a vector with as many elements as edges in layer ", i, "/", length(x[[1]]), ". Ensure that the function returns a vector of correct length"))
+      stop(paste0("wfun() did not return a vector with as many elements as edges in layer ", i, "/", layers, ". Ensure that the function returns a vector of correct length"))
     }
     if(any(is.nan(weight) | is.infinite(weight))) {
-      stop(paste0("wfun() resulted in a non-finite value (NaN, Inf) in  layer ", i, "/", length(x[[1]]), ". Ensure the function and data returns positive real numbers or NA"))
+      stop(paste0("wfun() resulted in a non-finite value (NaN, Inf) in  layer ", i, "/", layers, ". Ensure the function and data returns positive real numbers or NA"))
     }
     if(any(weight < 0)) {
-      stop(paste0("wfun() resulted in a negative value in layer ", i, "/", length(x[[1]]), ". Ensure the function and data returns positive real numbers"))
+      stop(paste0("wfun() resulted in a negative value in layer ", i, "/", layers, ". Ensure the function and data returns positive real numbers"))
     }
 
     mlink <- which(!tardis$gdat[2] %% abs(links[,1] - links[,2]) %in% c(0, 1, tardis$gdat[2]))
@@ -167,16 +183,16 @@ weight_tardis <- function(tardis, vars, wfun = function(origin, dest, lnum, ...)
 
       mweight <- try(mfun(origin = origin[mlink,], dest = dest[mlink,], lnum = i))
       if(class(mweight)[1] == "try-error") {
-        stop(paste0("An error occurred in mfun() for  layer ", i, "/", length(x[[1]]), ". Check that the column names in mfunc() match the names of vars, along with 'hdist' and 'vdist'"))
+        stop(paste0("An error occurred in mfun() for  layer ", i, "/", layers, ". Check that the column names in mfunc() match the names of vars, along with 'hdist' and 'vdist'"))
       }
       if(!is.vector(mweight) | length(mweight) != length(mlink)) {
-        stop(paste0("mfun() did not return a vector with as many elements as edges in layer ", i, "/", length(x[[1]]), ". Ensure that the function returns a vector of correct length"))
+        stop(paste0("mfun() did not return a vector with as many elements as edges in layer ", i, "/", layers, ". Ensure that the function returns a vector of correct length"))
       }
       if(any(is.nan(weight) | is.infinite(weight))) {
-        stop(paste0("mfun() resulted in a non-finite value (NaN, Inf) in  layer ", i, "/", length(x[[1]]), ". Ensure the function and data returns positive real numbers or NA"))
+        stop(paste0("mfun() resulted in a non-finite value (NaN, Inf) in  layer ", i, "/", layers, ". Ensure the function and data returns positive real numbers or NA"))
       }
       if(any(mweight < 0)) {
-        stop(paste0("mfun() resulted in a negative value in layer ", i, "/", length(x[[1]]), ". Ensure the function and data returns positive real numbers"))
+        stop(paste0("mfun() resulted in a negative value in layer ", i, "/", layers, ". Ensure the function and data returns positive real numbers"))
       }
       weight[mlink] <- mweight
     }

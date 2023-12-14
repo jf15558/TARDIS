@@ -49,13 +49,23 @@
 #' must be at least one edge between each pair of layers. Otherwise, any number
 #' of edges between layers can be specified, although it  makes sense for there
 #' to be maximally as many edges as cells within a layer.
-#' @param A logical to determine whether function progress should be
+#' @param verbose A logical to determine whether function progress should be
 #' reported. Useful when dealing with large rasters (high resolution and/or many
 #' layers)
 #' @return A spatiotemporal graph object of class 'tardis'.
-#' @import terra stats
+#' @import terra
 #' @importFrom geosphere distGeo
+#' @importFrom stats complete.cases
 #' @export
+#'
+#' @examples
+#' #library(terra)
+#' #library(TARDIS)
+#' #data("galapagos")
+#' #gal <- unwrap(galapagos)
+#' #gal <- crop(gal, extent(-92, -88, -2, 1))
+#' #gal_m <- classify(gal, rcl = matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
+#' #gt <- create_tardis(gal, times = c(seq(2.25, 0, -0.5), 0), mask = gal_m)
 
 create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1, mask = NULL, mask.check = TRUE, alg = "v", rotations = NULL, verbose = TRUE) {
 
@@ -144,7 +154,7 @@ create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1, mask = NULL,
   if(!is.logical(mask.check) | length(mask.check) != 1) {
     stop("mask.check should be a single logical")
   }
-  if(length(alg) != 1 | class(alg) != "character") {
+  if(length(alg) != 1 | inherits(alg, "character")) {
     stop("alg should be one of 'v' or 'k'")
   }
   if(!alg %in% c("v", "k")) {

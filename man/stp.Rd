@@ -32,3 +32,18 @@ accessible cell using great circle distances. Adjustment is performed using
 a rip of nearestLand() from seegSDM, up to a maximum of 10000 km, although
 it is expected that any adjustments will be nowhere near this large.
 }
+\examples{
+#library(terra)
+#library(TARDIS)
+
+#data("galapagos")
+#gal <- unwrap(galapagos)
+#gal <- crop(gal, extent(-92, -88, -2, 1))
+#gal_m <- classify(gal, rcl = matrix(c(-Inf, 0, NA, 0, Inf, 1),
+#                                    ncol = 3, byrow = T), right = F)
+#gt <- create_tardis(gal, times = c(seq(2.25, 0, -0.5), 0), mask = gal_m)
+
+#org <- rbind(c(-89, -1.05, 2), c(-89.5, -0.7, 2))
+#dst <- rbind(c(-91.2, -1, 0), c(-91.6, -0.4, 0))
+#pts <- stp(gt, rbind(org, dst))
+}

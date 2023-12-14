@@ -27,4 +27,4 @@
 #' million years and the geologic origins of modern Galápagos upwelling. Earth
 #' and Planetary Science Letters, 460, 22-28
 #' @source Modern DEM: documented at https://www.pmel.noaa.gov/eoi/staff/chadwick/galapagos.html,
-#' downloaded from the embedded link in the page: ftp://ftp.pmel.noaa.gov/newport/chadwick/galap_bathy/galap.grd
+#' downloaded from the embedded link in the page: ftp://ftp.pmel.noaa.gov/newport/chadwick/galap_bathy/gala

@@ -66,12 +66,15 @@ are identified using the st_connect function from nngeo, which assumes
 Euclidean geometry, while the "v" algorithm uses great circle distances
 }
 \examples{
-load(galapagos)
-gal <- crop(galapagos, extent(-92, -88, -2, 1))
-gal_m <- classify(gal, rcl = matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
-v <- link_mask(gal_m)
-k <- link_mask(gal_m, alg = "k")
-plot(gal_m[[1]])
-plot(v[[1]], add = T)
-plot(k[[1]], add = T, col = 2)
+#library(terra)
+#library(TARDIS)
+#data("galapagos")
+#gal <- unwrap(galapagos)
+#gal <- crop(gal, extent(-92, -88, -2, 1))
+#gal_m <- classify(gal, rcl = matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
+#v <- link_mask(gal_m)
+#k <- link_mask(gal_m, alg = "k")
+#plot(gal_m[[1]])
+#plot(v[[1]], add = T)
+#plot(k[[1]], add = T, col = 2)
 }

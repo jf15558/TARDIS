@@ -60,7 +60,7 @@ must be at least one edge between each pair of layers. Otherwise, any number
 of edges between layers can be specified, although it  makes sense for there
 to be maximally as many edges as cells within a layer.}
 
-\item{A}{logical to determine whether function progress should be
+\item{verbose}{A logical to determine whether function progress should be
 reported. Useful when dealing with large rasters (high resolution and/or many
 layers)}
 }
@@ -81,4 +81,13 @@ global landscapes over geological timescales, however, the positions of
 landmasses chance noticeably due to continental drift. In these cases, the
 edges can be altered so that they connect pairs of geographically homologous
 cells through time. Single layer cases (i.e. no time element) are allowed.
+}
+\examples{
+#library(terra)
+#library(TARDIS)
+#data("galapagos")
+#gal <- unwrap(galapagos)
+#gal <- crop(gal, extent(-92, -88, -2, 1))
+#gal_m <- classify(gal, rcl = matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
+#gt <- create_tardis(gal, times = c(seq(2.25, 0, -0.5), 0), mask = gal_m)
 }

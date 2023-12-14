@@ -21,6 +21,21 @@
 #' not be successfully adjusted, this will be NA.
 #' @importFrom geosphere distGeo
 #' @export
+#'
+#' @examples
+#' #library(terra)
+#' #library(TARDIS)
+#'
+#' #data("galapagos")
+#' #gal <- unwrap(galapagos)
+#' #gal <- crop(gal, extent(-92, -88, -2, 1))
+#' #gal_m <- classify(gal, rcl = matrix(c(-Inf, 0, NA, 0, Inf, 1),
+#' #                                    ncol = 3, byrow = T), right = F)
+#' #gt <- create_tardis(gal, times = c(seq(2.25, 0, -0.5), 0), mask = gal_m)
+#'
+#' #org <- rbind(c(-89, -1.05, 2), c(-89.5, -0.7, 2))
+#' #dst <- rbind(c(-91.2, -1, 0), c(-91.6, -0.4, 0))
+#' #pts <- stp(gt, rbind(org, dst))
 
 stp <- function(tardis, points, verbose = TRUE) {
 
@@ -30,11 +45,10 @@ stp <- function(tardis, points, verbose = TRUE) {
   if(!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
   }
-  if(class(tardis) != "tardis") {
+  if(!inherits(tardis, "tardis")) {
     stop("Supply tardis as the output of create_tardis")
   }
-
-  if(!class(points)[1] %in% c("data.frame", "matrix")) {
+  if(!inherits(points, "data.frame") & !inherits(points, "matrix")) {
     stop("Supply origin as a data.frame or matrix with two or three columns")
   }
   if(ncol(points) < 2 | ncol(points) > 3) {
