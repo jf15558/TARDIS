@@ -22,6 +22,7 @@ Imports:
     nngeo,
     parallel,
     pbapply,
+    rgplates,
     sf,
     stats,
     terra
