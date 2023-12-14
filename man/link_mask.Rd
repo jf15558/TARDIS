@@ -65,3 +65,8 @@ produces superficially similar results to the "v" algorithm, but connections
 are identified using the st_connect function from nngeo, which assumes
 Euclidean geometry, while the "v" algorithm uses great circle distances
 }
+\examples{
+load(galapagos)
+gal <- crop(gal, extent(-92, -88, -2, 1))
+gal_m <- classify((gal), rcl = matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
+}

@@ -32,6 +32,10 @@ gal_l <- classify((gal), rcl = matrix(c(-Inf, 0, NA), ncol = 3, byrow = T), righ
 org <- rbind(c(-89, -1.05, 2), c(-89.5, -0.7, 2))
 dst <- rbind(c(-91.2, -1, 0), c(-91.6, -0.4, 0))
 
+# tree data
+tdat <- Chelonoides_tree$biogeography
+rt <- cbind.data.frame(lng = rep(-89.5, 13), lat = rep(-0.9, 13), age = rep(1.5, 13))
+
 cairo_pdf("test.pdf", height = 10, width = 7)
 par(mfrow = c(3, 2))
 par(mar = c(0.5, 0.5, 0.5, 0.5))
@@ -50,24 +54,6 @@ plot(test3$geometry, add = T)
 plot(test4$geometry, add = T, col = scales::alpha(1, 0.2), border = F)
 
 
-# tortoise data
-# modern distr: https://www.nature.com/articles/s42003-022-03483-w
-# past origins: https://onlinelibrary.wiley.com/doi/full/10.1111/jzs.12387?saml_referrer
-trt <- read.tree(text = "(((becki, darwini), ((donfaustoni, chathamensis), (abingdonii, hoodensis))), (((((guntheri, vicina), (microphyes, vandenburghi)), porteri), niger), duncanensis));")
-trt$edge.length <- c(0.45, 1.06, 0.03, 0.03, 0.37, 0.39, 0.33, 0.33, 0.47, 0.25, 0.25,
-                     0.52, 0.47, 0.14, 0.28, 0.09, 0.04, 0.04, 0.08, 0.05, 0.05, 0.41, 0.55, 1.02)
-trt$root.time <- 1.54
-
-# tips + anc states
-tdat <- cbind.data.frame(node = c(trt$tip.label, as.character(14:25)),
-                         island =  c("Isa", "Santi", "SantaC", "SanC", "Pin", "Esp", "Isa", "Isa", "Isa", "Isa", "SantaC", "Flo", "Pin",
-                                     "Esp-SanC", "SanC", "Santi", "SanC", "SanC", "Esp", "Pin", "SantaC", "SantaC", "Isa", "Isa", "Isa"),
-                         lng = c(-91.36, -91.33, -90.3, -89.4, -90.76, -89.65, -90.94,
-                                 -91.3, -91.34, -91.1, -90.41, -90.43, -90.66, rep(1, 12)),
-                         lat = c(0,      -0.2,   -0.6, -0.85,  0.6,   -1.38,   -0.75,
-                         -0.96, -0.15, -0.45, -0.69, -1.3, -0.61, rep(1, 12)),
-                         age = trt$root.time - node.depth.edgelength(trt))
-rt <- cbind.data.frame(lng = rep(-89.5, 13), lat = rep(-0.9, 13), age = rep(1.5, 13))
 
 # functions
 

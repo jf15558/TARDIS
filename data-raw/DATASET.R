@@ -9,7 +9,7 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 # MAPS
 #
 # past geography
-past <- lapply(rev(gtools::mixedsort(list.files("galapagos/Karnauskas_etal_FinalModelOutput_Bathymetry/", pattern = "txt", full.names = T))), function(x) {
+past <- lapply(rev(gtools::mixedsort(list.files("./", pattern = "txt", full.names = T)))[-5], function(x) {
 
   # source downloaded manually to wd: https://doi.plutof.ut.ee/doi/10.15156/BIO/786389)
   x <- rev(gtools::mixedsort(list.files("galapagos/Karnauskas_etal_FinalModelOutput_Bathymetry/", pattern = "txt", full.names = T)))[1]
@@ -35,33 +35,33 @@ mod <- curl::curl_download("ftp://ftp.pmel.noaa.gov/newport/chadwick/galap_bathy
 mod <- terra::rast("./modern.grd")
 mod <- terra::crop(mod, terra::extent(past[[1]]))
 mod <- terra::resample(ob, past[[4]])
-Galapagos_palaeogeography <- terra::rast(lapply(c(past, mod), terra::rast))
-names(Galapagos_palaeogeography) <- c("2.25-1.75", "1.75-1.25", "1.25-0.75", "0.75-0.25", "0.25-0")
+galapagos <- terra::rast(lapply(c(past, mod), terra::rast))
+names(galapagos) <- c("2.25-1.75", "1.75-1.25", "1.25-0.75", "0.75-0.25", "0.25-0")
 
 # save
-usethis::use_data(Galapagos_palaeogeography, overwrite = TRUE)
+usethis::use_data(galapagos, overwrite = TRUE)
 
 
 # PHYLOGENY
 #
 # modern distr: https://www.nature.com/articles/s42003-022-03483-w
 # past origins: https://onlinelibrary.wiley.com/doi/full/10.1111/jzs.12387?saml_referrer
-Chelonoides_tree <- ape::read.tree(text = "(((becki, darwini), ((donfaustoni, chathamensis), (abingdonii, hoodensis))), (((((guntheri, vicina), (microphyes, vandenburghi)), porteri), niger), duncanensis));")
-Chelonoides_tree$edge.length <- c(0.45, 1.06, 0.03, 0.03, 0.37, 0.39, 0.33, 0.33, 0.47, 0.25, 0.25,
+chelonoides <- ape::read.tree(text = "(((becki, darwini), ((donfaustoni, chathamensis), (abingdonii, hoodensis))), (((((guntheri, vicina), (microphyes, vandenburghi)), porteri), niger), duncanensis));")
+chelonoides$edge.length <- c(0.45, 1.06, 0.03, 0.03, 0.37, 0.39, 0.33, 0.33, 0.47, 0.25, 0.25,
                      0.52, 0.47, 0.14, 0.28, 0.09, 0.04, 0.04, 0.08, 0.05, 0.05, 0.41, 0.55, 1.02)
-Chelonoides_tree$root.time <- 1.54
+chelonoides$root.time <- 1.54
 
 # biogeographic data
-tdat <- cbind.data.frame(node = c(trt$tip.label, as.character(14:25)),
+tdat <- cbind.data.frame(node = c(chelonoides$tip.label, as.character(14:25)),
                          island =  c("Isa", "Santi", "SantaC", "SanC", "Pin", "Esp", "Isa", "Isa", "Isa", "Isa", "SantaC", "Flo", "Pin",
                                      "Esp-SanC", "SanC", "Santi", "SanC", "SanC", "Esp", "Pin", "SantaC", "SantaC", "Isa", "Isa", "Isa"),
                          lng = c(-91.36, -91.33, -90.3, -89.4, -90.76, -89.65, -90.94,
                                  -91.3, -91.34, -91.1, -90.41, -90.43, -90.66, rep(NA, 12)),
                          lat = c(0,      -0.2,   -0.6, -0.85,  0.6,   -1.38,   -0.75,
                                  -0.96, -0.15, -0.45, -0.69, -1.3, -0.61, rep(NA, 12)),
-                         age = trt$root.time - node.depth.edgelength(trt))
-Chelonoides_tree$biogeography <- tdat
+                         age = chelonoides$root.time - ape::node.depth.edgelength(chelonoides))
+chelonoides$biogeography <- tdat
 
 # save
-usethis::use_data(Chelonoides_tree, overwrite = TRUE)
+usethis::use_data(chelonoides, overwrite = TRUE)
 
