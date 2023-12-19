@@ -111,11 +111,14 @@ get_rotations <- function(rast, ages, model = "PALEOMAP", out.res = NULL, gpath 
   # get present day positions from the first time slice positions
   pres <- reconstruct(recon[[1]], age = ages[1], reverse = T, model = model, path.gplates = gpath, verbose = verbose)
 
-  # get the present day positions at the subsequent reconstruction points
-  past <- reconstruct(pres, age = ages[-1], model = model, path.gplates = gpath, verbose = verbose)
+  # get the past positions at the subsequent reconstruction points if needed
+  if(length(which(ages > 0)) > 1) {
+    past <- reconstruct(pres, age = ages[-c(1, length(ages))], model = model, path.gplates = gpath, verbose = verbose)
+  }
 
   # convert from coordinates to cell IDs
   for(i in 1:length(past)) {recon[i + 1] <- past[i]}
+  if(length(which(ages > 0)) > 1) {recon[length(recon) + 1] <- pres}
   recon <- lapply(recon, function(x) {cellFromXY(out.res, x)})
 
   # format and return
