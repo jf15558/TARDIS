@@ -69,9 +69,9 @@
 
 link_mask <- function(mask, mode = "lines", alg = "v", verbose = TRUE) {
 
-  # mask = gal_m
-  # mode = "lines"
-  # alg = "v"
+  # mask = masks
+  # mode = "cells"
+  # alg = "k"
   # verbose = TRUE
 
   # check x is correctly supplied
@@ -185,8 +185,8 @@ link_mask <- function(mask, mode = "lines", alg = "v", verbose = TRUE) {
           storeval <- storeval + 1
 
           # convert links to graph and find the new linked clumps
-          linked <- cbind(extract(bar[[i]], cellFromXY(bar[[i]], lin[,1:2]))[,1],
-                          extract(bar[[i]], cellFromXY(bar[[i]], lin[,3:4]))[,1])
+          linked <- cbind(extract(bar[[i]], cellFromXY(bar[[i]], lin[,1:2, drop = F]))[,1],
+                          extract(bar[[i]], cellFromXY(bar[[i]], lin[,3:4, drop = F]))[,1])
           foo3 <- cbind(1:minmax(bar[[1]])[2], components(graph_from_edgelist(linked))$membership)
 
           # reclassify raster into the new, aggregated clumps
