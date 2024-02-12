@@ -87,13 +87,13 @@ link_mask <- function(mask, mode = "lines", alg = "v", verbose = TRUE) {
   if(any(!unique(mask[]) %in% c(1, NA))) {
     stop("Mask layers can only contain 1 or NA values")
   }
-  if(length(mode) != 1 | inherits(mode, "character")) {
+  if(length(mode) != 1 | !inherits(mode, "character")) {
     stop("mode should be one of 'lines' or 'cells'")
   }
   if(!mode %in% c("lines", "cells")) {
     stop("mode should be one of 'lines' or 'cells'")
   }
-  if(length(alg) != 1 | inherits(alg, "character")) {
+  if(length(alg) != 1 | !inherits(alg, "character")) {
     stop("alg should be one of 'v' or 'k'")
   }
   if(!alg %in% c("v", "k")) {
