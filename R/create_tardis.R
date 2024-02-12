@@ -154,7 +154,7 @@ create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1, mask = NULL,
   if(!is.logical(mask.check) | length(mask.check) != 1) {
     stop("mask.check should be a single logical")
   }
-  if(length(alg) != 1 | inherits(alg, "character")) {
+  if(length(alg) != 1 | !inherits(alg, "character")) {
     stop("alg should be one of 'v' or 'k'")
   }
   if(!alg %in% c("v", "k")) {
