@@ -91,11 +91,12 @@
 #' #                     mfun = function(origin, dest, lnum, ...) {
 #' #                               (origin$hdist^2 + abs(origin$vdist)^2) * 10})
 
-weight_tardis <- function(tardis, vars, wfun = function(origin, dest, lnum, ...) {sqrt(origin$hdist^2 + abs(origin$vdist)^2)}, mfun = NULL, verbose = TRUE, ...) {
+weight_tardis <- function(tardis, vars, wfun = function(origin, dest, lnum = NULL, ...) {sqrt(origin$hdist^2 + abs(origin$vdist)^2)}, mfun = NULL, verbose = TRUE, ...) {
 
-  # tardis = test2
-  # vars = list(elev = vars$elev)
+  # tardis = ob
+  # vars = list(elev = dem)
   # wfun = function(origin, dest, lnum, ...) {sqrt(origin$hdist^2 + abs(origin$vdist)^2)}
+  # wfun = dst
   # mfun = NULL
   # verbose = T
 
@@ -164,7 +165,7 @@ weight_tardis <- function(tardis, vars, wfun = function(origin, dest, lnum, ...)
     dest <- cbind.data.frame(links[,2], links[,3:4], do.call(cbind.data.frame, dest))
     colnames(origin) <- colnames(dest) <- c("cell", "hdist", "vdist", names(vars))
 
-    weight <- try(wfun(origin = origin, dest = dest, lnum = i))
+    weight <- try(wfun(origin = origin, dest = dest))
     if(class(weight)[1] == "try-error") {
       stop(paste0("An error occurred in wfun() for  layer ", i, "/", layers, ". Check that the column names in wfun() match the names of vars, along with 'hdist' and 'vdist'"))
     }
