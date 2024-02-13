@@ -71,7 +71,7 @@ link_mask <- function(mask, mode = "lines", alg = "v", verbose = TRUE) {
 
   # mask = masks
   # mode = "cells"
-  # alg = "k"
+  # alg = "v"
   # verbose = TRUE
 
   # check x is correctly supplied
@@ -119,51 +119,63 @@ link_mask <- function(mask, mode = "lines", alg = "v", verbose = TRUE) {
 
     if(minmax(bar[[i]])[2] > 1) {
 
-      if(alg == "v") {
-        # set up mask and island objects
-        foo2 <- boundaries(bar[[i]])
-        poly <- st_as_sf(as.polygons(bar[[i]]))
-        poly2 <- st_transform(poly, "+proj=cea")
+      crds <- list()
+      storeval <- 1
+      while(minmax(bar[[i]])[2] > 1) {
 
-        coords <- tapply(which(foo2[] == 1), extract(bar[[i]], which(foo2[] == 1)), function(x) {xyFromCell(bar[[i]], x)})
-        coords <- st_as_sfc(lapply(coords, st_multipoint))
+        if(alg == "v") {
 
-        # generate voronoi polygons for all vertices
-        vv <- st_voronoi(st_combine(poly2))
-        vv <- st_collection_extract(vv, 'POLYGON')
-        vv <- st_crop(vv, st_bbox(poly2))
+          # set up mask and island objects
+          foo2 <- boundaries(bar[[i]])
+          poly <- st_as_sf(as.polygons(bar[[i]]))
+          poly2 <- st_transform(poly, "+proj=cea")
 
-        # determine which voronoi polygons intersect with input polygons
-        ii <- st_intersects(poly2, vv)
+          coords <- tapply(which(foo2[] == 1), extract(bar[[i]], which(foo2[] == 1)), function(x) {xyFromCell(bar[[i]], x)})
+          coords <- st_as_sfc(lapply(coords, st_multipoint))
 
-        # union/dissolve voronoi polygons that belong to the same inputs
-        vt <- lapply(ii, function(x) {st_union(st_combine(vv[x]))})
-        vt <- suppressWarnings(suppressMessages(lapply(vt, st_collection_extract)))
-        vt <- lapply(vt, st_cast, "POLYGON")
-        vt <- lapply(vt, st_union)
-        vt <- st_sfc(do.call(rbind, vt))
-        vt <- st_intersects(vt, vt)
+          # generate voronoi polygons for all vertices
+          vv <- st_voronoi(st_combine(poly2))
+          vv <- st_collection_extract(vv, 'POLYGON')
+          vv <- st_crop(vv, st_bbox(poly2))
 
-        # get edge cells in each cluster
-        coords <- tapply(which(foo2[] == 1), extract(bar[[i]], which(foo2[] == 1)), function(x) {xyFromCell(bar[[i]], x)})
-        coords <- st_as_sfc(lapply(coords, st_multipoint))
+          # determine which voronoi polygons intersect with input polygons
+          ii <- st_intersects(poly2, vv)
 
-        # get nearest neighbours for adjacent voronoi polygons
-        res <- suppressMessages(lapply(1:length(vt), function(x) {st_nearest_points(coords[x], coords[vt[[x]]])}))
-        res <- Reduce(c, res)
-        st_crs(res) <- "+proj=longlat"
-        touches <- suppressMessages(st_intersects(res, poly$geometry, sparse = F))
-        lin <- res[which(apply(touches, 1, sum) == 2)]
+          # union/dissolve voronoi polygons that belong to the same inputs
+          vt <- lapply(ii, function(x) {st_union(st_combine(vv[x]))})
+          vt <- suppressWarnings(suppressMessages(lapply(vt, st_collection_extract)))
+          vt <- lapply(vt, st_cast, "POLYGON")
+          vt <- lapply(vt, st_union)
+          vt <- st_sfc(do.call(rbind, vt))
+          vt <- st_intersects(vt, vt)
 
-        if(nrow(unique(extract(bar[[i]], st_coordinates(lin)[,-3]))) != minmax(bar[[i]])[2]) {
-          stop(paste0("v algorithm failed to link all islands on layer ", i, ". Retry with k"))
+          # get edge cells in each cluster
+          coords <- tapply(which(foo2[] == 1), extract(bar[[i]], which(foo2[] == 1)), function(x) {xyFromCell(bar[[i]], x)})
+          coords <- st_as_sfc(lapply(coords, st_multipoint))
+
+          # get nearest neighbours for adjacent voronoi polygons
+          res <- suppressMessages(lapply(1:length(vt), function(x) {st_nearest_points(coords[x], coords[vt[[x]]])}))
+          res <- Reduce(c, res)
+          st_crs(res) <- "+proj=longlat"
+          touches <- suppressMessages(st_intersects(res, poly$geometry, sparse = F))
+          lin <- res[which(apply(touches, 1, sum) == 2)]
+
+          # coerce to source and destination points, dropping self links
+          lin <- matrix(c(t(st_coordinates(lin)[,1:2])), ncol = 4, byrow = T)
+          lin <- lin[apply(lin, 1, function(x) {x[1] != x[3] | x[2] != x[4]}), ,drop = F]
+          crds[[storeval]] <- lin
+          storeval <- storeval + 1
+
+          # convert links to graph and find the new linked clumps
+          linked <- cbind(extract(bar[[i]], cellFromXY(bar[[i]], lin[,1:2, drop = F]))[,1],
+                          extract(bar[[i]], cellFromXY(bar[[i]], lin[,3:4, drop = F]))[,1])
+          foo3 <- cbind(1:minmax(bar[[i]])[2], components(graph_from_edgelist(linked))$membership)
+
+          # reclassify raster into the new, aggregated clumps
+          bar[[i]] <- classify(bar[[i]], foo3)
         }
 
-      } else {
-
-        crds <- list()
-        storeval <- 1
-        while(minmax(bar[[1]])[2] > 1) {
+        if(alg == "k") {
 
           # get edge cells in each cluster
           foo <- boundaries(bar[[i]])
@@ -187,25 +199,26 @@ link_mask <- function(mask, mode = "lines", alg = "v", verbose = TRUE) {
           # convert links to graph and find the new linked clumps
           linked <- cbind(extract(bar[[i]], cellFromXY(bar[[i]], lin[,1:2, drop = F]))[,1],
                           extract(bar[[i]], cellFromXY(bar[[i]], lin[,3:4, drop = F]))[,1])
-          foo3 <- cbind(1:minmax(bar[[1]])[2], components(graph_from_edgelist(linked))$membership)
+          foo3 <- cbind(1:minmax(bar[[i]])[2], components(graph_from_edgelist(linked))$membership)
 
           # reclassify raster into the new, aggregated clumps
           bar[[i]] <- classify(bar[[i]], foo3)
         }
-        crds <- do.call(rbind, crds)
-
-        # drop any lines which intersect islands other than their start and end ones
-        lin <- st_multilinestring(lapply(1:nrow(crds), function(x) {st_linestring(matrix(crds[x,], ncol = 2, byrow = T))}))
-        touches <- unlist(do.call(rbind, lapply(lin, function(x) {extract(bar[[i]], vect(x), ID = F, fun = function(x) {length(na.omit(x))})})))
-        lin <- st_multilinestring(lin[which(touches == 2)])
       }
+      crds <- do.call(rbind, crds)
 
+      # drop any lines which intersect islands other than their start and end ones
+      lin <- st_multilinestring(lapply(1:nrow(crds), function(x) {st_linestring(matrix(crds[x,], ncol = 2, byrow = T))}))
+      touches <- unlist(do.call(rbind, lapply(lin, function(x) {extract(bar[[i]], vect(x), ID = F, fun = function(x) {length(na.omit(x))})})))
+      lin <- st_multilinestring(lin[which(touches == 2)])
+
+      # store solution
       if(mode == "lines") {
         res_list[[i]] <- lin
       } else {
 
-        cls <- matrix(c(t(st_coordinates(lin)[,-3])), ncol = 4, byrow = T)
-        cls <- cbind(cellFromXY(bar[[1]], cls[,1:2]), cellFromXY(bar[[1]], cls[,3:4]))
+        cls <- matrix(c(t(st_coordinates(lin)[,-(3:4)])), ncol = 4, byrow = T)
+        cls <- cbind(cellFromXY(bar[[i]], cls[,1:2]), cellFromXY(bar[[i]], cls[,3:4]))
         cls <- t(apply(cls, 1, function(x) {c(min(x), max(x))}))
         cls <- cls[!duplicated(cls),, drop = F]
         cls <- cls[order(cls[,1]),, drop = F]
