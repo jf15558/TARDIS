@@ -1,13 +1,13 @@
 #' slice_tardis
-#' 
+#'
 #' Temporally subset a TARDIS graph This function was developed for instances
-#' where successive analyses do not require the entire graph, in which case it 
+#' where successive analyses do not require the entire graph, in which case it
 #' is more efficient to weight and analyse subsets, rather than operate on the
 #' entire graph or create subsets from scratch. A user can subset by specific
 #' geographic layers, or supply a time range which will be used to select the
 #' geographic layers within that range. Note that layers are counted in
 #' decreasing age order, so the oldest time layer will be 1 and so forth.
-#' 
+#'
 #' @param tardis An object of class 'tardis', produced by create_tardis
 #' @param times A vector of two positive numbers denoting the desired time range
 #' to subset from tardis. Either this or 'layers' must be specified
@@ -15,7 +15,7 @@
 #' layers to subset from tardis. Either this or 'times' must be specified
 #' @return An object of class 'tardis', comprising the requested range of layers
 #' @export
-#' 
+#'
 #' @examples
 #' #library(terra)
 #' #library(TARDIS)
@@ -28,11 +28,11 @@
 #' #gts <- slice_tardis(gt, times = c(1.2, 0))
 #' #gts <- slice_tardis(gt, layers = c(1, 2))
 slice_tardis <- function(tardis, times = NULL, layers = NULL) {
-  
+
   # tardis <- ob
   # times <- c(280, 240)
   # layers <- NULL
-  
+
   # check tardis
   if(!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
@@ -43,18 +43,18 @@ slice_tardis <- function(tardis, times = NULL, layers = NULL) {
   if(is.null(tardis$tdat)) {
     stop("Temporal subsetting can only be applied to TARDIS graphs with multiple layers")
   }
-  
+
   # check subsetting conflict
   if(is.null(times) & is.null(layers)) {
     stop("One of times or layers must be not be NULL")
   }
   if(!is.null(times) & !is.null(layers)) {
     stop("One of times or layers must be left as NULL")
-  }  
-  
+  }
+
   # check times
-  if(exists("times")) {
-    
+  if(!is.null(times)) {
+
     if(!is.numeric(times) | length(times) != 2) {
       stop("Please supply times as a vector of 2 numbers denoting the desired temporal subset of the graph")
     }
@@ -70,10 +70,10 @@ slice_tardis <- function(tardis, times = NULL, layers = NULL) {
     }
     layers <- c(sum(times[1] <= tardis$tdat), sum(times[2] < tardis$tdat))
   }
-  
+
   # check layers
-  if(exists("layers")) {
-    
+  if(!is.null(layers)) {
+
     if(!is.numeric(layers) | length(layers) != 2) {
       stop("Please supply layers as a vector of 2 integers denoting the range of desired graph layers")
     }
@@ -92,24 +92,24 @@ slice_tardis <- function(tardis, times = NULL, layers = NULL) {
   # get the cell id range for the requested layer range
   mult <- prod(tardis$gdat[1:2])
   cls <- c((layers[1] * mult) - mult, layers[2] * mult + 1)
-  
+
   # subset edges
   tardis$edges <- tardis$edges[which(tardis$edges[,1] > cls[1] & tardis$edges[,1] < cls[2]),]
   tardis$edges <- tardis$edges[which(tardis$edges[,2] > cls[1] & tardis$edges[,2] < cls[2]),]
   tardis$tdat <- tardis$tdat[layers[1]:(layers[2] + 1)]
-  
+
   # subset tgraph
   tardis$tgraph$dict <- tardis$tgraph$dict[which(tardis$tgraph$dict$ref > cls[1] & tardis$tgraph$dict$ref < cls[2]),]
   tardis$tgraph$src <- tardis$tgraph$src[tardis$tgraph$src %in% tardis$tgraph$dict$ref]
   tardis$tgraph$dst <- tardis$tgraph$dst[tardis$tgraph$dst %in% tardis$tgraph$dict$ref]
-  
+
   # adjust cell id parameters
   tardis$tgraph$nbnode <- nrow(tardis$tgraph$dict)
   tardis$tgraph$dict$id <- (1:tardis$tgraph$nbnode) - 1
   tardis$tgraph$dict$ref <- as.character(as.numeric(tardis$tgraph$dict$ref) - cls[1])
   tardis$tgraph$src <- as.character(as.numeric(tardis$tgraph$src) - cls[1])
   tardis$tgraph$dst <- as.character(as.numeric(tardis$tgraph$dst) - cls[1])
-  
+
   # return
   return(tardis)
 }
