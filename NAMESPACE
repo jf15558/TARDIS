@@ -3,6 +3,7 @@
 export(commute)
 export(create_tardis)
 export(detour)
+export(galapagos)
 export(isochrone)
 export(lcp)
 export(link_mask)

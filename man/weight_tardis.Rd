@@ -7,7 +7,7 @@
 weight_tardis(
   tardis,
   vars,
-  wfun = function(origin, dest, lnum, ...) {
+  wfun = function(origin, dest, lnum = NULL, ...) {
      sqrt(origin$hdist^2 +
     abs(origin$vdist)^2)
  },

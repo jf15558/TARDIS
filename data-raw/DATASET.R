@@ -12,10 +12,10 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 past <- lapply(rev(gtools::mixedsort(list.files("./", pattern = "txt", full.names = T)))[-5], function(x) {
 
   # source downloaded manually to wd: https://doi.plutof.ut.ee/doi/10.15156/BIO/786389)
-  x <- rev(gtools::mixedsort(list.files("galapagos/Karnauskas_etal_FinalModelOutput_Bathymetry/", pattern = "txt", full.names = T)))[1]
+  #dat <- rev(gtools::mixedsort(list.files("galapagos/Karnauskas_etal_FinalModelOutput_Bathymetry/", pattern = "txt", full.names = T)))[1]
+  dat <- read.table(x)
   dat$v7 <- 1:nrow(dat)
   dat <- dat[order(dat$V1, dat$V2, method = "radix", decreasing = c(FALSE, FALSE)),]
-  dat <- read.table(x)
   xy <- as.matrix(dat[,1:2])
   v <- dat$V5
   i <- !is.na(v)
@@ -25,9 +25,9 @@ past <- lapply(rev(gtools::mixedsort(list.files("./", pattern = "txt", full.name
   # interpolate to regular grid
   ob <- interp::interp(x = xy[,1], y = xy[,2], z = v2, xo = seq(min(xy[,1]), max(xy[,1]), 0.01),
                yo = seq(min(xy[,2]), max(xy[,2]), 0.01))
-  ob3 <- terra::raster(t(ob$z[,ncol(ob$z):1]), xmn = min(ob$x) - 0.05, xmx = max(ob$x) + 0.05,
-                ymn = min(ob$y) - 0.05, ymx = max(ob$y) + 0.05)
-  ob3 <- terra::resample(ob3, raster(res = c(0.01, 0.01), ext = raster::extent(ob3)))
+  ob3 <- terra::rast(t(ob$z[,ncol(ob$z):1]))
+  terra::ext(ob3) <- c(min(ob$x) - 0.05, max(ob$x) + 0.05, min(ob$y) - 0.05, max(ob$y) + 0.05)
+  ob3 <- terra::resample(ob3, rast(res = c(0.01, 0.01), ext = ob3))
 })
 
 # present geography
@@ -40,8 +40,13 @@ names(galapagos) <- c("2.25-1.75", "1.75-1.25", "1.25-0.75", "0.75-0.25", "0.25-
 galapagos <- terra::wrap(galapagos)
 
 # save
-usethis::use_data(galapagos, internal = T)
 
+foo <- readRDS("galap_hr.RData")
+foo <- rast(lapply(foo, terra::rast))
+foo <- terra::wrap(foo)
+galapagos <- foo
+#usethis::use_data(galapagos, internal = F)
+writeRaster(galapagos, "../inst/extdata/galapagos.tif")
 
 # PHYLOGENY
 #

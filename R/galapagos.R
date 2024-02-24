@@ -1,9 +1,10 @@
 #' galapagos
 #'
-#' A terra 'SpatRaster' object containing four palaeogeographic digital
-#' elevation models and one modern digital elevation model of the Galapagos
-#' archipelago. Models are in geographic coordinates with elevations in metres
-#' above sea level.
+#' Load a terra 'SpatRaster' object from a source tiff containing four
+#' palaeogeographic digital elevation models and one modern digital elevation
+#' model of the Galapagos archipelago. Models are in geographic coordinates with
+#' elevations in metres above sea level.
+#' @export
 #'
 #' @details Each DEM records the topography and bathymetry of the archipelago
 #' at 0.5 million-year intervals from 2 million years ago to the present. As
@@ -28,3 +29,6 @@
 #' and Planetary Science Letters, 460, 22-28
 #' @source Modern DEM: documented at https://www.pmel.noaa.gov/eoi/staff/chadwick/galapagos.html,
 #' downloaded from the embedded link in the page: ftp://ftp.pmel.noaa.gov/newport/chadwick/galap_bathy/gala
+galapagos <- function() {
+  rast(system.file("extdata", "galapagos.tif", package = "TARDIS"))
+}
