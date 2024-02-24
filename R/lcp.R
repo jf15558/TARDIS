@@ -49,10 +49,10 @@
 
 lcp <- function(tardis, weights = NULL, origin, dest, verbose = TRUE) {
 
-  # tardis = test2
-  # weights = test_weight
-  # origin = pts[1:2,]
-  # dest = pts[3:4,]
+  # tardis = ob
+  # weights = nd_wt
+  # origin = srt
+  # dest = end
   # verbose = TRUE
 
   if(!exists("tardis")) {
@@ -152,7 +152,7 @@ lcp <- function(tardis, weights = NULL, origin, dest, verbose = TRUE) {
     for(j in 1:length(seq(1, length(wcst), 2))) {pgrp[[seq(1, length(wcst), 2)[j]]] <- within[[j]]}
     pids <- paste0(i, "_", pbin[1], "-", pbin[1])
 
-    if(length(pbin) > 1) {
+    if(length(unique(pbin)) > 1) {
       between <- lapply(which(diff(pseq) != 0) + 1, function(y) {st_linestring(as.matrix(path_xy[c(y - 1, y), ,drop = FALSE]))})
       for(j in 1:length(seq(2, length(wcst), 2))) {pgrp[[seq(2, length(wcst), 2)[j]]] <- between[[j]]}
       pids <- pbin[c(1, which(diff(pbin) != 0) + 1)]

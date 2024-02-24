@@ -71,25 +71,27 @@ stp <- function(tardis, points, verbose = TRUE) {
   # static rip of seegSDM nearestLand()
   nearest_land <- function(points, raster, max_distance) {
 
-    nearest <- function(lis, raster) {
+    # get all cells in the buffered radius
+    r <- rast(ncols = ncol(raster), nrows = nrow(raster))
+    r[cellFromXY(raster, points)] <- 1
+    b <- buffer(r, width = max_distance)
+    nb <- which(b[] == 1)
 
-      neighbours <- matrix(lis[[1]], ncol = 2)
-      point <- lis[[2]]
-      land <- !is.na(neighbours[, 2])
-      if (!any(land)) {return(c(NA, NA))} else {
-        coords <- xyFromCell(raster, neighbours[land, 1])
-        if (nrow(coords) == 1) {
-          return(coords[1, ])
-        }
-        dists <- sqrt((coords[,1] - point[1]) ^ 2 + (coords[,2] - point[2]) ^ 2)
-        return(coords[which.min(dists),])
+    # extract the buffer cells from the original raster
+    valid <- terra::extract(raster, nb)
+
+    # return NA if there are no non NA cells within the buffer, otherwise find the smallest distance
+    if(all(is.na(valid))) {
+      return(cbind(NA, NA))}
+    else {
+      coords <- xyFromCell(raster, nb[which(valid == 1)])
+      if (nrow(coords) == 1) {
+        return(coords[1, ,drop = F])
+      } else {
+        dists <- distance(as.matrix(points), coords, lonlat = T)
+        return(coords[which.min(dists),, drop = F])
       }
     }
-    neighbour_list <- extract(raster, points, buffer = max_distance, cellnumbers = TRUE)
-    neighbour_list <- lapply(1:nrow(points), function(y) {
-      list(neighbours = neighbour_list[[y]], point = as.numeric(points[y,]))
-    })
-    return(t(sapply(neighbour_list, nearest, raster)))
   }
 
   for(i in 1:length(ptcell)) {
