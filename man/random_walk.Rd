@@ -58,8 +58,7 @@ not necessarily be able to precisely hit the target distance.
 #library(terra)
 #library(TARDIS)
 
-#data("galapagos")
-#gal <- unwrap(galapagos)
+#gal <- galapagos()
 #gal <- crop(gal, extent(-92, -88, -2, 1))
 #gal_m <- classify(gal, rcl = matrix(c(-Inf, 0, NA, 0, Inf, 1),
 #                                    ncol = 3, byrow = T), right = F)
