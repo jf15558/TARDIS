@@ -49,11 +49,11 @@
 
 lcp <- function(tardis, weights = NULL, origin, dest, verbose = TRUE) {
 
-  # tardis = ob
-  # weights = NULL
-  # origin = srt
-  # dest = end
-  # verbose = TRUE
+  tardis = ob
+  weights = NULL
+  origin = srt
+  dest = end
+  verbose = TRUE
 
   if(!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
@@ -76,8 +76,10 @@ lcp <- function(tardis, weights = NULL, origin, dest, verbose = TRUE) {
     if(length(weights) != nrow(tardis$edges)) {
       stop("weights must be the same length as the number of edges in tardis")
     }
+    wt <- T
   } else {
     weights <- tardis$edges[,5]
+    wt <- F
   }
 
   if(!class(origin)[1] == c("sf")) {
@@ -131,11 +133,15 @@ lcp <- function(tardis, weights = NULL, origin, dest, verbose = TRUE) {
   if(verbose) {cat("Running paths\r")}
   paths <- lapply(suppressMessages(get_path_pair(tardis$tgraph, from = origin$cell, to = dest$cell)), as.numeric)
   costs <- lapply(1:length(paths), function(x) {
-    if(verbose) {cat(paste0("Running paths [", x, "/", length(paths), "]\r")}
+    if(verbose) {cat(paste0("Running paths [", x, "/", length(paths), "]\r"))}
     pth <- paths[[x]]
     wp <- c(get_distance_pair(tardis$tgraph, pth[-length(pth)], pth[-1], algorithm = "Djikstra"), 0)
-    tp <- c(get_distance_pair(tardis$tgraph, pth[-length(pth)], pth[-1], algorithm = "Djikstra", aggregate_aux = T), 0)
-    if(x == length(paths)) {cat("\n")}
+    if(wt) {
+      tp <- c(get_distance_pair(tardis$tgraph, pth[-length(pth)], pth[-1], algorithm = "Djikstra", aggregate_aux = T), 0)
+    } else {
+      tp <- wp
+    }
+    if(verbose) {if(x == length(paths)) {cat("\n")}}
     list(wp, tp)
   })
   wpaths <- lapply(costs, function(x) {x[[1]]})
