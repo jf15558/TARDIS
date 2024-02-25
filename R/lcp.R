@@ -49,11 +49,11 @@
 
 lcp <- function(tardis, weights = NULL, origin, dest, verbose = TRUE) {
 
-  tardis = ob
-  weights = NULL
-  origin = srt
-  dest = end
-  verbose = TRUE
+  # tardis = ob
+  # weights = NULL
+  # origin = srt
+  # dest = end
+  # verbose = TRUE
 
   if(!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
