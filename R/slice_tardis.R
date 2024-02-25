@@ -91,22 +91,22 @@ slice_tardis <- function(tardis, times = NULL, layers = NULL) {
 
   # get the cell id range for the requested layer range
   mult <- prod(tardis$gdat[1:2])
-  cls <- c((layers[1] * mult) - mult, layers[2] * mult + 1)
+  cls <- as.character((layers[1] * mult) - mult + 1:(layers[2] * mult))
 
   # subset edges and dict
-  valid <- tardis$tgraph$src > cls[1] & tardis$tgraph$src < cls[2] & tardis$tgraph$dst > cls[1] & tardis$tgraph$dst < cls[2]
+  valid <- tardis$tgraph$src %in% cls & tardis$tgraph$dst %in% cls
   tardis$tgraph$src <- tardis$tgraph$src[valid]
   tardis$tgraph$dst <- tardis$tgraph$dst[valid]
   tardis$edges <- tardis$edges[valid,]
-  tardis$tgraph$dict <- tardis$tgraph$dict[which(tardis$tgraph$dict$ref > cls[1] & tardis$tgraph$dict$ref < cls[2]),]
+  tardis$tgraph$dict <- tardis$tgraph$dict[which(tardis$tgraph$dict$ref %in% cls),]
 
   # adjust cell id parameters
   tardis$tdat <- tardis$tdat[layers[1]:(layers[2] + 1)]
   tardis$tgraph$nbnode <- nrow(tardis$tgraph$dict)
   tardis$tgraph$dict$id <- (1:tardis$tgraph$nbnode) - 1
-  tardis$tgraph$dict$ref <- as.character(as.numeric(tardis$tgraph$dict$ref) - cls[1])
-  tardis$tgraph$src <- as.character(as.numeric(tardis$tgraph$src) - cls[1])
-  tardis$tgraph$dst <- as.character(as.numeric(tardis$tgraph$dst) - cls[1])
+  tardis$tgraph$dict$ref <- as.character(as.numeric(tardis$tgraph$dict$ref) - (as.numeric(cls[1]) - 1))
+  tardis$tgraph$src <- as.character(as.numeric(tardis$tgraph$src) - (as.numeric(cls[1]) - 1))
+  tardis$tgraph$dst <- as.character(as.numeric(tardis$tgraph$dst) - (as.numeric(cls[1]) - 1))
 
   # return
   return(tardis)
