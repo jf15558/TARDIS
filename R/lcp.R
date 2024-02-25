@@ -49,11 +49,11 @@
 
 lcp <- function(tardis, weights = NULL, origin, dest, verbose = TRUE) {
 
-  # tardis = ob2
-  # weights = nd_wt
-  # origin = srt
-  # dest = end
-  # verbose = TRUE
+  tardis = ob
+  weights = NULL
+  origin = srt
+  dest = end
+  verbose = TRUE
 
   if(!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
@@ -128,10 +128,18 @@ lcp <- function(tardis, weights = NULL, origin, dest, verbose = TRUE) {
                                    dist = tardis$edges[,5])
   tardis$tgraph <- tardis$tgraph[1:5]
 
-  if(verbose) {cat("Running paths\n")}
+  if(verbose) {cat("Running paths\r")}
   paths <- lapply(suppressMessages(get_path_pair(tardis$tgraph, from = origin$cell, to = dest$cell)), as.numeric)
-  wpaths <- lapply(paths, function(x) {c(get_distance_pair(tardis$tgraph, x[-length(x)], x[-1]), 0)})
-  tpaths <- lapply(paths, function(x) {c(get_distance_pair(tardis$tgraph, x[-length(x)], x[-1], aggregate_aux = T), 0)})
+  costs <- lapply(1:length(paths), function(x) {
+    if(verbose) {cat(paste0("Running paths [", x, "/", length(paths), "]\r")}
+    pth <- paths[[x]]
+    wp <- c(get_distance_pair(tardis$tgraph, pth[-length(pth)], pth[-1], algorithm = "Djikstra"), 0)
+    tp <- c(get_distance_pair(tardis$tgraph, pth[-length(pth)], pth[-1], algorithm = "Djikstra", aggregate_aux = T), 0)
+    if(x == length(paths)) {cat("\n")}
+    list(wp, tp)
+  })
+  wpaths <- lapply(costs, function(x) {x[[1]]})
+  tpaths <- lapply(costs, function(x) {x[[2]]})
   pords <- ifelse(origin$bin - dest$bin <= 0, 1, 0)
 
   if(verbose) {cat("Summarising\n")}
