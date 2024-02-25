@@ -49,7 +49,7 @@
 
 lcp <- function(tardis, weights = NULL, origin, dest, verbose = TRUE) {
 
-  # tardis = ob
+  # tardis = ob2
   # weights = nd_wt
   # origin = srt
   # dest = end

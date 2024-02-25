@@ -94,13 +94,13 @@ slice_tardis <- function(tardis, times = NULL, layers = NULL) {
   cls <- c((layers[1] * mult) - mult, layers[2] * mult + 1)
 
   # subset edges
-  tardis$edges <- tardis$edges[which(tardis$edges[,1] > cls[1] & tardis$edges[,1] < cls[2]),]
-  tardis$edges <- tardis$edges[which(tardis$edges[,2] > cls[1] & tardis$edges[,2] < cls[2]),]
+  valid <- tardis$tgraph$src > cls[1] & tardis$tgraph$src < cls[2] & tardis$tgraph$dst > cls[1] & tardis$tgraph$dst < cls[2]
+  tardis$edges <- tardis$edges[valid,]
+  tardis$edges <- tardis$edges[valid,]
   tardis$tdat <- tardis$tdat[layers[1]:(layers[2] + 1)]
 
   # subset tgraph
   tardis$tgraph$dict <- tardis$tgraph$dict[which(tardis$tgraph$dict$ref > cls[1] & tardis$tgraph$dict$ref < cls[2]),]
-  valid <- tardis$tgraph$src %in% tardis$tgraph$dict$ref & tardis$tgraph$dst %in% tardis$tgraph$dict$ref
   tardis$tgraph$src <- tardis$tgraph$src[valid]
   tardis$tgraph$dst <- tardis$tgraph$dst[valid]
 
