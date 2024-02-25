@@ -100,8 +100,9 @@ slice_tardis <- function(tardis, times = NULL, layers = NULL) {
 
   # subset tgraph
   tardis$tgraph$dict <- tardis$tgraph$dict[which(tardis$tgraph$dict$ref > cls[1] & tardis$tgraph$dict$ref < cls[2]),]
-  tardis$tgraph$src <- tardis$tgraph$src[tardis$tgraph$src %in% tardis$tgraph$dict$ref]
-  tardis$tgraph$dst <- tardis$tgraph$dst[tardis$tgraph$dst %in% tardis$tgraph$dict$ref]
+  valid <- tardis$tgraph$src %in% tardis$tgraph$dict$ref & tardis$tgraph$dst %in% tardis$tgraph$dict$ref
+  tardis$tgraph$src <- tardis$tgraph$src[valid]
+  tardis$tgraph$dst <- tardis$tgraph$dst[valid]
 
   # adjust cell id parameters
   tardis$tgraph$nbnode <- nrow(tardis$tgraph$dict)

@@ -98,6 +98,9 @@ weight_tardis <- function(tardis, vars, wfun = function(origin, dest, lnum = NUL
   # wfun = dst
   # mfun = NULL
   # verbose = T
+  # tardis = ob
+  # vars = clim
+  # wfun = pcaweight
 
   if(!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
