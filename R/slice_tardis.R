@@ -29,9 +29,9 @@
 #' #gts <- slice_tardis(gt, layers = c(1, 2))
 slice_tardis <- function(tardis, times = NULL, layers = NULL) {
 
-  # tardis <- ob
-  # times <- c(280, 240)
-  # layers <- NULL
+  tardis <- ob
+  times <- NULL
+  layers <- 1:2
 
   # check tardis
   if(!exists("tardis")) {
@@ -93,18 +93,15 @@ slice_tardis <- function(tardis, times = NULL, layers = NULL) {
   mult <- prod(tardis$gdat[1:2])
   cls <- c((layers[1] * mult) - mult, layers[2] * mult + 1)
 
-  # subset edges
+  # subset edges and dict
   valid <- tardis$tgraph$src > cls[1] & tardis$tgraph$src < cls[2] & tardis$tgraph$dst > cls[1] & tardis$tgraph$dst < cls[2]
-  tardis$edges <- tardis$edges[valid,]
-  tardis$edges <- tardis$edges[valid,]
-  tardis$tdat <- tardis$tdat[layers[1]:(layers[2] + 1)]
-
-  # subset tgraph
-  tardis$tgraph$dict <- tardis$tgraph$dict[which(tardis$tgraph$dict$ref > cls[1] & tardis$tgraph$dict$ref < cls[2]),]
   tardis$tgraph$src <- tardis$tgraph$src[valid]
   tardis$tgraph$dst <- tardis$tgraph$dst[valid]
+  tardis$edges <- tardis$edges[valid,]
+  tardis$tgraph$dict <- tardis$tgraph$dict[which(tardis$tgraph$dict$ref > cls[1] & tardis$tgraph$dict$ref < cls[2]),]
 
   # adjust cell id parameters
+  tardis$tdat <- tardis$tdat[layers[1]:(layers[2] + 1)]
   tardis$tgraph$nbnode <- nrow(tardis$tgraph$dict)
   tardis$tgraph$dict$id <- (1:tardis$tgraph$nbnode) - 1
   tardis$tgraph$dict$ref <- as.character(as.numeric(tardis$tgraph$dict$ref) - cls[1])
