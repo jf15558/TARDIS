@@ -98,7 +98,7 @@ weight_tardis <- function(tardis, vars, wfun = function(origin, dest, lnum = NUL
   # wfun = dst
   # mfun = NULL
   # verbose = T
-  # tardis = ob
+  # tardis = ob2
   # vars = clim
   # wfun = pcaweight
 

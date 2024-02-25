@@ -31,7 +31,7 @@ slice_tardis <- function(tardis, times = NULL, layers = NULL) {
 
   # tardis <- ob
   # times <- NULL
-  # layers <- 1:2
+  # layers <- c(2, 2)
 
   # check tardis
   if(!exists("tardis")) {
@@ -80,7 +80,7 @@ slice_tardis <- function(tardis, times = NULL, layers = NULL) {
     if(any(is.na(layers))) {
       stop("layers cannot contain NA values")
     }
-    if(any(layers < 0) | any(!is.integer(layers))) {
+    if(any(layers < 0) | any(layers %% 1 != 0)) {
       stop("layers must only contain positive integers")
     }
     layers <- layers[order(layers, decreasing = F)]
@@ -98,6 +98,7 @@ slice_tardis <- function(tardis, times = NULL, layers = NULL) {
   tardis$tgraph$src <- tardis$tgraph$src[valid]
   tardis$tgraph$dst <- tardis$tgraph$dst[valid]
   tardis$edges <- tardis$edges[valid,]
+  tardis$edges[,1:2] <- tardis$edges[,1:2] - (as.numeric(cls[1]) - 1)
   tardis$tgraph$dict <- tardis$tgraph$dict[which(tardis$tgraph$dict$ref %in% cls),]
 
   # adjust cell id parameters
