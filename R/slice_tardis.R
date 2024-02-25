@@ -29,9 +29,9 @@
 #' #gts <- slice_tardis(gt, layers = c(1, 2))
 slice_tardis <- function(tardis, times = NULL, layers = NULL) {
 
-  tardis <- ob
-  times <- NULL
-  layers <- 1:2
+  # tardis <- ob
+  # times <- NULL
+  # layers <- 1:2
 
   # check tardis
   if(!exists("tardis")) {
