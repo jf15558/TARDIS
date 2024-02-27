@@ -1,4 +1,4 @@
-#' link_mask
+#' link_mask_old
 #'
 #' Check a set of geographic mask rasters to detect islands and calculate
 #' optimal bridging points between them. The function has two modes. Mode
@@ -12,13 +12,12 @@
 #' (masked) values
 #' @param mode One of 'cells' or 'lines'. If you are using this function
 #' directly, then the default 'lines' is probably the desired result.
-#' @param kcon The k-nearest neighbours to be linked for each island. If NULL
-#' (default), Voronoi neighbourhood of each island will be linked, i.e, each
-#' neighbour which can be accessed in a straight line without passing through
-#' any others first. Otherwise a numeric for the desired number of links per
-#' island. For kcon = 1, the returned links will form a minimum spanning tree.
-#' kcon can be set as high as the user likes, but any links not part of the
-#' Voronoi linkage for a given polygon will be discarded. 
+#' @param alg The linkage algorithm to be used. By default, this is "v", the
+#' voronoi linkage method which is superior and generally quite robust. This
+#' could still fail though for extremely topologically complex masks, so
+#' alternatively, "k" can be used to implement k-nearest neighbour links.
+#' This produces similar results to the other method, and is guaranteed to
+#' return complete linkage.
 #' @param verbose A logical to determine whether function progress should be
 #' reported. Useful when dealing with large rasters (high resolution and/or many
 #' layers).
@@ -29,7 +28,6 @@
 #' corresponding layer in x to visualise the bridges.
 #' @import terra sf
 #' @importFrom nngeo st_connect
-#' @export
 #'
 #' @details The "v"' bridging algorithm generates Voronoi cells around each
 #' detected island. An island is then connected to all other islands whose
@@ -67,13 +65,13 @@
 #' #plot(v[[1]], add = T)
 #' #plot(k[[1]], add = T, col = 2)
 
-link_mask <- function(mask, mode = "lines", kcon = NULL, verbose = TRUE) {
-  
+link_mask_old <- function(mask, mode = "lines", alg = "v", verbose = TRUE) {
+
   # mask = masks
   # mode = "cells"
-  # kcon = 1
+  # alg = "k"
   # verbose = TRUE
-  
+
   # check x is correctly supplied
   if(!exists("mask")) {
     stop("Supply mask as SpatRaster")
@@ -93,111 +91,130 @@ link_mask <- function(mask, mode = "lines", kcon = NULL, verbose = TRUE) {
   if(!mode %in% c("lines", "cells")) {
     stop("mode should be one of 'lines' or 'cells'")
   }
-  if(!is.null(kcon)) {
-    if(length(kcon) != 1 | !inherits(kcon, "numeric")) {
-      stop("If not NULL, kcon should be an integer")
-    }
+  if(length(alg) != 1 | !inherits(alg, "character")) {
+    stop("alg should be one of 'v' or 'k'")
   }
-  
+  if(!alg %in% c("v", "k")) {
+    stop("alg should be one of 'v' or 'k'")
+  }
+
   bar <- rast(lapply(mask, patches, allowGaps = F))
   res_list <- list()
   linest <- NA
   cls <- cbind(NA, NA)
   for(i in 1:nlyr(bar)) {
-    
+
     if(verbose) {
       cat(paste0("Resolving mask [", i, "/", nlyr(bar), "]\r"))
       if(i == nlyr(bar)) {cat("\n")}
     }
-    
+
     if(mode == "lines") {
       res_list[[i]] <- linest
     } else {
       res_list[[i]] <- cls
     }
-    
+
     if(minmax(bar[[i]])[2] > 1) {
-      
+
       crds <- list()
-      iter <- 1
-      while(as.logical(iter)) {
-        
-        # set up mask and island objects
-        foo2 <- boundaries(bar[[i]])
-        poly <- st_as_sf(as.polygons(bar[[i]]))
-        poly2 <- st_transform(poly, "+proj=cea")
-        
-        coords <- tapply(which(foo2[] == 1), terra::extract(bar[[i]], which(foo2[] == 1)), function(x) {xyFromCell(bar[[i]], x)})
-        coords <- st_as_sfc(lapply(coords, st_multipoint))
-        
-        # generate voronoi polygons for all vertices
-        vv <- st_voronoi(st_combine(poly2))
-        vv <- st_collection_extract(vv, 'POLYGON')
-        vv <- st_crop(vv, st_bbox(poly2))
-        
-        # determine which voronoi polygons intersect with input polygons
-        ii <- st_intersects(poly2, vv)
-        
-        # union/dissolve voronoi polygons that belong to the same inputs
-        vt <- lapply(ii, function(x) {st_union(st_combine(vv[x]))})
-        vt <- suppressWarnings(suppressMessages(lapply(vt, st_collection_extract)))
-        vt <- lapply(vt, st_cast, "POLYGON")
-        vt <- lapply(vt, st_union)
-        vt <- st_sfc(do.call(rbind, vt))
-        vt <- st_intersects(vt, vt)
-        
-        # get edge cells in each cluster
-        coords <- tapply(which(foo2[] == 1), terra::extract(bar[[i]], which(foo2[] == 1)), function(x) {xyFromCell(bar[[i]], x)})
-        coords <- st_as_sfc(lapply(coords, st_multipoint))
-        
-        # get nearest neighbour lines for adjacent voronoi polygons
-        res <- suppressMessages(lapply(1:length(vt), function(x) {st_nearest_points(coords[x], coords[vt[[x]]])}))
-        res <- lapply(res, function(x) {st_crs(x) <- "+proj=lonlat"; x})
-        
-        # get the lengths of each line, drop zero-length connections, return desired connection number (or the max if kcon exceeds the available connections)
-        len <- lapply(res, function(x) {as.vector(st_length(x))})
-        res <- mapply(x = res, y = len, function(x, y) {
-          x <- x[order(y)]
-          y <- y[order(y)]
-          x <- x[which(y > 0)]
-          y <- y[which(y > 0)]
-          kn <- ifelse(is.null(kcon) | kcon > length(y), length(y), kcon)
-          x[which(!is.na(y[1:kn]))]
-        }, SIMPLIFY = F)
-        res <- Reduce(c, res)
-        
-        # remove any lines that intersect the map polygons
-        touches <- suppressMessages(st_intersects(res, poly$geometry, sparse = F))
-        lin <- res[which(apply(touches, 1, sum) == 2)]
-        
-        # coerce to source and destination points, dropping self links
-        lin <- matrix(c(t(st_coordinates(lin)[,1:2])), ncol = 4, byrow = T)
-        lin <- lin[apply(lin, 1, function(x) {x[1] != x[3] | x[2] != x[4]}), ,drop = F]
-        crds[[iter]] <- lin
-        iter <- iter + 1
-        
-        # convert links to graph and find the new linked clumps
-        linked <- cbind(terra::extract(bar[[i]], cellFromXY(bar[[i]], lin[,1:2, drop = F]))[,1],
-                        terra::extract(bar[[i]], cellFromXY(bar[[i]], lin[,3:4, drop = F]))[,1])
-        foo3 <- cbind(1:minmax(bar[[i]])[2], components(graph_from_edgelist(linked))$membership)
-        
-        # reclassify raster into the new, aggregated clumps
-        bar[[i]] <- classify(bar[[i]], foo3)
-        if(minmax(bar[[i]])[2] == 1) {iter <- FALSE}
+      storeval <- 1
+      while(minmax(bar[[i]])[2] > 1) {
+
+        if(alg == "v") {
+
+          # set up mask and island objects
+          foo2 <- boundaries(bar[[i]])
+          poly <- st_as_sf(as.polygons(bar[[i]]))
+          poly2 <- st_transform(poly, "+proj=cea")
+
+          coords <- tapply(which(foo2[] == 1), extract(bar[[i]], which(foo2[] == 1)), function(x) {xyFromCell(bar[[i]], x)})
+          coords <- st_as_sfc(lapply(coords, st_multipoint))
+
+          # generate voronoi polygons for all vertices
+          vv <- st_voronoi(st_combine(poly2))
+          vv <- st_collection_extract(vv, 'POLYGON')
+          vv <- st_crop(vv, st_bbox(poly2))
+
+          # determine which voronoi polygons intersect with input polygons
+          ii <- st_intersects(poly2, vv)
+
+          # union/dissolve voronoi polygons that belong to the same inputs
+          vt <- lapply(ii, function(x) {st_union(st_combine(vv[x]))})
+          vt <- suppressWarnings(suppressMessages(lapply(vt, st_collection_extract)))
+          vt <- lapply(vt, st_cast, "POLYGON")
+          vt <- lapply(vt, st_union)
+          vt <- st_sfc(do.call(rbind, vt))
+          vt <- st_intersects(vt, vt)
+
+          # get edge cells in each cluster
+          coords <- tapply(which(foo2[] == 1), extract(bar[[i]], which(foo2[] == 1)), function(x) {xyFromCell(bar[[i]], x)})
+          coords <- st_as_sfc(lapply(coords, st_multipoint))
+
+          # get nearest neighbours for adjacent voronoi polygons
+          res <- suppressMessages(lapply(1:length(vt), function(x) {st_nearest_points(coords[x], coords[vt[[x]]])}))
+          res <- Reduce(c, res)
+          st_crs(res) <- "+proj=longlat"
+          touches <- suppressMessages(st_intersects(res, poly$geometry, sparse = F))
+          lin <- res[which(apply(touches, 1, sum) == 2)]
+
+          # coerce to source and destination points, dropping self links
+          lin <- matrix(c(t(st_coordinates(lin)[,1:2])), ncol = 4, byrow = T)
+          lin <- lin[apply(lin, 1, function(x) {x[1] != x[3] | x[2] != x[4]}), ,drop = F]
+          crds[[storeval]] <- lin
+          storeval <- storeval + 1
+
+          # convert links to graph and find the new linked clumps
+          linked <- cbind(extract(bar[[i]], cellFromXY(bar[[i]], lin[,1:2, drop = F]))[,1],
+                          extract(bar[[i]], cellFromXY(bar[[i]], lin[,3:4, drop = F]))[,1])
+          foo3 <- cbind(1:minmax(bar[[i]])[2], components(graph_from_edgelist(linked))$membership)
+
+          # reclassify raster into the new, aggregated clumps
+          bar[[i]] <- classify(bar[[i]], foo3)
+        }
+
+        if(alg == "k") {
+
+          # get edge cells in each cluster
+          foo <- boundaries(bar[[i]])
+          foo2 <- extract(bar[[i]], which(foo[] == 1))
+          coords <- tapply(which(foo[] == 1), foo2, function(x) {xyFromCell(bar[[i]], x)})
+          coords <- st_as_sfc(lapply(coords, st_multipoint))
+
+          # get nearest k neighbours between clusters as line links
+          if(length(coords) > 2) {
+            lin <- suppressMessages(st_connect(coords, coords, k = ifelse(length(coords) > 3, 4, 3), progress = FALSE))
+          } else {
+            lin <- suppressMessages(st_connect(coords[-1], coords[-2], k = 1, progress = FALSE))
+          }
+
+          # coerce to source and destination points, dropping self links
+          lin <- matrix(c(t(st_coordinates(lin)[,1:2])), ncol = 4, byrow = T)
+          lin <- lin[apply(lin, 1, function(x) {x[1] != x[3] | x[2] != x[4]}), ,drop = F]
+          crds[[storeval]] <- lin
+          storeval <- storeval + 1
+
+          # convert links to graph and find the new linked clumps
+          linked <- cbind(extract(bar[[i]], cellFromXY(bar[[i]], lin[,1:2, drop = F]))[,1],
+                          extract(bar[[i]], cellFromXY(bar[[i]], lin[,3:4, drop = F]))[,1])
+          foo3 <- cbind(1:minmax(bar[[i]])[2], components(graph_from_edgelist(linked))$membership)
+
+          # reclassify raster into the new, aggregated clumps
+          bar[[i]] <- classify(bar[[i]], foo3)
+        }
       }
       crds <- do.call(rbind, crds)
-      
+
       # drop any lines which intersect islands other than their start and end ones
       lin <- st_multilinestring(lapply(1:nrow(crds), function(x) {st_linestring(matrix(crds[x,], ncol = 2, byrow = T))}))
-      #touches <- unlist(do.call(rbind, lapply(lin, function(x) {terra::extract(bar[[i]], vect(x), ID = F, fun = function(x) {length(na.omit(x))})})))
-      #lin <- st_multilinestring(lin[which(touches == 2)])
-      lin <- st_sfc(lin, crs = "+proj=lonlat")
-      
+      touches <- unlist(do.call(rbind, lapply(lin, function(x) {extract(bar[[i]], vect(x), ID = F, fun = function(x) {length(na.omit(x))})})))
+      lin <- st_multilinestring(lin[which(touches == 2)])
+
       # store solution
       if(mode == "lines") {
         res_list[[i]] <- lin
       } else {
-        
+
         cls <- matrix(c(t(st_coordinates(lin)[,-(3:4)])), ncol = 4, byrow = T)
         cls <- cbind(cellFromXY(bar[[i]], cls[,1:2]), cellFromXY(bar[[i]], cls[,3:4]))
         cls <- t(apply(cls, 1, function(x) {c(min(x), max(x))}))
