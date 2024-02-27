@@ -69,10 +69,10 @@
 
 link_mask <- function(mask, mode = "lines", kcon = NULL, verbose = TRUE) {
 
-  # mask = masks
-  # mode = "cells"
-  # kcon = NULL
-  # verbose = TRUE
+mask = masks
+mode = "cells"
+kcon = 1
+verbose = TRUE
 
   # check x is correctly supplied
   if(!exists("mask")) {
@@ -156,7 +156,7 @@ link_mask <- function(mask, mode = "lines", kcon = NULL, verbose = TRUE) {
 
         # get the lengths of each line, drop zero-length connections, return desired connection number (or the max if kcon exceeds the available connections)
         len <- lapply(res, function(x) {as.vector(st_length(x))})
-        res2 <- mapply(x = res, y = len, function(x, y) {
+        res <- mapply(x = res, y = len, function(x, y) {
           x <- x[order(y)]
           y <- y[order(y)]
           x <- x[which(y > 0)]
