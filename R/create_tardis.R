@@ -68,15 +68,15 @@
 
 create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1, mask = NULL, mask.check = TRUE, kcon = NULL, rotations = NULL, verbose = TRUE) {
 
-  # geog = gal
-  # times = c(seq(2.25, 0, -0.5), 0)
-  # glink = 8
-  # tlink = 1
-  # mask = gal_m
-  # mask.check = TRUE
-  # alg = "v"
-  # rotations = NULL
-  # verbose = TRUE
+  geog = dem
+  times = bins
+  glink = 8
+  tlink = 1
+  mask = masks
+  mask.check = TRUE
+  kcon = NULL
+  rotations = NULL
+  verbose = TRUE
 
   # some precedent in Maartensen et al. (2017). Spatio-temporal connectivity: assessing the amount of reachable habitat in dynamic landscapes
   # useful for landscape graph theory: Decocq et al (2023). Modelling plant community dynamics in changing forest ecosystems: a review

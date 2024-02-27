@@ -69,10 +69,10 @@
 
 link_mask <- function(mask, mode = "lines", kcon = NULL, verbose = TRUE) {
 
-  # mask = masks
-  # mode = "cells"
-  # kcon = 1
-  # verbose = TRUE
+  mask = masks
+  mode = "cells"
+  kcon = 1
+  verbose = TRUE
 
   # check x is correctly supplied
   if(!exists("mask")) {
@@ -162,7 +162,7 @@ link_mask <- function(mask, mode = "lines", kcon = NULL, verbose = TRUE) {
           x <- x[which(y > 0)]
           y <- y[which(y > 0)]
           kn <- ifelse(is.null(kcon) | kcon > length(y), length(y), kcon)
-          x[which(!is.na(y[1:kn]))]
+          x[1:kn]
         }, SIMPLIFY = F)
         res <- Reduce(c, res)
 
