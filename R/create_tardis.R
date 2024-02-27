@@ -40,7 +40,7 @@
 #' @param mask.check A logical determining whether mask should be checked for
 #' islands using link_mask. This is the recommended default as bridges will be
 #' added to ensure that the unmasked portion of the landscape is fully traversable.
-#' @param alg The linkage algorithm to be used, as called by link_mask().
+#' @param kcon The number of mask connections to generate, as called by link_mask().
 #' @param rotations A list with nlayers(geog) - 1 elements. Each element in the
 #' list is a two-column numeric matrix containing the IDs of geographically
 #' homologous cells between successive pairs of layers in x. Cell IDs are given
@@ -66,7 +66,7 @@
 #' #gal_m <- classify(gal, rcl = matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
 #' #gt <- create_tardis(gal, times = c(seq(2.25, 0, -0.5), 0), mask = gal_m)
 
-create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1, mask = NULL, mask.check = TRUE, alg = "v", rotations = NULL, verbose = TRUE) {
+create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1, mask = NULL, mask.check = TRUE, kcon = NULL, rotations = NULL, verbose = TRUE) {
 
   # geog = gal
   # times = c(seq(2.25, 0, -0.5), 0)
@@ -153,11 +153,10 @@ create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1, mask = NULL,
   if(!is.logical(mask.check) | length(mask.check) != 1) {
     stop("mask.check should be a single logical")
   }
-  if(length(alg) != 1 | !inherits(alg, "character")) {
-    stop("alg should be one of 'v' or 'k'")
-  }
-  if(!alg %in% c("v", "k")) {
-    stop("alg should be one of 'v' or 'k'")
+  if(!is.null(kcon)) {
+    if(length(kcon) != 1 | !inherits(kcon, "numeric")) {
+      stop("If not NULL, kcon should be an integer")
+    }
   }
 
   if(is.null(mask)) {
@@ -183,7 +182,7 @@ create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1, mask = NULL,
         warning("mask contains inaccessible regions that may cause some TARDIS paths to fail. Consider running with mask.check = TRUE")
       }
       if(mask.check) {
-        add_links <- link_mask(mask, mode = "cells", alg = alg, verbose = verbose)
+        add_links <- link_mask(mask, mode = "cells", kcon = kcon, verbose = verbose)
       }
     }
   }
