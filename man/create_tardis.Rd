@@ -11,7 +11,7 @@ create_tardis(
   tlink = 1,
   mask = NULL,
   mask.check = TRUE,
-  alg = "v",
+  kcon = NULL,
   rotations = NULL,
   verbose = TRUE
 )
@@ -49,7 +49,7 @@ corresponding layers in geog. This must contain only 1 (unmasked) or NA
 islands using link_mask. This is the recommended default as bridges will be
 added to ensure that the unmasked portion of the landscape is fully traversable.}
 
-\item{alg}{The linkage algorithm to be used, as called by link_mask().}
+\item{kcon}{The number of mask connections to generate, as called by link_mask().}
 
 \item{rotations}{A list with nlayers(geog) - 1 elements. Each element in the
 list is a two-column numeric matrix containing the IDs of geographically
