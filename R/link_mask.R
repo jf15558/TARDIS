@@ -18,7 +18,7 @@
 #' any others first. Otherwise a numeric for the desired number of links per
 #' island. For kcon = 1, the returned links will form a minimum spanning tree.
 #' kcon can be set as high as the user likes, but any links not part of the
-#' Voronoi linkage for a given polygon will be discarded. 
+#' Voronoi linkage for a given polygon will be discarded.
 #' @param verbose A logical to determine whether function progress should be
 #' reported. Useful when dealing with large rasters (high resolution and/or many
 #' layers).
@@ -68,12 +68,12 @@
 #' #plot(k[[1]], add = T, col = 2)
 
 link_mask <- function(mask, mode = "lines", kcon = NULL, verbose = TRUE) {
-  
+
   # mask = masks
   # mode = "cells"
   # kcon = 1
   # verbose = TRUE
-  
+
   # check x is correctly supplied
   if(!exists("mask")) {
     stop("Supply mask as SpatRaster")
@@ -98,46 +98,46 @@ link_mask <- function(mask, mode = "lines", kcon = NULL, verbose = TRUE) {
       stop("If not NULL, kcon should be an integer")
     }
   }
-  
+
   bar <- rast(lapply(mask, patches, allowGaps = F))
   res_list <- list()
   linest <- NA
   cls <- cbind(NA, NA)
   for(i in 1:nlyr(bar)) {
-    
+
     if(verbose) {
       cat(paste0("Resolving mask [", i, "/", nlyr(bar), "]\r"))
       if(i == nlyr(bar)) {cat("\n")}
     }
-    
+
     if(mode == "lines") {
       res_list[[i]] <- linest
     } else {
       res_list[[i]] <- cls
     }
-    
+
     if(minmax(bar[[i]])[2] > 1) {
-      
+
       crds <- list()
       iter <- 1
       while(as.logical(iter)) {
-        
+
         # set up mask and island objects
         foo2 <- boundaries(bar[[i]])
         poly <- st_as_sf(as.polygons(bar[[i]]))
         poly2 <- st_transform(poly, "+proj=cea")
-        
+
         coords <- tapply(which(foo2[] == 1), terra::extract(bar[[i]], which(foo2[] == 1)), function(x) {xyFromCell(bar[[i]], x)})
         coords <- st_as_sfc(lapply(coords, st_multipoint))
-        
+
         # generate voronoi polygons for all vertices
         vv <- st_voronoi(st_combine(poly2))
         vv <- st_collection_extract(vv, 'POLYGON')
         vv <- st_crop(vv, st_bbox(poly2))
-        
+
         # determine which voronoi polygons intersect with input polygons
         ii <- st_intersects(poly2, vv)
-        
+
         # union/dissolve voronoi polygons that belong to the same inputs
         vt <- lapply(ii, function(x) {st_union(st_combine(vv[x]))})
         vt <- suppressWarnings(suppressMessages(lapply(vt, st_collection_extract)))
@@ -145,15 +145,15 @@ link_mask <- function(mask, mode = "lines", kcon = NULL, verbose = TRUE) {
         vt <- lapply(vt, st_union)
         vt <- st_sfc(do.call(rbind, vt))
         vt <- st_intersects(vt, vt)
-        
+
         # get edge cells in each cluster
         coords <- tapply(which(foo2[] == 1), terra::extract(bar[[i]], which(foo2[] == 1)), function(x) {xyFromCell(bar[[i]], x)})
         coords <- st_as_sfc(lapply(coords, st_multipoint))
-        
+
         # get nearest neighbour lines for adjacent voronoi polygons
         res <- suppressMessages(lapply(1:length(vt), function(x) {st_nearest_points(coords[x], coords[vt[[x]]])}))
         res <- lapply(res, function(x) {st_crs(x) <- "+proj=lonlat"; x})
-        
+
         # get the lengths of each line, drop zero-length connections, return desired connection number (or the max if kcon exceeds the available connections)
         len <- lapply(res, function(x) {as.vector(st_length(x))})
         res <- mapply(x = res, y = len, function(x, y) {
@@ -165,39 +165,39 @@ link_mask <- function(mask, mode = "lines", kcon = NULL, verbose = TRUE) {
           x[which(!is.na(y[1:kn]))]
         }, SIMPLIFY = F)
         res <- Reduce(c, res)
-        
+
         # remove any lines that intersect the map polygons
         touches <- suppressMessages(st_intersects(res, poly$geometry, sparse = F))
         lin <- res[which(apply(touches, 1, sum) == 2)]
-        
+
         # coerce to source and destination points, dropping self links
         lin <- matrix(c(t(st_coordinates(lin)[,1:2])), ncol = 4, byrow = T)
         lin <- lin[apply(lin, 1, function(x) {x[1] != x[3] | x[2] != x[4]}), ,drop = F]
         crds[[iter]] <- lin
         iter <- iter + 1
-        
+
         # convert links to graph and find the new linked clumps
         linked <- cbind(terra::extract(bar[[i]], cellFromXY(bar[[i]], lin[,1:2, drop = F]))[,1],
                         terra::extract(bar[[i]], cellFromXY(bar[[i]], lin[,3:4, drop = F]))[,1])
         foo3 <- cbind(1:minmax(bar[[i]])[2], components(graph_from_edgelist(linked))$membership)
-        
+
         # reclassify raster into the new, aggregated clumps
         bar[[i]] <- classify(bar[[i]], foo3)
         if(minmax(bar[[i]])[2] == 1) {iter <- FALSE}
       }
       crds <- do.call(rbind, crds)
-      
+
       # drop any lines which intersect islands other than their start and end ones
       lin <- st_multilinestring(lapply(1:nrow(crds), function(x) {st_linestring(matrix(crds[x,], ncol = 2, byrow = T))}))
       #touches <- unlist(do.call(rbind, lapply(lin, function(x) {terra::extract(bar[[i]], vect(x), ID = F, fun = function(x) {length(na.omit(x))})})))
       #lin <- st_multilinestring(lin[which(touches == 2)])
       lin <- st_sfc(lin, crs = "+proj=lonlat")
-      
+
       # store solution
       if(mode == "lines") {
         res_list[[i]] <- lin
       } else {
-        
+
         cls <- matrix(c(t(st_coordinates(lin)[,-(3:4)])), ncol = 4, byrow = T)
         cls <- cbind(cellFromXY(bar[[i]], cls[,1:2]), cellFromXY(bar[[i]], cls[,3:4]))
         cls <- t(apply(cls, 1, function(x) {c(min(x), max(x))}))
