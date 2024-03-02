@@ -73,7 +73,7 @@
 link_mask <- function(mask, glink = 8, mode = "lines", kcon = NULL, verbose = TRUE) {
 
   # mask = masks
-  # mode = "cells"
+  # mode = "lines"
   # glink = 8
   # kcon = 1
   # verbose = TRUE
