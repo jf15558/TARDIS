@@ -209,8 +209,8 @@ link_mask <- function(mask, glink = 8, mode = "lines", kcon = NULL, verbose = TR
       lin <- st_sfc(lapply(1:nrow(crds), function(x) {st_linestring(matrix(crds[x,], ncol = 2, byrow = T))}), crs = "+proj=lonlat")
       lin <- st_sf(data.frame(srt = cellFromXY(bar[[1]], crds[,1:2]),
                               end = cellFromXY(bar[[1]], crds[,3:4]),
-                              bin = rep(i, length(foo))),
-                              distance = as.vector(st_length(foo)), geometry = foo)
+                              bin = rep(i, length(lin))),
+                              distance = as.vector(st_length(lin)), geometry = lin)
 
       # # store solution
       if(mode == "lines") {
