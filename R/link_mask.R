@@ -72,11 +72,11 @@
 
 link_mask <- function(mask, glink = 8, mode = "lines", kcon = NULL, verbose = TRUE) {
 
-  mask = masks
-  mode = "cells"
-  glink = 8
-  kcon = 1
-  verbose = TRUE
+  # mask = masks
+  # mode = "cells"
+  # glink = 8
+  # kcon = 1
+  # verbose = TRUE
 
   # check x is correctly supplied
   if(!exists("mask")) {
