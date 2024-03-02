@@ -10,6 +10,9 @@
 #'
 #' @param mask A SpatRaster of geographic masks containing 1 (unmasked) or NA
 #' (masked) values
+#' @param glink The linkage mode for island cell clusters - 4 (Rook's case,
+#' only orthogonal neighbours considered as touching) or 8 (Queen's case,
+#' orthogonal and diagonal neighbours considered as touching).
 #' @param mode One of 'cells' or 'lines'. If you are using this function
 #' directly, then the default 'lines' is probably the desired result.
 #' @param kcon The k-nearest neighbours to be linked for each island. If NULL
@@ -67,12 +70,13 @@
 #' #plot(v[[1]], add = T)
 #' #plot(k[[1]], add = T, col = 2)
 
-link_mask <- function(mask, mode = "lines", kcon = NULL, verbose = TRUE) {
+link_mask <- function(mask, glink = 8, mode = "lines", kcon = NULL, verbose = TRUE) {
 
-  # mask = masks
-  # mode = "cells"
-  # kcon = 1
-  # verbose = TRUE
+  mask = masks
+  mode = "cells"
+  glink = 8
+  kcon = 1
+  verbose = TRUE
 
   # check x is correctly supplied
   if(!exists("mask")) {
@@ -87,6 +91,12 @@ link_mask <- function(mask, mode = "lines", kcon = NULL, verbose = TRUE) {
   if(any(!unique(mask[]) %in% c(1, NA))) {
     stop("Mask layers can only contain 1 or NA values")
   }
+  if(!is.numeric(glink) | length(glink) != 1) {
+    stop("glink should be one of 4 (Rook's case) or 8 (Queen's case)")
+  }
+  if(!glink %in% c(4, 8)) {
+    stop("glink should be one of 4 or 8")
+  }
   if(length(mode) != 1 | !inherits(mode, "character")) {
     stop("mode should be one of 'lines' or 'cells'")
   }
@@ -99,7 +109,7 @@ link_mask <- function(mask, mode = "lines", kcon = NULL, verbose = TRUE) {
     }
   }
 
-  bar <- rast(lapply(mask, patches, allowGaps = F))
+  bar <- rast(lapply(mask, patches, directions = glink, allowGaps = F))
   res_list <- list()
   linest <- NA
   cls <- cbind(NA, NA)
@@ -190,24 +200,33 @@ link_mask <- function(mask, mode = "lines", kcon = NULL, verbose = TRUE) {
       crds <- do.call(rbind, crds)
 
       # drop any lines which intersect islands other than their start and end ones
-      lin <- st_multilinestring(lapply(1:nrow(crds), function(x) {st_linestring(matrix(crds[x,], ncol = 2, byrow = T))}))
+      #lin <- st_multilinestring(lapply(1:nrow(crds), function(x) {st_linestring(matrix(crds[x,], ncol = 2, byrow = T))}))
       #touches <- unlist(do.call(rbind, lapply(lin, function(x) {terra::extract(bar[[i]], vect(x), ID = F, fun = function(x) {length(na.omit(x))})})))
       #lin <- st_multilinestring(lin[which(touches == 2)])
-      lin <- st_sfc(lin, crs = "+proj=lonlat")
+      #lin <- st_sfc(lin, crs = "+proj=lonlat")
 
-      # store solution
+      # test code
+      lin <- st_sfc(lapply(1:nrow(crds), function(x) {st_linestring(matrix(crds[x,], ncol = 2, byrow = T))}), crs = "+proj=lonlat")
+      lin <- st_sf(data.frame(srt = cellFromXY(bar[[1]], crds[,1:2]),
+                              end = cellFromXY(bar[[1]], crds[,3:4]),
+                              bin = rep(i, length(foo))),
+                              distance = as.vector(st_length(foo)), geometry = foo)
+
+      # # store solution
       if(mode == "lines") {
-        res_list[[i]] <- lin
-      } else {
-
-        cls <- matrix(c(t(st_coordinates(lin)[,-(3:4)])), ncol = 4, byrow = T)
-        cls <- cbind(cellFromXY(bar[[i]], cls[,1:2]), cellFromXY(bar[[i]], cls[,3:4]))
-        cls <- t(apply(cls, 1, function(x) {c(min(x), max(x))}))
-        cls <- cls[!duplicated(cls),, drop = F]
-        cls <- cls[order(cls[,1]),, drop = F]
-        res_list[[i]] <- matrix(c(t(cbind(cls, cls[,2:1,drop = F]))), ncol = 2, byrow = T)
+         res_list[[i]] <- lin
       }
+      # } else {
+      #
+      #   cls <- matrix(c(t(st_coordinates(lin)[,-(3:4)])), ncol = 4, byrow = T)
+      #   cls <- cbind(cellFromXY(bar[[i]], cls[,1:2]), cellFromXY(bar[[i]], cls[,3:4]))
+      #   cls <- t(apply(cls, 1, function(x) {c(min(x), max(x))}))
+      #   cls <- cls[!duplicated(cls),, drop = F]
+      #   cls <- cls[order(cls[,1]),, drop = F]
+      #   res_list[[i]] <- matrix(c(t(cbind(cls, cls[,2:1,drop = F]))), ncol = 2, byrow = T)
+      # }
     }
   }
+  res_list <- do.call(rbind.data.frame, res_list)
   return(res_list)
 }
