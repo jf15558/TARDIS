@@ -81,8 +81,8 @@ create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1,
   # tlink = 1
   # mask = masks
   # mask.check = TRUE
-  # klink = NULL
-  # mlink = ms
+  # klink = 1
+  # mlink = NULL
   # rotations = NULL
   # verbose = TRUE
 
@@ -177,7 +177,7 @@ create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1,
     }
     mask <- geog
     mask[] <- 1
-    add_links <- vector(mode = "list", length = nlyr(mask))
+    add_links <- lapply(1:nlyr(geog), function(x) {cbind(NA, NA)})
 
   } else {
 
@@ -246,6 +246,8 @@ create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1,
         }
         crds <- matrix(cellFromXY(mask, st_coordinates(mlink[which(mlink$bin == x),])[,1:2]), ncol = 2, byrow = T)
         matrix(c(t(cbind(crds, crds[,2:1]))), ncol = 2, byrow = T)
+      } else {
+        cbind(NA, NA)
       }
     })
 
@@ -258,9 +260,11 @@ create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1,
     if(mask.check) {
       lnk <- link_mask(mask, glink = glink, klink = klink, verbose = verbose)
       add_links <- lapply(1:nlyr(geog), function(x) {
-        if(x %in% mlink$bin) {
+        if(x %in% lnk$bin) {
           crds <- matrix(cellFromXY(mask, st_coordinates(lnk[which(lnk$bin == x),])[,1:2]), ncol = 2, byrow = T)
           matrix(c(t(cbind(crds, crds[,2:1]))), ncol = 2, byrow = T)
+        } else {
+          cbind(NA, NA)
         }
       })
     }
