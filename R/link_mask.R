@@ -13,15 +13,13 @@
 #' @param glink The linkage mode for island cell clusters - 4 (Rook's case,
 #' only orthogonal neighbours considered as touching) or 8 (Queen's case,
 #' orthogonal and diagonal neighbours considered as touching).
-#' @param mode One of 'cells' or 'lines'. If you are using this function
-#' directly, then the default 'lines' is probably the desired result.
-#' @param kcon The k-nearest neighbours to be linked for each island. If NULL
-#' (default), Voronoi neighbourhood of each island will be linked, i.e, each
-#' neighbour which can be accessed in a straight line without passing through
-#' any others first. Otherwise a numeric for the desired number of links per
-#' island. For kcon = 1, the returned links will form a minimum spanning tree.
-#' kcon can be set as high as the user likes, but any links not part of the
-#' Voronoi linkage for a given polygon will be discarded.
+#' @param klink The k-nearest neighbours to be linked for each island. If NULL
+#' (default), the Voronoi neighbourhood of each island will be linked, i.e,
+#' each neighbour which can be accessed in a straight line without passing
+#' through any others first. Otherwise a numeric for the desired number of
+#' links per island. For klink = 1, the returned links will form a minimum
+#' spanning tree. klink can be set as high as the user likes, but any links not
+#' part of the Voronoi linkage for a given polygon will be discarded.
 #' @param verbose A logical to determine whether function progress should be
 #' reported. Useful when dealing with large rasters (high resolution and/or many
 #' layers).
@@ -33,30 +31,6 @@
 #' @import terra sf
 #' @importFrom nngeo st_connect
 #' @export
-#'
-#' @details The "v"' bridging algorithm generates Voronoi cells around each
-#' detected island. An island is then connected to all other islands whose
-#' Voronoi cells are adjacent to its own Voronoi cell. The links themselves
-#' are made between the closest cells in each island, producing the
-#' minimum planar graph representation for the landscape (Fall et al. 2007:
-#' Spatial Graphs: Principles and Applications for Habitat Connectivity). This
-#' linkage occurs simultaneously and is driven primarily by functions from
-#' the sf package
-#'
-#' The "k" bridging algorithm works by detecting all islands of cells, counting
-#' the number of islands, and assigning each cell a unique island-wise ID.
-#' While the number of unique island IDs is greater than one: for each island,
-#' its four nearest neighbors are identified and the pairs of cells for those
-#' neighbor connections are identified. The cells in all the islands comprising
-#' the neighborhood are then assigned the same numeric island ID, progressively
-#' reducing the number of island IDs. The pairs of cells recorded at each stage
-#' are then returned as the bridging solution. This strategy generally provides
-#' more realistic connections between closely positioned sets of islands
-#' compared to simply joining to a single nearest neighbour, which would be
-#' equivalent to creating a minimum spanning tree for that set. k=4 connections
-#' produces superficially similar results to the "v" algorithm, but connections
-#' are identified using the st_connect function from nngeo, which assumes
-#' Euclidean geometry, while the "v" algorithm uses great circle distances
 #'
 #' @examples
 #' #library(terra)
@@ -70,12 +44,11 @@
 #' #plot(v[[1]], add = T)
 #' #plot(k[[1]], add = T, col = 2)
 
-link_mask <- function(mask, glink = 8, mode = "lines", kcon = NULL, verbose = TRUE) {
+link_mask <- function(mask, glink = 8, klink = NULL, verbose = TRUE) {
 
   # mask = masks
-  # mode = "lines"
   # glink = 8
-  # kcon = 1
+  # klink = 1
   # verbose = TRUE
 
   # check x is correctly supplied
@@ -97,33 +70,22 @@ link_mask <- function(mask, glink = 8, mode = "lines", kcon = NULL, verbose = TR
   if(!glink %in% c(4, 8)) {
     stop("glink should be one of 4 or 8")
   }
-  if(length(mode) != 1 | !inherits(mode, "character")) {
-    stop("mode should be one of 'lines' or 'cells'")
-  }
-  if(!mode %in% c("lines", "cells")) {
-    stop("mode should be one of 'lines' or 'cells'")
-  }
-  if(!is.null(kcon)) {
-    if(length(kcon) != 1 | !inherits(kcon, "numeric")) {
-      stop("If not NULL, kcon should be an integer")
+  if(!is.null(klink)) {
+    if(length(klink) != 1 | !inherits(klink, "numeric")) {
+      stop("If not NULL, klink should be an integer")
+    }
+    if(!klink %% 1 == 0) {
+      stop("If not NULL, klink should be an integer")
     }
   }
 
   bar <- rast(lapply(mask, patches, directions = glink, allowGaps = F))
   res_list <- list()
-  linest <- NA
-  cls <- cbind(NA, NA)
   for(i in 1:nlyr(bar)) {
 
     if(verbose) {
       cat(paste0("Resolving mask [", i, "/", nlyr(bar), "]\r"))
       if(i == nlyr(bar)) {cat("\n")}
-    }
-
-    if(mode == "lines") {
-      res_list[[i]] <- linest
-    } else {
-      res_list[[i]] <- cls
     }
 
     if(minmax(bar[[i]])[2] > 1) {
@@ -133,7 +95,7 @@ link_mask <- function(mask, glink = 8, mode = "lines", kcon = NULL, verbose = TR
       while(as.logical(iter)) {
 
         # set up mask and island objects
-        foo2 <- boundaries(bar[[i]])
+        foo2 <- boundaries(bar[[i]], directions = glink)
         poly <- st_as_sf(as.polygons(bar[[i]]))
         poly2 <- st_transform(poly, "+proj=cea")
 
@@ -171,8 +133,8 @@ link_mask <- function(mask, glink = 8, mode = "lines", kcon = NULL, verbose = TR
           y <- y[order(y)]
           x <- x[which(y > 0)]
           y <- y[which(y > 0)]
-          if(is.null(kcon)) {kn <- length(y)} else {
-            if(kcon > length(y)) {kn <- length(y)} else {kn <- kcon}
+          if(is.null(klink)) {kn <- length(y)} else {
+            if(klink > length(y)) {kn <- length(y)} else {kn <- klink}
           }
           x[1:kn]
         }, SIMPLIFY = F)
@@ -185,7 +147,11 @@ link_mask <- function(mask, glink = 8, mode = "lines", kcon = NULL, verbose = TR
         # coerce to source and destination points, dropping self links
         lin <- matrix(c(t(st_coordinates(lin)[,1:2])), ncol = 4, byrow = T)
         lin <- lin[apply(lin, 1, function(x) {x[1] != x[3] | x[2] != x[4]}), ,drop = F]
-        crds[[iter]] <- lin
+
+        # ensuring that duplicate connections (or reciprocal) are removed
+        cl <- cbind(cellFromXY(mask, lin[,1:2]), cellFromXY(mask, lin[,3:4]))
+        cl <- t(apply(cl, 1, function(x) {c(min(x), max(x))}))
+        crds[[iter]] <- lin[!duplicated(cl),]
         iter <- iter + 1
 
         # convert links to graph and find the new linked clumps
@@ -205,26 +171,13 @@ link_mask <- function(mask, glink = 8, mode = "lines", kcon = NULL, verbose = TR
       #lin <- st_multilinestring(lin[which(touches == 2)])
       #lin <- st_sfc(lin, crs = "+proj=lonlat")
 
-      # test code
+      # create lines and store
       lin <- st_sfc(lapply(1:nrow(crds), function(x) {st_linestring(matrix(crds[x,], ncol = 2, byrow = T))}), crs = "+proj=lonlat")
       lin <- st_sf(data.frame(srt = cellFromXY(bar[[1]], crds[,1:2]),
                               end = cellFromXY(bar[[1]], crds[,3:4]),
                               bin = rep(i, length(lin))),
                               distance = as.vector(st_length(lin)), geometry = lin)
-
-      # # store solution
-      if(mode == "lines") {
-         res_list[[i]] <- lin
-      }
-      # } else {
-      #
-      #   cls <- matrix(c(t(st_coordinates(lin)[,-(3:4)])), ncol = 4, byrow = T)
-      #   cls <- cbind(cellFromXY(bar[[i]], cls[,1:2]), cellFromXY(bar[[i]], cls[,3:4]))
-      #   cls <- t(apply(cls, 1, function(x) {c(min(x), max(x))}))
-      #   cls <- cls[!duplicated(cls),, drop = F]
-      #   cls <- cls[order(cls[,1]),, drop = F]
-      #   res_list[[i]] <- matrix(c(t(cbind(cls, cls[,2:1,drop = F]))), ncol = 2, byrow = T)
-      # }
+      res_list[[i]] <- lin
     }
   }
   res_list <- do.call(rbind.data.frame, res_list)

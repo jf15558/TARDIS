@@ -40,7 +40,12 @@
 #' @param mask.check A logical determining whether mask should be checked for
 #' islands using link_mask. This is the recommended default as bridges will be
 #' added to ensure that the unmasked portion of the landscape is fully traversable.
-#' @param kcon The number of mask connections to generate, as called by link_mask().
+#' @param klink The number of island connections to generate, as called by link_mask().
+#' @param mlink If not NULL, an sf linestrings data.frame matching that produced
+#' by link_mask(). This argument mainly exists to allow the user to supply
+#' modified outputs of link_mask(). The validity of links are checked
+#' internally, so modifications should be undertaken with care. If mlink is
+#' supplied, then mask checking will not be performed, even if mask.check = TRUE
 #' @param rotations A list with nlayers(geog) - 1 elements. Each element in the
 #' list is a two-column numeric matrix containing the IDs of geographically
 #' homologous cells between successive pairs of layers in x. Cell IDs are given
@@ -66,7 +71,9 @@
 #' #gal_m <- classify(gal, rcl = matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
 #' #gt <- create_tardis(gal, times = c(seq(2.25, 0, -0.5), 0), mask = gal_m)
 
-create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1, mask = NULL, mask.check = TRUE, kcon = NULL, rotations = NULL, verbose = TRUE) {
+create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1,
+                          mask = NULL, mask.check = TRUE, klink = NULL, mlink = NULL,
+                          rotations = NULL, verbose = TRUE) {
 
   # geog = dem
   # times = bins
@@ -74,7 +81,8 @@ create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1, mask = NULL,
   # tlink = 1
   # mask = masks
   # mask.check = TRUE
-  # kcon = NULL
+  # klink = NULL
+  # mlink = ms
   # rotations = NULL
   # verbose = TRUE
 
@@ -153,16 +161,23 @@ create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1, mask = NULL,
   if(!is.logical(mask.check) | length(mask.check) != 1) {
     stop("mask.check should be a single logical")
   }
-  if(!is.null(kcon)) {
-    if(length(kcon) != 1 | !inherits(kcon, "numeric")) {
-      stop("If not NULL, kcon should be an integer")
+  if(!is.null(klink)) {
+    if(length(klink) != 1 | !inherits(klink, "numeric")) {
+      stop("If not NULL, klink should be an integer")
+    }
+    if(!klink %% 1 == 0) {
+      stop("If not NULL, klink should be an integer")
     }
   }
 
   if(is.null(mask)) {
+
+    if(!is.null(mlink)) {
+      stop("If mlink is not NULL, then mask must also be supplied")
+    }
     mask <- geog
     mask[] <- 1
-    add_links <- lapply(1:nlyr(mask), function(x) {cbind(NA, NA)})
+    add_links <- vector(mode = "list", length = nlyr(mask))
 
   } else {
 
@@ -175,15 +190,79 @@ create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1, mask = NULL,
     if(!all(dim(geog) == dim(mask)) | ext(geog) != ext(mask)) {
       stop("geog and mask must all have the same extent, resolution, and number of layers")
     }
-    if(any(is.na(mask[]))) {
+  }
 
-      bar <- rast(lapply(as.list(mask), patches, allowGaps = F))
-      if(any(minmax(bar)[2,] > 1) & mask.check == FALSE) {
-        warning("mask contains inaccessible regions that may cause some TARDIS paths to fail. Consider running with mask.check = TRUE")
+  if(!is.null(mlink)) {
+
+    warning("As mlink has been supplied, masks will not be checked for inaccessible regions. TARDIS paths may be prone to failure")
+    if(!inherits(mlink, "sf")) {
+      stop("mlink should be an sf data.frame of linestrings")
+    }
+    if(!inherits(mlink, "data.frame")) {
+      stop("mlink should be an sf data.frame of linestrings")
+    }
+    if(ncol(mlink) != 5) {
+      stop("mlink should match the format of the output of link_mask()")
+    }
+    if(!all(colnames(mlink) == c("srt", "end", "bin", "distance", "geometry"))) {
+      stop("mlink should match the format of the output of link_mask()")
+    }
+    if(!all(apply(st_drop_geometry(mlink), 2, is.numeric))) {
+      stop("One or more columns in mlink is not numeric")
+    }
+    if(!all(apply(st_drop_geometry(mlink), 2, function(x) {any(!is.na(x))}))) {
+      stop("One or more columns in mlink contains NA values")
+    }
+    if(any(mlink$bin < 1) | any(mlink$bin %% 1 != 0)) {
+      stop("Only positive integers are permitted in mlink$bin")
+    }
+    if(nlyr(geog) == 1) {
+      if(length(unique(mlink$bin)) > nlyr(geog)) {
+        stop("mlink contains links for more time bins than layers present in geog")
       }
-      if(mask.check) {
-        add_links <- link_mask(mask, mode = "cells", kcon = kcon, verbose = verbose)
+    } else {
+      if(any(mlink$bin) > nlyr(geog)) {
+        stop("mlink contains bin values exceeding the number of layers present in geog")
       }
+    }
+    if(!all(as.vector(st_geometry_type(mlink)) == "LINESTRING")) {
+      stop("All geometries in mlink should be of type linestring")
+    }
+    if(!all(table(st_coordinates(mlink)[,3]) == 2)) {
+      stop("Each linestring can only contain 2 coordinates (start and end)")
+    }
+    if(!all(abs(as.vector(ext(geog))) - abs(as.vector(ext(mlink))) >= 0)) {
+      stop("The extent of mlink does not fall fully within the extent of mask")
+    }
+
+    add_links <- lapply(1:nlyr(geog), function(x) {
+      if(x %in% mlink$bin) {
+        vals <- extract(boundaries(mask[[x]], directions = 8), vect(mlink[which(mlink$bin == x),]))
+        if(0 %in% vals[,2]) {
+          stop(paste0("In bin ", x, ", one or more line start/end points do not fall on cells at the edges of islands"))
+        }
+        if(!all(table(vals[complete.cases(vals),1]) == 2)) {
+          stop(paste0("In bin ", x, ", one or more lines intersect non-masked areas other than at their start and end points"))
+        }
+        crds <- matrix(cellFromXY(mask, st_coordinates(mlink[which(mlink$bin == x),])[,1:2]), ncol = 2, byrow = T)
+        matrix(c(t(cbind(crds, crds[,2:1]))), ncol = 2, byrow = T)
+      }
+    })
+
+  } else {
+
+    bar <- rast(lapply(as.list(mask), patches, allowGaps = F, directions = glink))
+    if(any(minmax(bar)[2,] > 1) & mask.check == FALSE) {
+      warning("mask contains inaccessible regions. TARDIS paths may be prone to failure. Consider running with mask.check = TRUE")
+    }
+    if(mask.check) {
+      lnk <- link_mask(mask, glink = glink, klink = klink, verbose = verbose)
+      add_links <- lapply(1:nlyr(geog), function(x) {
+        if(x %in% mlink$bin) {
+          crds <- matrix(cellFromXY(mask, st_coordinates(lnk[which(lnk$bin == x),])[,1:2]), ncol = 2, byrow = T)
+          matrix(c(t(cbind(crds, crds[,2:1]))), ncol = 2, byrow = T)
+        }
+      })
     }
   }
 

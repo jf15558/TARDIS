@@ -4,22 +4,23 @@
 \alias{link_mask}
 \title{link_mask}
 \usage{
-link_mask(mask, mode = "lines", kcon = NULL, verbose = TRUE)
+link_mask(mask, glink = 8, klink = NULL, verbose = TRUE)
 }
 \arguments{
 \item{mask}{A SpatRaster of geographic masks containing 1 (unmasked) or NA
 (masked) values}
 
-\item{mode}{One of 'cells' or 'lines'. If you are using this function
-directly, then the default 'lines' is probably the desired result.}
+\item{glink}{The linkage mode for island cell clusters - 4 (Rook's case,
+only orthogonal neighbours considered as touching) or 8 (Queen's case,
+orthogonal and diagonal neighbours considered as touching).}
 
-\item{kcon}{The k-nearest neighbours to be linked for each island. If NULL
-(default), Voronoi neighbourhood of each island will be linked, i.e, each
-neighbour which can be accessed in a straight line without passing through
-any others first. Otherwise a numeric for the desired number of links per
-island. For kcon = 1, the returned links will form a minimum spanning tree.
-kcon can be set as high as the user likes, but any links not part of the
-Voronoi linkage for a given polygon will be discarded.}
+\item{klink}{The k-nearest neighbours to be linked for each island. If NULL
+(default), the Voronoi neighbourhood of each island will be linked, i.e,
+each neighbour which can be accessed in a straight line without passing
+through any others first. Otherwise a numeric for the desired number of
+links per island. For klink = 1, the returned links will form a minimum
+spanning tree. klink can be set as high as the user likes, but any links not
+part of the Voronoi linkage for a given polygon will be discarded.}
 
 \item{verbose}{A logical to determine whether function progress should be
 reported. Useful when dealing with large rasters (high resolution and/or many
@@ -40,31 +41,6 @@ given as R's standard cell number order for raster objects. Mode 'cells'
 is called internally by link_geog(), but it may be desirable to inspect
 where the bridges have been placed. Mode 'lines' returns a set of lines
 which can be plotted with the masks to visualize the bridging solutions.
-}
-\details{
-The "v"' bridging algorithm generates Voronoi cells around each
-detected island. An island is then connected to all other islands whose
-Voronoi cells are adjacent to its own Voronoi cell. The links themselves
-are made between the closest cells in each island, producing the
-minimum planar graph representation for the landscape (Fall et al. 2007:
-Spatial Graphs: Principles and Applications for Habitat Connectivity). This
-linkage occurs simultaneously and is driven primarily by functions from
-the sf package
-
-The "k" bridging algorithm works by detecting all islands of cells, counting
-the number of islands, and assigning each cell a unique island-wise ID.
-While the number of unique island IDs is greater than one: for each island,
-its four nearest neighbors are identified and the pairs of cells for those
-neighbor connections are identified. The cells in all the islands comprising
-the neighborhood are then assigned the same numeric island ID, progressively
-reducing the number of island IDs. The pairs of cells recorded at each stage
-are then returned as the bridging solution. This strategy generally provides
-more realistic connections between closely positioned sets of islands
-compared to simply joining to a single nearest neighbour, which would be
-equivalent to creating a minimum spanning tree for that set. k=4 connections
-produces superficially similar results to the "v" algorithm, but connections
-are identified using the st_connect function from nngeo, which assumes
-Euclidean geometry, while the "v" algorithm uses great circle distances
 }
 \examples{
 #library(terra)

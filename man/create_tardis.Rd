@@ -11,7 +11,8 @@ create_tardis(
   tlink = 1,
   mask = NULL,
   mask.check = TRUE,
-  kcon = NULL,
+  klink = NULL,
+  mlink = NULL,
   rotations = NULL,
   verbose = TRUE
 )
@@ -49,7 +50,13 @@ corresponding layers in geog. This must contain only 1 (unmasked) or NA
 islands using link_mask. This is the recommended default as bridges will be
 added to ensure that the unmasked portion of the landscape is fully traversable.}
 
-\item{kcon}{The number of mask connections to generate, as called by link_mask().}
+\item{klink}{The number of island connections to generate, as called by link_mask().}
+
+\item{mlink}{If not NULL, an sf linestrings data.frame matching that produced
+by link_mask(). This argument mainly exists to allow the user to supply
+modified outputs of link_mask(). The validity of links are checked
+internally, so modifications should be undertaken with care. If mlink is
+supplied, then mask checking will not be performed, even if mask.check = TRUE}
 
 \item{rotations}{A list with nlayers(geog) - 1 elements. Each element in the
 list is a two-column numeric matrix containing the IDs of geographically
