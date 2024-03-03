@@ -183,8 +183,8 @@ lcp <- function(tardis, weights = NULL, origin, dest, verbose = TRUE) {
   # restructure and return
   path_ids <- unlist(path_ids)
   ob <- cbind.data.frame(path = as.numeric(unlist(lapply(strsplit(path_ids, "_"), function(y) {y[[1]]}))),
-                         srt_bin = as.numeric(unlist(lapply(strsplit(path_ids, "-"), function(y) {y[[2]]}))),
-                         end_bin = as.numeric(unlist(lapply(strsplit(path_ids, "-"), function(y) {y[[3]]}))),
+                         srt_bin = as.numeric(unlist(lapply(strsplit(path_ids, "_|-"), function(y) {y[[2]]}))),
+                         end_bin = as.numeric(unlist(lapply(strsplit(path_ids, "_|-"), function(y) {y[[3]]}))),
                          order = unlist(lapply(path_groups, function(x) {1:length(x)})),
                          distance = unlist(tvec),
                          cost = unlist(wvec))
