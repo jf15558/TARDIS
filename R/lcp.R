@@ -49,8 +49,8 @@
 
 lcp <- function(tardis, weights = NULL, origin, dest, verbose = TRUE) {
 
-  # tardis = ob
-  # weights = NULL
+  # tardis = ob2
+  # weights = nd_wt
   # origin = srt
   # dest = end
   # verbose = TRUE
@@ -183,10 +183,12 @@ lcp <- function(tardis, weights = NULL, origin, dest, verbose = TRUE) {
   # restructure and return
   path_ids <- unlist(path_ids)
   ob <- cbind.data.frame(path = as.numeric(unlist(lapply(strsplit(path_ids, "_"), function(y) {y[[1]]}))),
-                         bin = as.numeric(unlist(lapply(strsplit(path_ids, "-"), function(y) {y[[2]]}))),
+                         srt_bin = as.numeric(unlist(lapply(strsplit(path_ids, "-"), function(y) {y[[2]]}))),
+                         end_bin = as.numeric(unlist(lapply(strsplit(path_ids, "-"), function(y) {y[[3]]}))),
                          order = unlist(lapply(path_groups, function(x) {1:length(x)})),
-                         cost = unlist(wvec), distance = unlist(tvec))
-  row.names(ob) <- path_ids
+                         distance = unlist(tvec),
+                         cost = unlist(wvec))
+  #row.names(ob) <- path_ids
   st_geometry(ob) <- st_sfc(unlist(path_groups, recursive = F), crs = "+proj=longlat")
   return(ob)
 }
