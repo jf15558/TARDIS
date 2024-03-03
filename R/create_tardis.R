@@ -194,7 +194,7 @@ create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1,
 
   if(!is.null(mlink)) {
 
-    warning("As mlink has been supplied, masks will not be checked for inaccessible regions. TARDIS paths may be prone to failure")
+    warning("As mlink was supplied, masks were not checked inaccessible regions. TARDIS paths may fail unexpectedly")
     if(!inherits(mlink, "sf")) {
       stop("mlink should be an sf data.frame of linestrings")
     }
@@ -255,7 +255,7 @@ create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1,
 
     bar <- rast(lapply(as.list(mask), patches, allowGaps = F, directions = glink))
     if(any(minmax(bar)[2,] > 1) & mask.check == FALSE) {
-      warning("mask contains inaccessible regions. TARDIS paths may be prone to failure. Consider running with mask.check = TRUE")
+      warning("mask contains inaccessible regions. TARDIS paths fail unexpectedly. Consider running with mask.check = TRUE")
     }
     if(mask.check) {
       lnk <- link_mask(mask, glink = glink, klink = klink, verbose = verbose)
