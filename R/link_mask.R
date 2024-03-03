@@ -95,12 +95,31 @@ link_mask <- function(mask, glink = 8, klink = NULL, verbose = TRUE) {
       while(as.logical(iter)) {
 
         # set up mask and island objects
-        foo2 <- boundaries(bar[[i]], directions = glink)
+        bnd <- boundaries(bar[[i]], directions = glink)
         poly <- st_as_sf(as.polygons(bar[[i]]))
         poly2 <- st_transform(poly, "+proj=cea")
 
-        coords <- tapply(which(foo2[] == 1), terra::extract(bar[[i]], which(foo2[] == 1)), function(x) {xyFromCell(bar[[i]], x)})
-        coords <- st_as_sfc(lapply(coords, st_multipoint))
+
+        # pts <- lapply(poly$geometry, function(x) {st_coordinates(x)[,1:2]})
+        # pts <- cbind(do.call(rbind, pts), unlist(lapply(1:length(pts), function(x) {rep(x, nrow(pts[[x]]))})))
+        # vert <- pts[!duplicated(pts),]
+        # xlat = as.double(vert[,2]) * pi/180
+        # xlon = as.double(vert[,1]) * pi/180
+        # x = cos(xlat) * cos(xlon)
+        # y = cos(xlat) * sin(xlon)
+        # z = sin(xlat)
+        # outvec = cbind(x, y, z)
+        #
+        # vor <- VoronoiOnSphere(outvec)
+        # vor <- lapply(vor, function(x) {
+        #   xyz <- t(x$cell)
+        #   lat <- 180 * asin(xyz[,3]) / pi
+        #   lon <- 180 * atan2(xyz[,2], xyz[,1]) / pi
+        #   lonlat <- cbind(lon, lat)
+        #   st_polygon(list(lonlat[c(1:nrow(lonlat), 1),]))
+        # })
+        # vor <- (st_sfc(vor, crs = "+proj=lonlat"))
+
 
         # generate voronoi polygons for all vertices
         vv <- st_voronoi(st_combine(poly2))
@@ -119,7 +138,7 @@ link_mask <- function(mask, glink = 8, klink = NULL, verbose = TRUE) {
         vt <- st_intersects(vt, vt)
 
         # get edge cells in each cluster
-        coords <- tapply(which(foo2[] == 1), terra::extract(bar[[i]], which(foo2[] == 1)), function(x) {xyFromCell(bar[[i]], x)})
+        coords <- tapply(which(bnd[] == 1), terra::extract(bar[[i]], which(bnd[] == 1)), function(x) {xyFromCell(bar[[i]], x)})
         coords <- st_as_sfc(lapply(coords, st_multipoint))
 
         # get nearest neighbour lines for adjacent voronoi polygons
