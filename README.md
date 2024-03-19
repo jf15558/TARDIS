@@ -1,3 +1,5 @@
+# TARDIS <img src="man/figures/logo.png" align="right" height="135" />
+
 TARDIS (Terrains And Routes of Dispersal In Spacetime) is a package for spatiotemporal landscape connectivity analysis.
 
 In regular connectivity analysis, the cells of raster grid for a given landscape are converted to vertices in an xy lattice
