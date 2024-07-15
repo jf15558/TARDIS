@@ -11,23 +11,11 @@
 #' elevation is gained or lost along an edge. All subsequent columns in both
 #' data.frames record the cell characteristics as supplied by the user. The
 #' columns in these data.frames can then be used to calculate weights with a
-#' custom, user-supplied weighting function.
-#'
-#' Crucially, all returned weights must be finite and greater than zero, or NA,
-#' as negative weights are not meaningful for downstream methods and weights
-#' of zero are reserved for the interlayer edges. Thus, the mathematics of the
-#' function should be carefully considered as it may be very easy to create
-#' values of zero based on numeric differences in characteristics between
-#' adjacent cells, then produce Inf by zero division. NA values are permitted
-#' to allow the designation of impermeable edges (for example to restrict
-#' movement above a certain threshold cost). Such values, however, may
-#' introduce inaccessible islands into a landscape even after resolution of
-#' mask islands by create_tardis, which may lead to certain functions like
-#' lcp() failing to return complete traverses between points. A solution to this
-#' is to use resistance_surface() to derive raster layers with the positions
-#' of cells without accessible edges and include these cells within the
-#' initial masking stage. This is a somewhat roundabout solution, but the
-#' inclusion of NA weights is preferable for flexible landscape specification.
+#' custom, user-supplied weighting function. If the TARDIS graph contains mask
+#' links, these can be weighted differently if desired. Crucially, all returned
+#' weights must be finite and greater than zero, or NA, as negative weights are
+#' not meaningful for downstream methods and weights of zero are reserved for
+#' the interlayer edges.
 #'
 #' @param tardis A object of class 'tardis' from create_tardis.
 #' @param vars A named list of SpatRasters where each element has the same
@@ -38,7 +26,7 @@
 #' hdist' and 'vdist' which are reserved.
 #' @param wfun A function to calculate the cost of traversal for the edges in
 #' each graph layer. This must have the signature:
-#' function(origin, dest, lnum, ...) {rules for weighting} - see @details
+#' function(origin, dest, lnum, ...) \{rules for weighting\} - see @details
 #' @param mfun A function to calculate the cost of traversal for the edges
 #' added to bridge mask islands, should the user desire them to be weighted
 #' differently to the result of the later. The function should have the same
@@ -46,7 +34,7 @@
 #' by default, so edge weights will come from @param wfun.
 #' @param verbose A logical indicating whether function progress should be
 #' reported to the user.
-#' @param ... Additional arguments supplied to wfun() if desired.
+#' @param ... Additional arguments supplied to wfun() and mfun() if desired.
 #' @return A numeric vector of weights with as many elements as edges in x.
 #' @import terra
 #' @export
@@ -65,6 +53,15 @@
 #' function can additionally take a dots argument to allow data to be supplied
 #' to the weighting function from the global environment, for example an object
 #' with elements to be used in conjunction with lnum.
+#'
+#' The mathematics of the function should be carefully considered as it may be
+#' very easy to create values of zero from numeric differences in values between
+#' adjacent cells, then produce Inf by zero division. Judicious use of abs(),
+#' as.vector(), and division by minimum values throughout the function is
+#' recommended. NA values are permitted to allow the designation of impermeable
+#' edges (for example to restrict movement above a certain threshold cost).
+#' Such values, however, may introduce inaccessible islands into a landscape
+#' even after resolution of mask islands by create_tardis().
 #'
 #' The weight_tardis function is heavily inspired by the weighting function
 #' used in the gen3sis R package by Oskar Hagen. A major difference between
@@ -92,15 +89,12 @@
 
 weight_tardis <- function(tardis, vars, wfun = function(origin, dest, lnum = NULL, ...) {sqrt(origin$hdist^2 + abs(origin$vdist)^2)}, mfun = NULL, verbose = TRUE, ...) {
 
-  # tardis = ob
-  # vars = list(elev = dem)
-  # wfun = function(origin, dest, lnum, ...) {sqrt(origin$hdist^2 + abs(origin$vdist)^2)}
-  # wfun = dst
-  # mfun = NULL
+  # tardis = ob2
+  # wfun <- multweight
+  # mfun <- multweightm
   # verbose = T
   # tardis = ob2
   # vars = clim
-  # wfun = pcaweight
 
   if(!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
@@ -171,31 +165,33 @@ weight_tardis <- function(tardis, vars, wfun = function(origin, dest, lnum = NUL
     if(class(weight)[1] == "try-error") {
       stop(paste0("An error occurred in wfun() for  layer ", i, "/", layers, ". Check that the column names in wfun() match the names of vars, along with 'hdist' and 'vdist'"))
     }
+    weight <- as.vector(weight)
     if(!is.vector(weight) | length(weight) != nrow(links)) {
       stop(paste0("wfun() did not return a vector with as many elements as edges in layer ", i, "/", layers, ". Ensure that the function returns a vector of correct length"))
     }
     if(any(is.nan(weight) | is.infinite(weight))) {
       stop(paste0("wfun() resulted in a non-finite value (NaN, Inf) in  layer ", i, "/", layers, ". Ensure the function and data returns positive real numbers or NA"))
     }
-    if(any(weight < 0)) {
-      stop(paste0("wfun() resulted in a negative value in layer ", i, "/", layers, ". Ensure the function and data returns positive real numbers"))
+    if(any(weight <= 0)) {
+      stop(paste0("wfun() resulted in a non-positive value in layer ", i, "/", layers, ". Ensure the function and data returns positive real numbers"))
     }
 
     mlink <- which(!tardis$gdat[2] %% abs(links[,1] - links[,2]) %in% c(0, 1, tardis$gdat[2]))
     if(!is.null(mfun) & length(mlink) != 0) {
 
-      mweight <- try(mfun(origin = origin[mlink,], dest = dest[mlink,], lnum = i))
+      mweight <- try(mfun(origin = origin[mlink,], dest = dest[mlink,]))
       if(class(mweight)[1] == "try-error") {
         stop(paste0("An error occurred in mfun() for  layer ", i, "/", layers, ". Check that the column names in mfunc() match the names of vars, along with 'hdist' and 'vdist'"))
       }
+      mweight <- as.vector(mweight)
       if(!is.vector(mweight) | length(mweight) != length(mlink)) {
         stop(paste0("mfun() did not return a vector with as many elements as edges in layer ", i, "/", layers, ". Ensure that the function returns a vector of correct length"))
       }
       if(any(is.nan(weight) | is.infinite(weight))) {
         stop(paste0("mfun() resulted in a non-finite value (NaN, Inf) in  layer ", i, "/", layers, ". Ensure the function and data returns positive real numbers or NA"))
       }
-      if(any(mweight < 0)) {
-        stop(paste0("mfun() resulted in a negative value in layer ", i, "/", layers, ". Ensure the function and data returns positive real numbers"))
+      if(any(mweight <= 0)) {
+        stop(paste0("mfun() resulted in a non-positive value in layer ", i, "/", layers, ". Ensure the function and data returns positive real numbers"))
       }
       weight[mlink] <- mweight
     }

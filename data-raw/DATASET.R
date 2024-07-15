@@ -48,6 +48,7 @@ galapagos <- foo
 #usethis::use_data(galapagos, internal = F)
 writeRaster(galapagos, "../inst/extdata/galapagos.tif")
 
+
 # PHYLOGENY
 #
 # modern distr: https://www.nature.com/articles/s42003-022-03483-w
