@@ -1,6 +1,6 @@
 # TARDIS <img src="man/figures/logo.png" align="right" height="135" />
 
-TARDIS (Terrains Routes Directed In Spacetime) is a package for spatiotemporal landscape connectivity analysis.
+TARDIS (Terrains And Routes Directed In Spacetime) is a package for spatiotemporal landscape connectivity analysis.
 
 In regular connectivity analysis, the cells of raster grid for a given landscape are converted to vertices in an xy lattice
 graph, with the weights of the edges parameterising the ease of travel across the landscape. In palaeontological cases,
