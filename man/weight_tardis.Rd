@@ -28,7 +28,7 @@ hdist' and 'vdist' which are reserved.}
 
 \item{wfun}{A function to calculate the cost of traversal for the edges in
 each graph layer. This must have the signature:
-function(origin, dest, lnum, ...) {rules for weighting} - see @details}
+function(origin, dest, lnum, ...) \{rules for weighting\} - see @details}
 
 \item{mfun}{A function to calculate the cost of traversal for the edges
 added to bridge mask islands, should the user desire them to be weighted
@@ -39,7 +39,7 @@ by default, so edge weights will come from @param wfun.}
 \item{verbose}{A logical indicating whether function progress should be
 reported to the user.}
 
-\item{...}{Additional arguments supplied to wfun() if desired.}
+\item{...}{Additional arguments supplied to wfun() and mfun() if desired.}
 }
 \value{
 A numeric vector of weights with as many elements as edges in x.
@@ -56,25 +56,13 @@ the vertical distance will be positive or negative depending on whether
 elevation is gained or lost along an edge. All subsequent columns in both
 data.frames record the cell characteristics as supplied by the user. The
 columns in these data.frames can then be used to calculate weights with a
-custom, user-supplied weighting function.
+custom, user-supplied weighting function. If the TARDIS graph contains mask
+links, these can be weighted differently if desired. Crucially, all returned
+weights must be finite and greater than zero, or NA, as negative weights are
+not meaningful for downstream methods and weights of zero are reserved for
+the interlayer edges.
 }
 \details{
-Crucially, all returned weights must be finite and greater than zero, or NA,
-as negative weights are not meaningful for downstream methods and weights
-of zero are reserved for the interlayer edges. Thus, the mathematics of the
-function should be carefully considered as it may be very easy to create
-values of zero based on numeric differences in characteristics between
-adjacent cells, then produce Inf by zero division. NA values are permitted
-to allow the designation of impermeable edges (for example to restrict
-movement above a certain threshold cost). Such values, however, may
-introduce inaccessible islands into a landscape even after resolution of
-mask islands by create_tardis, which may lead to certain functions like
-lcp() failing to return complete traverses between points. A solution to this
-is to use resistance_surface() to derive raster layers with the positions
-of cells without accessible edges and include these cells within the
-initial masking stage. This is a somewhat roundabout solution, but the
-inclusion of NA weights is preferable for flexible landscape specification.
-
 The core of the weighting function can have as many steps as the
 user likes, but must consist of vectorised calculations that call on the
 columns in the data.frames origin and dest. The argument default exemplifies
@@ -89,6 +77,15 @@ allow the user to design weighting rules that can vary through time. The
 function can additionally take a dots argument to allow data to be supplied
 to the weighting function from the global environment, for example an object
 with elements to be used in conjunction with lnum.
+
+The mathematics of the function should be carefully considered as it may be
+very easy to create values of zero from numeric differences in values between
+adjacent cells, then produce Inf by zero division. Judicious use of abs(),
+as.vector(), and division by minimum values throughout the function is
+recommended. NA values are permitted to allow the designation of impermeable
+edges (for example to restrict movement above a certain threshold cost).
+Such values, however, may introduce inaccessible islands into a landscape
+even after resolution of mask islands by create_tardis().
 
 The weight_tardis function is heavily inspired by the weighting function
 used in the gen3sis R package by Oskar Hagen. A major difference between
