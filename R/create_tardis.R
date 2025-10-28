@@ -342,7 +342,8 @@ create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1,
   # remove the rare grid cell IDs which are perfectly divisible by the graph resolution modulus. These create complications
   # when converting cell ID to xy coordinates and it seems better to remove access here and ensure that complete pathways
   # are found in the remainder of the graph
-  forbidden <- c(which((glinked[,1] %% prod(gdat[1:2])) == 0), which((glinked[,2] %% prod(gdat[1:2])) == 0))
+  forbidden <- c(glinked[which((glinked[,1] %% prod(gdat[1:2])) == 0),1], 
+                 glinked[which((glinked[,2] %% prod(gdat[1:2])) == 0),2])
   if(length(forbidden) > 0) {
     glinked <- glinked[!glinked[,1] %in% forbidden,]
     glinked <- glinked[!glinked[,2] %in% forbidden,]
