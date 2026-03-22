@@ -194,7 +194,7 @@ create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1,
 
   if(!is.null(mlink)) {
 
-    warning("As mlink was supplied, masks were not checked inaccessible regions. TARDIS paths may fail unexpectedly")
+    warning("As mlink was supplied, masks were not checked for inaccessible regions. TARDIS paths may fail unexpectedly")
     if(!inherits(mlink, "sf")) {
       stop("mlink should be an sf data.frame of linestrings")
     }
@@ -247,7 +247,8 @@ create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1,
         crds <- matrix(cellFromXY(mask, st_coordinates(mlink[which(mlink$bin == x),])[,1:2]), ncol = 2, byrow = T)
         matrix(c(t(cbind(crds, crds[,2:1]))), ncol = 2, byrow = T)
       } else {
-        cbind(NA, NA)
+        #cbind(NA, NA)
+        NULL
       }
     })
 
@@ -264,7 +265,8 @@ create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1,
           crds <- matrix(cellFromXY(mask, st_coordinates(lnk[which(lnk$bin == x),])[,1:2]), ncol = 2, byrow = T)
           matrix(c(t(cbind(crds, crds[,2:1]))), ncol = 2, byrow = T)
         } else {
-          cbind(NA, NA)
+          #cbind(NA, NA)
+          NULL
         }
       })
     }
@@ -294,8 +296,13 @@ create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1,
     }
 
     # temporary edgelist to include the mask links
-    ed2 <- rbind(ed, na.omit(add_links[[i]]))
-    h_dists2 <- c(h_dists, na.omit(distGeo(xyFromCell(geog, add_links[[i]][,1]),  xyFromCell(geog, add_links[[i]][,2]))))
+    ed2 <- ed
+    h_dists2 <- h_dists
+    if(!is.null(add_links[[i]])) {
+      #ed2 <- rbind(ed, na.omit(add_links[[i]]))
+      ed2 <- rbind(ed, add_links[[i]])
+      h_dists2 <- c(h_dists, na.omit(distGeo(xyFromCell(geog, add_links[[i]][,1]),  xyFromCell(geog, add_links[[i]][,2]))))
+    }
 
     # get mask
     blocked <- which(is.na(mask[[i]][]))
