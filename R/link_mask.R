@@ -44,7 +44,7 @@
 #' #plot(k[[1]], add = T, col = 2)
 
 link_mask <- function (mask, glink = 8, klink = NULL, verbose = TRUE) {
-  
+
   if (!exists("mask")) {
     stop("Supply mask as SpatRaster")
   }
@@ -75,7 +75,7 @@ link_mask <- function (mask, glink = 8, klink = NULL, verbose = TRUE) {
   res_list <- list()
   for (i in 1:nlyr(bar)) {
     if (verbose) {
-      cat(paste0("Resolving mask [", i, "/", nlyr(bar), 
+      cat(paste0("Resolving mask [", i, "/", nlyr(bar),
                  "]\r"))
       if (i == nlyr(bar)) {
         cat("\n")
@@ -85,13 +85,13 @@ link_mask <- function (mask, glink = 8, klink = NULL, verbose = TRUE) {
       crds <- list()
       iter <- 1
       while (as.logical(iter)) {
-        
+
         # get the voronoi neighbourhood of each island
         poly <- as.polygons(bar[[i]])
         vv <- voronoi(poly)
         vv <- crop(vv, bar[[i]])
         vv <- aggregate(vv, by = "patches")
-        
+
         # get the distances between islands in adjacent patches
         ii <- adjacent(vv)
         nr <- do.call(rbind, apply(ii, 1, function(x) {
@@ -103,18 +103,19 @@ link_mask <- function (mask, glink = 8, klink = NULL, verbose = TRUE) {
         links <- cbind.data.frame(ii, dists)
         nr <- nr[order(links$from, links$dists)]
         links <- links[order(links$from, links$dists),]
-        
+
         # take up to klink links for each island patch
         newlink <- tapply(links$dists, links$from, function(x) {
           1:ifelse(klink < length(x), klink, length(x))
-        }) + (which(!duplicated(links$from)) - 1)
+        })
+        newlink <- unlist(mapply(x = newlink, y = as.list((which(!duplicated(links$from)) - 1)), function(x, y) {x + y}))
         crds[[iter]] <- nr[newlink]
         newlink <- as.matrix(links[newlink,1:2])
-        
+
         # reclassify island membership by links
         newid <- cbind(1:minmax(bar[[i]])[2], components(graph_from_edgelist(newlink))$membership)
         bar[[i]] <- classify(bar[[i]], newid)
-        
+
         # stop loop if all islands have the same membership
         iter <- iter + 1
         if(minmax(bar[[i]])[2] == 1) {
