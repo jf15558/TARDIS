@@ -75,17 +75,6 @@ create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1,
                           mask = NULL, mask.check = TRUE, klink = NULL, mlink = NULL,
                           rotations = NULL, verbose = TRUE) {
 
-  # geog = dem
-  # times = bins
-  # glink = 8
-  # tlink = 1
-  # mask = masks
-  # mask.check = TRUE
-  # klink = 1
-  # mlink = NULL
-  # rotations = NULL
-  # verbose = TRUE
-
   # some precedent in Maartensen et al. (2017). Spatio-temporal connectivity: assessing the amount of reachable habitat in dynamic landscapes
   # useful for landscape graph theory: Decocq et al (2023). Modelling plant community dynamics in changing forest ecosystems: a review
 
@@ -237,6 +226,7 @@ create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1,
 
     add_links <- lapply(1:nlyr(geog), function(x) {
       if(x %in% mlink$bin) {
+
         vals <- extract(boundaries(mask[[x]], directions = 8), vect(mlink[which(mlink$bin == x),]))
         if(0 %in% vals[,2]) {
           stop(paste0("In bin ", x, ", one or more line start/end points do not fall on cells at the edges of islands"))
@@ -345,11 +335,11 @@ create_tardis <- function(geog, times = NULL, glink = 8, tlink = 1,
   # create modified cppRouting graph object and return
   if(verbose) {cat("Building graph\n")}
   glinked <- do.call(rbind, glinked)
-  
+
   # remove the rare grid cell IDs which are perfectly divisible by the graph resolution modulus. These create complications
   # when converting cell ID to xy coordinates and it seems better to remove access here and ensure that complete pathways
   # are found in the remainder of the graph
-  forbidden <- c(glinked[which((glinked[,1] %% prod(gdat[1:2])) == 0),1], 
+  forbidden <- c(glinked[which((glinked[,1] %% prod(gdat[1:2])) == 0),1],
                  glinked[which((glinked[,2] %% prod(gdat[1:2])) == 0),2])
   if(length(forbidden) > 0) {
     glinked <- glinked[!glinked[,1] %in% forbidden,]
