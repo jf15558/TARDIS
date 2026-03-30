@@ -46,7 +46,7 @@
 #' #plot(v[[1]], add = T)
 #' #plot(k[[1]], add = T, col = 2)
 
-link_mask <- function(mask, glink = 8, klink = NULL, verbose = TRUE) {
+link_mask_old <- function(mask, glink = 8, klink = NULL, verbose = TRUE) {
 
   # mask = masks
   # glink = 8
