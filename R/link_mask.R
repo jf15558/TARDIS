@@ -45,6 +45,11 @@
 
 link_mask <- function (mask, glink = 8, klink = NULL, verbose = TRUE) {
 
+  mask = msk
+  glink = 8
+  klink = 1
+  verbose = TRUE
+
   if (!exists("mask")) {
     stop("Supply mask as SpatRaster")
   }
@@ -52,7 +57,7 @@ link_mask <- function (mask, glink = 8, klink = NULL, verbose = TRUE) {
     stop("Supply mask as a SpatRaster")
   }
   if (!is.lonlat(mask)) {
-    stop("mask should be in geographic (long-lat) projection")
+    stop("mask should be in geographic (lon-lat) projection")
   }
   if (any(!unique(mask[]) %in% c(1, NA))) {
     stop("Mask layers can only contain 1 or NA values")
@@ -97,6 +102,7 @@ link_mask <- function (mask, glink = 8, klink = NULL, verbose = TRUE) {
         nr <- do.call(rbind, apply(ii, 1, function(x) {
           nearest(poly[x[1]], poly[x[2]], centroids = F, lines = T)
         }))
+        vals <- extract(mask[[i]], nr)
         dists <- perim(nr)
         nr <- geom(nr)
         nr <- sapply(seq(2, nrow(nr), 2), function(x) {nr[c(x-1, x),3:4]}, simplify = F)
@@ -104,23 +110,36 @@ link_mask <- function (mask, glink = 8, klink = NULL, verbose = TRUE) {
         nr <- nr[order(links$from, links$dists)]
         links <- links[order(links$from, links$dists),]
 
-        # take up to klink links for each island patch
-        newlink <- tapply(links$dists, links$from, function(x) {
-          1:ifelse(klink < length(x), klink, length(x))
-        })
-        newlink <- unlist(mapply(x = newlink, y = as.list((which(!duplicated(links$from)) - 1)), function(x, y) {x + y}))
-
         # adjust coordinates of lines from cell corners to cell centres
         bnd <- mask(bar[[i]], classify(boundaries(bar[[i]]), cbind(0, NA)))
         bnd[which(!is.na(bnd[]))] <- which(!is.na(bnd[]))
         to_cell <- as.points(as.polygons(bnd))
         to_cell <- cbind(to_cell$patches, geom(to_cell)[,3:4])
-        lns <- nr[newlink]
-        lns <- lapply(lns, function(x) {
-          xyFromCell(bar[[i]], to_cell[c(which(to_cell[,2] == x[1,1] & to_cell[,3] == x[1,2])[1],
-                                         which(to_cell[,2] == x[2,1] & to_cell[,3] == x[2,2])[1]),1])
+        nr <- lapply(nr, function(x) {
+          st_linestring(xyFromCell(bar[[i]], to_cell[c(which(to_cell[,2] == x[1,1] & to_cell[,3] == x[1,2])[1],
+                                                       which(to_cell[,2] == x[2,1] & to_cell[,3] == x[2,2])[1]),1]))
         })
-        crds[[iter]] <- lns
+
+        # nr <- lapply(nr, function(x) {
+        #   cl <- xyFromCell(bar[[i]], to_cell[c(which(to_cell[,2] == x[1,1] & to_cell[,3] == x[1,2])[1],
+        #                                        which(to_cell[,2] == x[2,1] & to_cell[,3] == x[2,2])[1]),1])
+        #   rbind(cl[1,], gcIntermediate(cl[1,], cl[2,]), cl[2,])
+        # })
+
+        # reject links which cut through other islands
+        checks <- extract(mask[[i]], vect(nr))
+        checks <- which(table(checks[complete.cases(checks),1]) > 2)
+        if(length(checks) != 0) {
+          nr <- nr[-checks]
+          links <- links[-checks,]
+        }
+
+        # take up to klink links for each island patch
+        newlink <- tapply(links$dists, links$from, function(x) {
+          1:ifelse(klink < length(x), klink, length(x))
+        })
+        newlink <- unlist(mapply(x = newlink, y = as.list((which(!duplicated(links$from)) - 1)), function(x, y) {x + y}))
+        crds[[iter]] <- nr[newlink]
         newlink <- as.matrix(links[newlink,1:2])
 
         # reclassify island membership by links
@@ -133,19 +152,9 @@ link_mask <- function (mask, glink = 8, klink = NULL, verbose = TRUE) {
           iter <- FALSE
         }
       }
-      crds <- unlist(crds, recursive = F)
-      cls <- do.call(rbind, lapply(crds, cellFromXY, object = bar[[i]]))
-      lin <- st_sfc(lapply(crds, st_linestring), crs = "+proj=lonlat")
+      lin <- do.call(c, crds)
+      cls <- matrix(cellFromXY(bar[[i]], st_coordinates(lin)[,1:2]), ncol = 2, byrow = 2)
       lin <- st_sf(data.frame(srt = cls[,1], end = cls[,2], bin = rep(i, length(lin))), distance = as.vector(st_length(lin)), geometry = lin)
-
-      # FAIL CONDITION FOR LINES
-      # vals <- extract(boundaries(bar[[i]], directions = 8), vect(lin))
-      # if(0 %in% vals[,2]) {
-      #   stop(paste0("In bin ", x, ", one or more line start/end points do not fall on cells at the edges of islands"))
-      # }
-      # if(!all(table(vals[complete.cases(vals),1]) == 2)) {
-      #   stop(paste0("In bin ", x, ", one or more lines intersect non-masked areas other than at their start and end points"))
-      # }
       res_list[[i]] <- lin
     }
   }
