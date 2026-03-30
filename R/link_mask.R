@@ -45,10 +45,10 @@
 
 link_mask <- function (mask, glink = 8, klink = NULL, verbose = TRUE) {
 
-  mask = msk
-  glink = 8
-  klink = 1
-  verbose = TRUE
+  # mask = msk
+  # glink = 8
+  # klink = 1
+  # verbose = TRUE
 
   if (!exists("mask")) {
     stop("Supply mask as SpatRaster")
