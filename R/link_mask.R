@@ -45,10 +45,10 @@
 
 link_mask <- function (mask, glink = 8, klink = NULL, verbose = TRUE) {
 
-  # mask = msk
-  # glink = 8
-  # klink = 1
-  # verbose = TRUE
+  mask = msk
+  glink = 8
+  klink = 1
+  verbose = TRUE
 
   if (!exists("mask")) {
     stop("Supply mask as SpatRaster")
@@ -119,6 +119,7 @@ link_mask <- function (mask, glink = 8, klink = NULL, verbose = TRUE) {
           st_linestring(xyFromCell(bar[[i]], to_cell[c(which(to_cell[,2] == x[1,1] & to_cell[,3] == x[1,2])[1],
                                                        which(to_cell[,2] == x[2,1] & to_cell[,3] == x[2,2])[1]),1]))
         })
+        nr <- st_as_sfc(nr, "+proj=lonlat")
 
         # nr <- lapply(nr, function(x) {
         #   cl <- xyFromCell(bar[[i]], to_cell[c(which(to_cell[,2] == x[1,1] & to_cell[,3] == x[1,2])[1],
