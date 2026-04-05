@@ -38,7 +38,7 @@
 
 stp <- function(tardis, points, verbose = TRUE) {
 
-  # x = test2
+  # x = trd
   # points = pairs
 
   if(!exists("tardis")) {
@@ -62,7 +62,7 @@ stp <- function(tardis, points, verbose = TRUE) {
   }
 
   samprast <- rast(nrows = tardis$gdat[1], ncols = tardis$gdat[2], ext = ext(tardis$gdat[5:8]))
-  pcell <- cellFromXY(samprast, points[,1:2])
+  pcell <- cellFromXY(samprast, points[,1:2, drop = F])
   pt <- unlist(lapply(points[,3], function(y) {sum(y < tardis$tdat[-1]) * prod(tardis$gdat[1:2])}))
   pt[which(points[,3] > tardis$tdat[1] | points[,3] < tardis$tdat[length(tardis$tdat)])] <- NA
   ptcell <- pcell + pt

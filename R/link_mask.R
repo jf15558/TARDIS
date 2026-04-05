@@ -102,7 +102,6 @@ link_mask <- function (mask, glink = 8, klink = NULL, verbose = TRUE) {
         nr <- do.call(rbind, apply(ii, 1, function(x) {
           nearest(poly[x[1]], poly[x[2]], centroids = F, lines = T)
         }))
-        vals <- extract(mask[[i]], nr)
         dists <- perim(nr)
         nr <- geom(nr)
         nr <- sapply(seq(2, nrow(nr), 2), function(x) {nr[c(x-1, x),3:4]}, simplify = F)
@@ -116,16 +115,9 @@ link_mask <- function (mask, glink = 8, klink = NULL, verbose = TRUE) {
         to_cell <- as.points(as.polygons(bnd))
         to_cell <- cbind(to_cell$patches, geom(to_cell)[,3:4])
         nr <- lapply(nr, function(x) {
-          st_linestring(xyFromCell(bar[[i]], to_cell[c(which(to_cell[,2] == x[1,1] & to_cell[,3] == x[1,2])[1],
-                                                       which(to_cell[,2] == x[2,1] & to_cell[,3] == x[2,2])[1]),1]))
+          vect(xyFromCell(bar[[i]], to_cell[c(which(to_cell[,2] == x[1,1] & to_cell[,3] == x[1,2])[1],
+                                                       which(to_cell[,2] == x[2,1] & to_cell[,3] == x[2,2])[1]),1]), type = "line")
         })
-        nr <- st_as_sfc(nr, "+proj=lonlat")
-
-        # nr <- lapply(nr, function(x) {
-        #   cl <- xyFromCell(bar[[i]], to_cell[c(which(to_cell[,2] == x[1,1] & to_cell[,3] == x[1,2])[1],
-        #                                        which(to_cell[,2] == x[2,1] & to_cell[,3] == x[2,2])[1]),1])
-        #   rbind(cl[1,], gcIntermediate(cl[1,], cl[2,]), cl[2,])
-        # })
 
         # reject links which cut through other islands
         checks <- extract(mask[[i]], vect(nr))
@@ -155,8 +147,9 @@ link_mask <- function (mask, glink = 8, klink = NULL, verbose = TRUE) {
       }
       lin <- do.call(c, crds)
       cls <- matrix(cellFromXY(bar[[i]], st_coordinates(lin)[,1:2]), ncol = 2, byrow = 2)
-      lin <- st_sf(data.frame(srt = cls[,1], end = cls[,2], bin = rep(i, length(lin))), distance = as.vector(st_length(lin)), geometry = lin)
-      res_list[[i]] <- lin
+      lin <- st_sf(data.frame(srt = cls[,1], end = cls[,2], bin = rep(i, length(lin))), geometry = lin, crs = "+proj=lonlat")
+      lin$distance <- as.vector(st_length(lin))
+      res_list[[i]] <- lin[,c(1:3, 5, 4)]
     }
   }
   res_list <- do.call(rbind.data.frame, res_list)
