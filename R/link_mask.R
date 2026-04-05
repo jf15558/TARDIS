@@ -45,7 +45,7 @@
 
 link_mask <- function (mask, glink = 8, klink = NULL, verbose = TRUE) {
 
-  # mask = msk
+  # mask = msk[[1]]
   # glink = 8
   # klink = 1
   # verbose = TRUE
@@ -145,10 +145,11 @@ link_mask <- function (mask, glink = 8, klink = NULL, verbose = TRUE) {
           iter <- FALSE
         }
       }
-      lin <- do.call(c, crds)
+      lin <- unlist(crds, recursive = F)
+      lin <- st_as_sf(do.call(rbind, lin))
+      st_crs(lin) <- "+proj=lonlat"
       cls <- matrix(cellFromXY(bar[[i]], st_coordinates(lin)[,1:2]), ncol = 2, byrow = 2)
-      lin <- st_sf(data.frame(srt = cls[,1], end = cls[,2], bin = rep(i, length(lin))), geometry = lin, crs = "+proj=lonlat")
-      lin$distance <- as.vector(st_length(lin))
+      lin <- st_sf(data.frame(srt = cls[,1], end = cls[,2], bin = rep(i, length(lin))), distance = as.vector(st_length(lin)), geometry = lin$geometry)
       res_list[[i]] <- lin[,c(1:3, 5, 4)]
     }
   }
