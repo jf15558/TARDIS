@@ -6,7 +6,8 @@
 \usage{
 weight_tardis(
   tardis,
-  vars,
+  name,
+  vars = NULL,
   wfun = function(origin, dest, lnum = NULL, ...) {
      sqrt(origin$hdist^2 +
     abs(origin$vdist)^2)
@@ -17,55 +18,60 @@ weight_tardis(
 )
 }
 \arguments{
-\item{tardis}{A object of class 'tardis' from create_tardis.}
+\item{tardis}{\code{tardis}. The output of \code{build_tardis()}.}
 
-\item{vars}{A named list of SpatRasters where each element has the same
-resolution, extent, number of layers and layer order as the original landscape
-data used to create tardis, and records a single property for that landscape
-(e.g., temperature). List names are crucial as these are used to make their
-data accessible during weighting. Any names can be used, aside for 'cell',
-hdist' and 'vdist' which are reserved.}
+\item{name}{\code{character}. The name for weighting scheme to be generated.}
 
-\item{wfun}{A function to calculate the cost of traversal for the edges in
-each graph layer. This must have the signature:
-function(origin, dest, lnum, ...) \{rules for weighting\} - see @details}
+\item{vars}{\code{list}. A named list of \code{geoglist} objects, each recording an alternative
+geographic property of the landscape represented in \code{tardis}. As such, these
+must bear the same resolution, extent, number of layers and layer order as the
+\code{geoglist} used to create \code{tardis}. The names 'cell', 'type', 'bearing',
+'hdist', 'vdist' and gdist' are reserved.}
 
-\item{mfun}{A function to calculate the cost of traversal for the edges
-added to bridge mask islands, should the user desire them to be weighted
-differently to the result of the later. The function should have the same
-signature as @param wfun, but its internals can be totally different. NULL
-by default, so edge weights will come from @param wfun.}
+\item{wfun}{\verb{function(origin, dest, lnum, ...)} A function to calculate the
+cost of traversal for the edges in each graph layer. See @details for the required
+function signature.}
 
-\item{verbose}{A logical indicating whether function progress should be
-reported to the user.}
+\item{mfun}{\code{NULL} or \verb{function(origin, dest, lnum, ...)}. A function to
+calculate the cost of traversal for any edges spanning masked regions,
+should the user desire them to be weighted differently. See @details for the
+required function signature. By default, \code{NULL}, so edge weights will come
+from @param wfun instead.}
 
-\item{...}{Additional arguments supplied to wfun() and mfun() if desired.}
+\item{verbose}{\code{logical}. Should function progress be to the user?}
+
+\item{...}{Additional arguments supplied to wfun() and mfun() if required.}
 }
 \value{
-A numeric vector of weights with as many elements as edges in x.
+The input \code{tardis} object with the new weighting scheme added to
+\code{tardis$edges} under the column name given in \code{weights}.
 }
 \description{
-Generate a custom weighting scheme for a TARDIS analysis. Internally,
-weight_tardis generates two data.frames, origin and dest, which respectively
-record the landscape properties for each pair of origin and destination
-cells comprising the edges in a graph layer. The first three columns in both
-data.frames record the cell ID, the horizontal distance to its partner cell
-in metres, and the horizontal and vertical distances to its partner cell in
-metres. The horizontal distance will be the same in both data.frames, but
-the vertical distance will be positive or negative depending on whether
-elevation is gained or lost along an edge. All subsequent columns in both
-data.frames record the cell characteristics as supplied by the user. The
-columns in these data.frames can then be used to calculate weights with a
-custom, user-supplied weighting function. If the TARDIS graph contains mask
-links, these can be weighted differently if desired. Crucially, all returned
-weights must be finite and greater than zero, or NA, as negative weights are
-not meaningful for downstream methods and weights of zero are reserved for
-the interlayer edges.
+Generate a custom weighting scheme for a \code{tardis} object. This may be based
+on the properties in \code{tardis} itself or derived from \code{geoglist} objects recording
+alternative properties of a landscape.
 }
 \details{
+The \code{weight_tardis} function is heavily inspired by the weighting function
+used in the \code{gen3sis} R package by Oskar Hagen.
+
+Internally, weight_tardis generates two \code{data.frames}, \code{origin} and \code{dest}.
+These minimally record the properties for each pair of origin and destination cells
+comprising the edges in a graph layer. Each records the cell ID, the horizontal
+distance and bearing to its partner cell in metres and degrees respectively, and
+the vertical distance to its partner cell in metres. Horizontal distance will
+be the same in \code{origin} and \code{dest}, but the vertical distance will be positive
+or negative depending on whether elevation is gained or lost along an edge.
+
+If \code{vars} are supplied, then subsequent columns in both data.frames record the
+cell characteristics in each \code{geoglist}. The columns in these data.frames can
+then be used to calculate weights with a custom, user-supplied weighting function.
+If the TARDIS graph contains mask links, these can be weighted differently if
+desired.
+
 The core of the weighting function can have as many steps as the
 user likes, but must consist of vectorised calculations that call on the
-columns in the data.frames origin and dest. The argument default exemplifies
+columns in the data.frames \code{origin} and \code{dest}. The argument default exemplifies
 this and will return identical geographic distances to those in within x,
 using Pythagoras's theorem on the horizontal (origin$hdist) and vertical
 (origin$vdist) intercell distances. The user function can use one, the other,
@@ -78,36 +84,45 @@ function can additionally take a dots argument to allow data to be supplied
 to the weighting function from the global environment, for example an object
 with elements to be used in conjunction with lnum.
 
-The mathematics of the function should be carefully considered as it may be
-very easy to create values of zero from numeric differences in values between
-adjacent cells, then produce Inf by zero division. Judicious use of abs(),
-as.vector(), and division by minimum values throughout the function is
-recommended. NA values are permitted to allow the designation of impermeable
-edges (for example to restrict movement above a certain threshold cost).
-Such values, however, may introduce inaccessible islands into a landscape
-even after resolution of mask islands by create_tardis().
-
-The weight_tardis function is heavily inspired by the weighting function
-used in the gen3sis R package by Oskar Hagen. A major difference between
-tardis and gen3sis, however, is that the former considers a landscape as a
-lattice graph where only adjacent cell connections are considered. This
-produces a sparse distance matrix to which graph algorithms can be applied,
-rather than the dense distance matrix used by gen3sis, where all intercell
-connections are given, but without consideration of the intervening space
-those connections span through.
+Crucially, all returned weights should be finite and >= 0, as negative
+weights are not permitted for downstream functions. \code{NA} values are permitted
+to allow the designation of impermeable edges (for example to restrict
+movement above a certain threshold cost). Such values, however, may introduce
+inaccessible islands into a landscape even if island linkage has already been
+performed.
 }
 \examples{
-#library(terra)
-#library(TARDIS)
+\dontrun{
+library(terra)
+library(TARDIS)
 
-#gal <- galapagos()
-#gal <- crop(gal, extent(-92, -88, -2, 1))
-#gal_m <- classify(gal, rcl = matrix(c(-Inf, 0, NA, 0, Inf, 1),
-#                                    ncol = 3, byrow = T), right = F)
-#gt <- create_tardis(gal, times = c(seq(2.25, 0, -0.5), 0), mask = gal_m)
+# load a dataset of the Galapagos archipelago through geological time
+gal <- TARDIS::galapagos()
+gal <- crop(gal, ext(-92, -88, -2, 1))
 
-#vars = list(elev = classify(gal, cbind(-Inf, 0, 0)))
-#gtw <- weight_tardis(test2, vars = vars,
-#                     mfun = function(origin, dest, lnum, ...) {
-#                               (origin$hdist^2 + abs(origin$vdist)^2) * 10})
+# create a land-sea mask from the archipelago raster set
+gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
+
+# create a geoglist with hexagonal resampling and mask the sea
+rasts <- rast_to_geoglist(gal, gal_m)
+rasts <- link_islands(rasts)
+rtd <- build_tardis(rasts, times = c(seq(2.25, 0, -0.5), 0))
+
+# create a dummy alternative raster dataset with random values
+gal_v <- rast(gal_m, vals = rnorm(abs(ncell(gal_m) * nlyr(gal_m))))
+
+# convert the dummy data to a geoglist with the same masking
+gvars <- rast_to_geoglist(gal_v, gal_m)
+
+# define a function where geographic distances are multiplied by 10
+altfunc <- function(origin, dest, lnum, ...) {
+  (origin$hdist^2 + abs(origin$vdist)^2) * 10
+}
+
+# place the alternative geoglist data into a list
+vrs <- list(rand = gvars)
+
+# generate a new weighting scheme where geographic distances along mask links are multiplied by 10
+gtw <- weight_tardis(rts, name = "altweight", vars = vrs, mfun = altfunc())
+}
 }

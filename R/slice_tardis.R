@@ -1,43 +1,52 @@
 #' slice_tardis
 #'
-#' Temporally subset a TARDIS graph This function was developed for instances
-#' where successive analyses do not require the entire graph, in which case it
-#' is more efficient to weight and analyse subsets, rather than operate on the
-#' entire graph or create subsets from scratch. A user can subset by specific
-#' geographic layers, or supply a time range which will be used to select the
-#' geographic layers within that range. Note that layers are counted in
-#' decreasing age order, so the oldest time layer will be 1 and so forth.
+#' Temporally subset a TARDIS graph to specific layers, or using a time range.
 #'
-#' @param tardis An object of class 'tardis', produced by create_tardis
-#' @param times A vector of two positive numbers denoting the desired time range
+#' @param tardis `tardis`. The output of `build_tardis()` or `weight_tardis()`.
+#' @param times `numeric`. A vector of two positive numbers denoting the desired time range
 #' to subset from tardis. Either this or 'layers' must be specified
-#' @param layers A vector of two positive numbers denoting the desired range of
+#' @param layers `numeric`. A vector of two positive numbers denoting the desired range of
 #' layers to subset from tardis. Either this or 'times' must be specified
-#' @return An object of class 'tardis', comprising the requested range of layers
+#' @return A `tardis` object comprising the requested layers
 #' @export
 #'
+#' @details
+#' This function was developed for instances where successive analyses do not require
+#' the entire graph, in which case it is more efficient to weight and analyse subsets,
+#' rather than operate on the entire graph or create subsets from scratch. Note that
+#' layers are counted in decreasing age order, so the oldest time layer will be 1
+#' and so forth.
+#'
 #' @examples
+#' \dontrun{
 #' #library(terra)
 #' #library(TARDIS)
 #'
-#' #gal <- galapagos()
-#' #gal <- crop(gal, extent(-92, -88, -2, 1))
-#' #gal_m <- classify(gal, rcl = matrix(c(-Inf, 0, NA, 0, Inf, 1),
-#' #                                    ncol = 3, byrow = T), right = F)
-#' #gt <- create_tardis(gal, times = c(seq(2.25, 0, -0.5), 0), mask = gal_m)
-#' #gts <- slice_tardis(gt, times = c(1.2, 0))
-#' #gts <- slice_tardis(gt, layers = c(1, 2))
+#' gal <- TARDIS::galapagos()
+#' gal <- crop(gal, ext(-92, -88, -2, 1))
+#' gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
+
+#' rasts <- rast_to_geoglist(gal, gal_m)
+
+#' hlink <- link_islands(hexes)
+#' rlink <- link_islands(rasts)
+
+#' rtd <- build_tardis(rasts, times = c(seq(2.25, 0, -0.5), 0), mlink = rlink)
+
+#' gts <- slice_tardis(rtd, times = c(1.2, 0))
+#' gts <- slice_tardis(rtd, layers = c(1, 2))
+#' }
+
 slice_tardis <- function(tardis, times = NULL, layers = NULL) {
 
-  # tardis <- ob
+  # tardis <- rtd
   # times <- NULL
   # layers <- c(2, 2)
 
-  # check tardis
-  if(!exists("tardis")) {
+  if (!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
   }
-  if(!inherits(tardis, "tardis")) {
+  if (!inherits(tardis, "tardis")) {
     stop("Supply tardis as the output of create_tardis")
   }
   if(is.null(tardis$tdat)) {
@@ -90,8 +99,7 @@ slice_tardis <- function(tardis, times = NULL, layers = NULL) {
   }
 
   # get the cell id range for the requested layer range
-  mult <- prod(tardis$gdat[1:2])
-  cls <- as.character((layers[1] * mult) - mult + 1:(layers[2] * mult))
+  cls <- as.character(((layers[1] * tardis$gdat[5]) - tardis$gdat[5] + 1):(layers[2] * tardis$gdat[5]))
 
   # subset edges and dict
   valid <- tardis$tgraph$src %in% cls & tardis$tgraph$dst %in% cls

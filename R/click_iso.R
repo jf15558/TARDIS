@@ -1,0 +1,46 @@
+#' click functions
+#'
+#' interactive function under development
+#' @param tardis `tardis`. An object of class 'tardis', produced by create_tardis
+#' @param geog `geoglist`. A geoglist
+#' @param time `integer`. The tardis time slice to plot and interact with
+#' @param col `character`. The colour to use for plotting interactive features.
+#' @param cost `numeric`. the maximum cost for calculating a reach isochrone (only for click_iso)
+#' @import terra sf scales
+
+click_iso <- function(tardis, geog, time = NULL, cost = 1e6, col = "gold") {
+
+  # tardis = rtd
+  # geog = hexes
+  # mlink = NULL
+  # time = NULL
+  # n = 1
+
+  if(is.null(time)) {
+    bin <- 1
+  } else {
+    if(time > tardis$tdat[1] | time < tardis$tdat[length(tardis$tdat)]) {
+      stop("Time falls outside the range of tardis")
+    }
+    bin <- sum(time < tardis$tdat)
+  }
+
+  if(inherits(geog$layers[[1]], "SpatRaster")) {
+    plot(geog$layers[[bin]])
+  } else {
+    plot(geog$layers[[bin]]$geometry, border = NA)
+    plot(geog$layers[[bin]][,1], add = T)
+  }
+  if(!is.null(geog$links)) {
+    plot(geog$links[which(geog$links$bin == bin),"geometry"], add = T)
+  }
+
+  org <- cbind(click(n = 1), rep(time, 1))
+
+  hpts <- point_check(tardis, org)
+
+  hlcp <- isochrone(tardis, origin = hpts, cost = cost)
+
+  plot(hpts$geometry, col = col, pch = 16, add = T)
+  plot(st_wrap_dateline(hlcp$geometry, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180")), add = T, border = col, col = scales::alpha(col, 0.2), lwd = 2)
+}

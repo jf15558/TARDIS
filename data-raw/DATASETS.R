@@ -6,7 +6,19 @@ rm(list = ls())
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 
-# MAPS
+# CRETACEOUS
+#
+# past geography
+baz <- chronosphere::fetch("paleomap", "dem")
+cretaceous <- baz@stack[[23:24]]
+
+# wrap and save
+cretaceous <- terra::wrap(foo)
+#usethis::use_data(cretaceous, internal = F)
+writeRaster(cretaceous, "../inst/extdata/cretaceous.tif")
+
+
+# GALAPAGOS
 #
 # past geography
 past <- lapply(rev(gtools::mixedsort(list.files("./", pattern = "txt", full.names = T)))[-5], function(x) {
@@ -40,7 +52,6 @@ names(galapagos) <- c("2.25-1.75", "1.75-1.25", "1.25-0.75", "0.75-0.25", "0.25-
 galapagos <- terra::wrap(galapagos)
 
 # save
-
 foo <- readRDS("galap_hr.RData")
 foo <- rast(lapply(foo, terra::rast))
 foo <- terra::wrap(foo)

@@ -1,130 +1,125 @@
 #' get_rotations
 #'
-#' Generate a rotation list using commonly-implemented plate rotation models for
-#' use with create_tardis(). The user supplies a SpatRaster with the desired
-#' geographic resolution for the resulting rotation list, along with a vector of
-#' reconstruction ages in descending order. Conceivably, the SpatRaster and age
-#' vector the user intends to supply to create_tardis() could be used here. The
-#' function will take the cell centre coordinates for all grid cells in the
-#' SpatRaster as starting positions at the first age in the vector, then
-#' calculates their geographic positions at the subsequent ages. Calculation
-#' relies on the reconstruct() function from the rgplates package and will be
-#' very slow if high resolution SpatRasters/lengthy time vectors are supplied.
-#' Each SpatRaster layer must have at least some reconstructed grid cell
-#' positions so the age vector cannot be made shorter. Instead, it may be
-#' advisable to use a SpatRaster with a lower geographic resolution than those
-#' the user intends to supply to create_tardis(). This is totally fine as the
-#' rotations list does not need to give reconstructions for every grid cell in
-#' the landscape raster stack, nor will this even be possible as gplates will be
-#' unable to determine some geographic positions due to the limitations of the
-#' plate rotation models themselves. NAs are returned where reconstructions fail,
-#' although this is again not an issue as these will be automatically filtered
-#' by create_tardis(). There is no point performing rotations at a higher
-#' geographic resolution than the SpatRaster stack that you will use with
-#' create_tardis()
-#' #'
-#' @param rast A SpatRaster in longitude-latitude projection
-#' @param ages A numeric vector of desired reconstruction ages in millions of
-#' years before present, in descending age order. These will correspond to the
-#' layers in the SpatRaster destined for create_tardis().
-#' @param model The desired plate reconstruction model. See
-#' rgplates::reconstruct() for details.
-#' @param out.res If you are calculating rotations at a reduced resolution to
-#' save time, then out.res should be the SpatRaster you intent to use with
-#' create_tardis(). This is essential so that the returned cell IDs will conform
-#' to that SpatRaster, rather than to that given by 'rast'.
-#' @param gpath If NULL, the GPlates API is used. This is very slow for large
-#' numbers of points, so the software call be installed locally for faster
-#' results. If desired gpath is the file path to the local reconstruction
-#' submodule. In case the GPlates executable file is not found at the coded
-#' default location, the full path to the executable (gplates-<ver>.exe on
-#' Windows) can be entered, e.g. "C:/gplates_2.3.0_win64/gplates.exe".
-#' @param verbose Should function progress be reported?
-#' @return A list with length(ages) - 1 elements. Each element is a two-column
-#' matrix containing the IDs of geographically homologous cells between
-#' successive reconstruction ages.
-#' @import terra rgplates
+#' Generate a rotation list from commonly-used plate rotation models for
+#' use with build_tardis(). Ensure that the same plate rotation model on which
+#' the input `geoglist` is based is requested for function call.
+#'
+#' @param geog `geoglist`. The output of `rast_to_geoglist()`. This should contain
+#' at least two layers, representing two palaeogeographic time slices where
+#' there is appreciable intervening plate roation.
+#' @param times `numeric`. A  vector with `nlayers(geog) + 1` positive
+#' elements, expressing the temporal boundaries of each layer as millions of
+#' years in the past. The vector need not end in the present (i.e. `0`), but time
+#' must flow from oldest to youngest.
+#' @param model `character`. The desired plate reconstruction model. See `palaeoverse::palaeorotate()`
+#' for details.
+#' @param method `character`. The reconstruction method to use. See `palaeoverse::palaeorotate()`
+#' for details.
+#' @param verbose `logical` Should function progress be reported to the user?
+#' @param ... Other arguments passed to `palaeoverse::palaeorotate()`.
+#' @return A list with as many elements as layers in `geog$layers`. Each element
+#' is a two-column matrix containing the IDs of geographically homologous cells
+#' between successive landscape layers.
+#' @import terra sf h3jsr palaeoverse
+#' @export
+#'
+#' @details
+#' Cell reconstruction from layer to layer is performed by `palaeoverse::palaeorotate()`.
+#' By default this uses the `"grid"` method, by retrieving reconstructed coordinates
+#' from pre-rotated H3 grids at resolution 3 (~119 km). This is almost
+#' certainly sufficient for any global scale analyses given that palaeogeographic
+#' models of topography and bathymetry rarely if ever exceed 1 degree resolution
+#' (~111 km).
 #'
 #' @examples
-#' #rast <- rast(nrows = 2, ncols = 2)
-#' #ages <- c(440, 430, 420)
-#' #foo <- get_rotations(rast = rast, ages = ages)
-#'
-get_rotations <- function(rast, ages, model = "PALEOMAP", out.res = NULL, gpath = NULL, verbose = TRUE) {
+#' \dontrun{
+#' rast <- rast(nrows = 2, ncols = 2)
+#' ages <- c(440, 430, 420)
+#' foo <- get_rotations(rast = rast, times = ages, model = "MERDITH2021")
+#'}
 
-  # rast <- rast(nrows = 2, ncols = 2)
-  # ages <- c(440, 430, 420)
+get_rotations <- function(geog, times, model, method = "grid", verbose = TRUE, ...) {
+
+  # geog <- rasts
+  # times <- c(125, 120)
   # model = "PALEOMAP"
-  # out.res = NULL
-  # gpath = NULL
+  # method = "grid"
   # verbose = TRUE
 
-  if(!exists("rast")) {
-    stop("Supply rast as a SpatRaster with longitude-latitude projection")
+  if(!exists("geog")) {
+    stop("Supply geog as a geoglist from rast_to_geoglist()")
   }
-  if(!inherits(rast, "SpatRaster")) {
-    stop("Supply rast as a SpatRaster with longitude-latitude projection")
-  }
-  if(!is.lonlat(rast)) {
-    stop("Supply rast as a SpatRaster with longitude-latitude projection")
+  if(!inherits(geog, "geoglist")) {
+    stop("Supply geog as a geoglist from rast_to_geoglist()")
   }
 
-  if(!exists("ages")) {
-    stop("Supply ages as a vector of descending reconstruction ages in millions of years before present")
+  if(!exists("times")) {
+    stop("Supply times as a vector of descending reconstruction ages in millions of years before present")
   }
-  if(!inherits(ages, "numeric") | !is.vector(ages)) {
-    stop("Supple ages as a vector of descending reconstruction ages in millions of years before present")
+  if(!is.numeric(times) | !is.vector(times)) {
+    stop("Supply times as a vector of descending reconstruction ages in millions of years before present")
   }
-  if(any(is.na(ages)) | any(is.infinite(ages)) | any(ages < 0)) {
-    stop("ages cannot contain missing, infinite or negative values")
+  if(any(is.na(times)) | any(is.infinite(times)) | any(times < 0)) {
+    stop("times cannot contain missing, infinite or negative values")
   }
-  if(length(ages) < 2) {
-    stop("ages must contain at least two elements")
+  if(length(times) < 2) {
+    stop("times must contain at least two elements")
   }
-
-  if(!exists("out.res")) {
-    stop("Supply out.res as a SpatRaster with longitude-latitude projection")
-  }
-  if(is.null(out.res)) {out.res <- rast}
-  if(!inherits(out.res, "SpatRaster")) {
-    stop("Supply out.res as a SpatRaster with longitude-latitude projection")
-  }
-  if(!is.lonlat(out.res)) {
-    stop("Supply out.res as a SpatRaster with longitude-latitude projection")
+  if (!is.numeric(times) | length(times) != length(geog$layers) + 1) {
+    stop("Please supply times as a vector of time bin boundaries with n elements in geog$layers + 1")
   }
 
   if(!exists("model")) {
-    stop("Supply model as the character string of the desired plate rotation model (see rgplates::reconstruct for details)")
+    stop("Supply model as the character string of the desired plate rotation model (see palaeoverse::palaeorotate for details)")
   }
   if(!inherits(model, "character") | !is.vector(model)) {
-    stop("Supply model as the character string of the desired plate rotation model (see rgplates::reconstruct for details)")
+    stop("Supply model as the character string of the desired plate rotation model (see palaeoverse::palaeorotate for details)")
   }
   if(length(model) > 1) {
     warning("Only the first element of model will be used")
   }
 
-  # set up args
-  model <- model[1]
-  ages <- ages[order(ages, decreasing = T)]
-  recon <- list(xyFromCell(rast, 1:ncell(rast)))
+  # area for point reconstruction
+  if(!is.na(geog$gdat[7])) {
+    grid <- get_grid(geog$gdat[1:4], geog$gdat[7])
+    pts <- st_coordinates(cell_to_point(grid))
 
-  # get present day positions from the first time slice positions
-  pres <- reconstruct(recon[[1]], age = ages[1], reverse = T, model = model, path.gplates = gpath, verbose = verbose)
-
-  # get the past positions at the subsequent reconstruction points if needed
-  if(length(which(ages > 0)) > 1) {
-    past <- reconstruct(pres, age = ages[-c(1, length(ages))], model = model, path.gplates = gpath, verbose = verbose)
+  } else {
+    grid <- rast(nrows = geog$gdat[5] / geog$gdat[6], ncols = geog$gdat[6],
+                 ext = ext(geog$gdat[1:4]))
+    pts <- xyFromCell(grid, 1:ncell(grid))
   }
+  colnames(pts) <- c("lng", "lat")
 
-  # convert from coordinates to cell IDs
-  for(i in 1:length(past)) {recon[i + 1] <- past[i]}
-  if(length(which(ages > 0)) > 1) {recon[length(recon) + 1] <- pres}
-  recon <- lapply(recon, function(x) {cellFromXY(out.res, x)})
+  # times to reconstruct (midpoints of the time bins)
+  mids <- times[-1] - diff(times) / 2
+
+  # reconstruct
+  rots <- lapply(1:length(mids), function(x) {
+    if(verbose) {
+      cat(paste0("Rotating layer [", x,"/", length(mids), "]\r"))
+      if(x == length(mids)) {cat("\n")}
+    }
+    pts2 <- cbind.data.frame(pts, age = mids[x])
+    pts2 <- suppressWarnings(palaeorotate(pts2, model = model, method = method))[,c("p_lng", "p_lat")]
+
+    cls <- rep(NA, nrow(pts2))
+    to_cell <- which(!is.na(pts2[,1]))
+    if(!is.na(geog$gdat[7])) {
+      cls[to_cell] <- match(suppressMessages(point_to_cell(pts2[to_cell,], res = geog$gdat[7])), grid)
+    } else {
+      cls[to_cell] <- cellFromXY(grid, pts2[to_cell,])
+    }
+    cls
+  })
+  rots <- cbind(do.call(cbind, rots), 1:geog$gdat[5])
 
   # format and return
-  recon <- do.call(cbind, recon)
-  out <- lapply(1:(ncol(recon) - 1), function(x) {recon[,x:(x + 1)]})
-  names(out) <- paste0(ages[-length(ages)], "-", ages[-1])
+  out <- lapply(1:(ncol(rots) - 1), function(x) {
+    vals <- rots[,x:(x + 1)]
+    vals[complete.cases(vals),]
+  })
+  names(out) <- paste0(times[-length(times)], "-", times[-1])
   return(out)
 }
 

@@ -4,72 +4,50 @@
 \alias{get_rotations}
 \title{get_rotations}
 \usage{
-get_rotations(
-  rast,
-  ages,
-  model = "PALEOMAP",
-  out.res = NULL,
-  gpath = NULL,
-  verbose = TRUE
-)
+get_rotations(geog, times, model, method = "grid", verbose = TRUE, ...)
 }
 \arguments{
-\item{rast}{A SpatRaster in longitude-latitude projection}
+\item{geog}{\code{geoglist}. The output of \code{rast_to_geoglist()}. This should contain
+at least two layers, representing two palaeogeographic time slices where
+there is appreciable intervening plate roation.}
 
-\item{ages}{A numeric vector of desired reconstruction ages in millions of
-years before present, in descending age order. These will correspond to the
-layers in the SpatRaster destined for create_tardis().}
+\item{times}{\code{numeric}. A  vector with \code{nlayers(geog) + 1} positive
+elements, expressing the temporal boundaries of each layer as millions of
+years in the past. The vector need not end in the present (i.e. \code{0}), but time
+must flow from oldest to youngest.}
 
-\item{model}{The desired plate reconstruction model. See
-rgplates::reconstruct() for details.}
+\item{model}{\code{character}. The desired plate reconstruction model. See \code{palaeoverse::palaeorotate()}
+for details.}
 
-\item{out.res}{If you are calculating rotations at a reduced resolution to
-save time, then out.res should be the SpatRaster you intent to use with
-create_tardis(). This is essential so that the returned cell IDs will conform
-to that SpatRaster, rather than to that given by 'rast'.}
+\item{method}{\code{character}. The reconstruction method to use. See \code{palaeoverse::palaeorotate()}
+for details.}
 
-\item{gpath}{If NULL, the GPlates API is used. This is very slow for large
-numbers of points, so the software call be installed locally for faster
-results. If desired gpath is the file path to the local reconstruction
-submodule. In case the GPlates executable file is not found at the coded
-default location, the full path to the executable (gplates-\if{html}{\out{<ver>}}.exe on
-Windows) can be entered, e.g. "C:/gplates_2.3.0_win64/gplates.exe".}
+\item{verbose}{\code{logical} Should function progress be reported to the user?}
 
-\item{verbose}{Should function progress be reported?}
+\item{...}{Other arguments passed to \code{palaeoverse::palaeorotate()}.}
 }
 \value{
-A list with length(ages) - 1 elements. Each element is a two-column
-matrix containing the IDs of geographically homologous cells between
-successive reconstruction ages.
+A list with as many elements as layers in \code{geog$layers}. Each element
+is a two-column matrix containing the IDs of geographically homologous cells
+between successive landscape layers.
 }
 \description{
-Generate a rotation list using commonly-implemented plate rotation models for
-use with create_tardis(). The user supplies a SpatRaster with the desired
-geographic resolution for the resulting rotation list, along with a vector of
-reconstruction ages in descending order. Conceivably, the SpatRaster and age
-vector the user intends to supply to create_tardis() could be used here. The
-function will take the cell centre coordinates for all grid cells in the
-SpatRaster as starting positions at the first age in the vector, then
-calculates their geographic positions at the subsequent ages. Calculation
-relies on the reconstruct() function from the rgplates package and will be
-very slow if high resolution SpatRasters/lengthy time vectors are supplied.
-Each SpatRaster layer must have at least some reconstructed grid cell
-positions so the age vector cannot be made shorter. Instead, it may be
-advisable to use a SpatRaster with a lower geographic resolution than those
-the user intends to supply to create_tardis(). This is totally fine as the
-rotations list does not need to give reconstructions for every grid cell in
-the landscape raster stack, nor will this even be possible as gplates will be
-unable to determine some geographic positions due to the limitations of the
-plate rotation models themselves. NAs are returned where reconstructions fail,
-although this is again not an issue as these will be automatically filtered
-by create_tardis(). There is no point performing rotations at a higher
-geographic resolution than the SpatRaster stack that you will use with
-create_tardis()
-#'
+Generate a rotation list from commonly-used plate rotation models for
+use with build_tardis(). Ensure that the same plate rotation model on which
+the input \code{geoglist} is based is requested for function call.
+}
+\details{
+Cell reconstruction from layer to layer is performed by \code{palaeoverse::palaeorotate()}.
+By default this uses the \code{"grid"} method, by retrieving reconstructed coordinates
+from pre-rotated H3 grids at resolution 3 (~119 km). This is almost
+certainly sufficient for any global scale analyses given that palaeogeographic
+models of topography and bathymetry rarely if ever exceed 1 degree resolution
+(~111 km).
 }
 \examples{
-#rast <- rast(nrows = 2, ncols = 2)
-#ages <- c(440, 430, 420)
-#foo <- get_rotations(rast = rast, ages = ages)
-
+\dontrun{
+rast <- rast(nrows = 2, ncols = 2)
+ages <- c(440, 430, 420)
+foo <- get_rotations(rast = rast, times = ages, model = "MERDITH2021")
+}
 }
