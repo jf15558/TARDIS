@@ -79,7 +79,7 @@ cost_surface <- function(tardis, weights = "gdist", verbose = T) {
       tmp <- cell_to_polygon(grid[as.numeric(names(wts))])
       wts <- data.frame(wts)
       colnames(wts) <- weights
-      st_geometry(wts) <- tmp
+      st_geometry(wts) <- st_wrap_dateline(tmp, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
       tmp <- wts
 
     } else {
