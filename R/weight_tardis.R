@@ -103,12 +103,14 @@
 
 weight_tardis <- function(tardis, name, vars = NULL, wfun = function(origin, dest, lnum = NULL, ...) {sqrt(origin$hdist^2 + abs(origin$vdist)^2)}, mfun = NULL, verbose = TRUE, ...) {
 
-  # tardis = rtd
-  # name = "altweight"
-  # vars = NULL
-  # wfun = function(origin, dest, lnum = NULL, ...) {sqrt(origin$hdist^2 + abs(origin$vdist)^2)}
-  # mfun = function(origin, dest, lnum = NULL, ...) {sqrt(origin$hdist^2 + abs(origin$vdist)^2) * 10}
-  # verbose = T
+  tardis = rtd
+  name = "clim"
+  vars = list(clim = tmp)
+  wfun = function(origin, dest, lnum = NULL, ...) {
+    (origin + dest) / 2
+  }
+  mfun = NULL
+  verbose = T
 
   if(!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
@@ -180,12 +182,12 @@ weight_tardis <- function(tardis, name, vars = NULL, wfun = function(origin, des
     origin <- as.data.frame(links[,c(1, 4:6)])
     dest <- as.data.frame(links[,c(2, 4:6)])
     if(!is.null(vars)) {
-      vrs <- lapply(vars, function(y) {y$layers[[i]][links[,1]]})
+      vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][links[,1]]})
       origin <- cbind.data.frame(origin, vrs)
-      vrs <- lapply(vars, function(y) {y$layers[[i]][links[,2]]})
-      origin <- cbind.data.frame(dest, vrs)
+      vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][links[,2]]})
+      dest <- cbind.data.frame(dest, vrs)
     }
-    colnames(origin) <- colnames(dest) <- c("cell", "hdist", "vdist", names(vars))
+    colnames(origin) <- colnames(dest) <- c("cell", "bearing", "hdist", "vdist", names(vars))
 
     weight <- try(wfun(origin = origin, dest = dest))
     if(class(weight)[1] == "try-error") {

@@ -171,10 +171,10 @@ rast_to_geoglist <- function(geog, mask = NULL, as.hex = FALSE, hex = "auto", me
       st_geometry(dat) <- clsp
       hex_list[[i]] <- dat[st_is_valid(dat),]
     }
-    out <- list(gdat = c(as.vector(ext(geog)), ncell = length(clist), ncol = ncol(geog), hex = hex), layers = hex_list, links = NULL, tgraph = NULL)
+    out <- list(gdat = c(as.vector(ext(geog)), ncell = length(clist), ncol = ncol(geog), hex = hex), layers = hex_list)
 
   } else {
-    out <- list(gdat = c(as.vector(ext(geog)), ncell = ncell(geog), ncol = ncol(geog), hex = NA), layers = geog, links = NULL, tgraph = NULL)
+    out <- list(gdat = c(as.vector(ext(geog)), ncell = ncell(geog), ncol = ncol(geog), hex = NA), layers = geog)
   }
   class(out) <- "geoglist"
   return(out)

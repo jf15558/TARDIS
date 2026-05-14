@@ -4,18 +4,19 @@
 #' @param tardis `tardis`. An object of class 'tardis', produced by create_tardis
 #' @param geog `geoglist`. A geoglist
 #' @param time `integer`. The tardis time slice to plot and interact with
+#' @param n `integer`. the number of points to link with a minimum spanning
+#' arborescence.
 #' @param col `character`. The colour to use for plotting interactive features.
-#' @param cost `numeric`. the maximum cost for calculating a reach isochrone (only for click_iso)
 #' @import terra sf scales
 
-click_iso <- function(tardis, geog, time = NULL, cost = 1e6, col = "gold") {
-
-  # tardis = rtd
-  # geog = hexes
-  # mlink = NULL
-  # time = NULL
+click_msa <- function(tardis, geog, time = NULL, n = 1, col = "gold") {
+  
+  # tardis = rtdw
+  # geog = rasts
+  # time = 2
+  # col = "gold"
   # n = 1
-
+  
   if(is.null(time)) {
     bin <- 1
   } else {
@@ -24,7 +25,7 @@ click_iso <- function(tardis, geog, time = NULL, cost = 1e6, col = "gold") {
     }
     bin <- sum(time < tardis$tdat)
   }
-
+  
   if(inherits(geog$layers[[1]], "SpatRaster")) {
     plot(geog$layers[[bin]])
   } else {
@@ -34,13 +35,13 @@ click_iso <- function(tardis, geog, time = NULL, cost = 1e6, col = "gold") {
   if(!is.null(geog$links)) {
     plot(geog$links[which(geog$links$bin == bin),"geometry"], add = T)
   }
-
-  org <- cbind(click(n = 1), rep(time, 1))
+  
+  org <- cbind(click(n = n), rep(time, n))
 
   hpts <- point_check(tardis, org)
-
-  hlcp <- st_make_valid(isochrone(tardis, origin = hpts, cost = cost))
-
+  
+  hlcp <- min_span(tardis, points = hpts)
+  
   plot(hpts$geometry, col = col, pch = 16, add = T)
-  plot(st_wrap_dateline(hlcp$geometry, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180")), add = T, border = col, col = scales::alpha(col, 0.2), lwd = 2)
+  plot(st_wrap_dateline(hlcp$geometry, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180")), add = T, col = col, lwd = 2)
 }
