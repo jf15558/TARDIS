@@ -178,13 +178,13 @@ weight_tardis <- function(tardis, name, vars = NULL, wfun = function(origin, des
     }
 
     links <- tardis$edges[which(src == i & src == dst),]
-    links[,1:2] <- links[,1:2] - ((i - 1) * tardis$gdat[5])
+    links[,1:2] <- links[,1:2] %% tardis$gdat[5]
     origin <- as.data.frame(links[,c(1, 4:6)])
     dest <- as.data.frame(links[,c(2, 4:6)])
     if(!is.null(vars)) {
-      vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][links[,1]]})
+      vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][match(links[,1], y$layers[[i]]$id)]})
       origin <- cbind.data.frame(origin, vrs)
-      vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][links[,2]]})
+      vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][match(links[,2], y$layers[[i]]$id)]})
       dest <- cbind.data.frame(dest, vrs)
     }
     colnames(origin) <- colnames(dest) <- c("cell", "bearing", "hdist", "vdist", names(vars))
@@ -200,8 +200,11 @@ weight_tardis <- function(tardis, name, vars = NULL, wfun = function(origin, des
     if(any(is.nan(weight) | is.infinite(weight))) {
       stop(paste0("wfun() resulted in a non-finite value (NaN, Inf) in  layer ", i, "/", layers, ". Ensure the function and data returns positive real numbers or NA"))
     }
-    if(any(weight <= 0)) {
-      stop(paste0("wfun() resulted in a non-positive value in layer ", i, "/", layers, ". Ensure the function and data returns positive real numbers"))
+    if(all(is.na(weight))) {
+      stop(paste0("wfun() resulted in all NA weights in layer ", i, "/", layers))
+    }
+    if(any(na.omit(weight) <= 0)) {
+      stop(paste0("wfun() resulted in a non-positive value in layer ", i, "/", layers, ". Ensure the function and data returns positive real numbers or NA"))
     }
 
     mlink <- which(links[,3] == 1)
@@ -209,7 +212,7 @@ weight_tardis <- function(tardis, name, vars = NULL, wfun = function(origin, des
 
       mweight <- try(mfun(origin = origin[mlink,], dest = dest[mlink,]))
       if(class(mweight)[1] == "try-error") {
-        stop(paste0("An error occurred in mfun() for  layer ", i, "/", layers, ". Check that the column names in mfunc() match the names of vars, along with 'hdist' and 'vdist'"))
+        stop(paste0("An error occurred in mfun() for layer ", i, "/", layers, ". Check that the column names in mfunc() match the names of vars, along with 'hdist' and 'vdist'"))
       }
       mweight <- as.vector(mweight)
       if(!is.vector(mweight) | length(mweight) != length(mlink)) {
@@ -218,8 +221,11 @@ weight_tardis <- function(tardis, name, vars = NULL, wfun = function(origin, des
       if(any(is.nan(weight) | is.infinite(weight))) {
         stop(paste0("mfun() resulted in a non-finite value (NaN, Inf) in  layer ", i, "/", layers, ". Ensure the function and data returns positive real numbers or NA"))
       }
-      if(any(mweight <= 0)) {
-        stop(paste0("mfun() resulted in a non-positive value in layer ", i, "/", layers, ". Ensure the function and data returns positive real numbers"))
+      if(all(is.na(mweight))) {
+        stop(paste0("mfun() resulted in all NA weights in layer ", i, "/", layers))
+      }
+      if(any(na.omit(mweight) <= 0)) {
+        stop(paste0("mfun() resulted in a non-positive value in layer ", i, "/", layers, ". Ensure the function and data returns positive real numbers or NA"))
       }
       weight[mlink] <- mweight
     }
@@ -227,7 +233,7 @@ weight_tardis <- function(tardis, name, vars = NULL, wfun = function(origin, des
   }
 
   if(any(is.na(wts))) {
-    warning("Some weights are NA. This is permissible, but may produce inaccessible islands. Consider checking with resistance_surface()")
+    warning("Some weights are NA. This is permissible, but may produce inaccessible islands. Consider checking with cost_surface()")
   }
 
   # attach weighting scheme and return
