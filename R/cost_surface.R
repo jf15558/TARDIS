@@ -32,8 +32,8 @@
 
 cost_surface <- function(tardis, weights = "gdist", verbose = T) {
 
-  # tardis = rtd
-  # weights = "tdist"
+  # tardis = rtdw
+  # weights = "clim"
 
   if (!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
@@ -80,6 +80,7 @@ cost_surface <- function(tardis, weights = "gdist", verbose = T) {
       wts <- data.frame(wts)
       colnames(wts) <- weights
       st_geometry(wts) <- tmp
+      tmp <- wts
 
     } else {
       tmp <- samprast
