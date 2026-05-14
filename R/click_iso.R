@@ -2,13 +2,16 @@
 #'
 #' interactive function under development
 #' @param tardis `tardis`. An object of class 'tardis', produced by create_tardis
+#' @param weights `character`. The name of the weighting scheme column in
+#' `tardis$edges` to use. By default these are true geographic distances
+#' (`"gdist"`). Alternatively, the name of a weighting scheme added to the tardis
 #' @param geog `geoglist`. A geoglist
 #' @param time `integer`. The tardis time slice to plot and interact with
 #' @param col `character`. The colour to use for plotting interactive features.
 #' @param cost `numeric`. the maximum cost for calculating a reach isochrone (only for click_iso)
 #' @import terra sf scales
 
-click_iso <- function(tardis, geog, time = NULL, cost = 1e6, col = "gold") {
+click_iso <- function(tardis, weights = "gdist", geog, time = NULL, cost = 1e6, col = "gold") {
 
   # tardis = rtd
   # geog = hexes

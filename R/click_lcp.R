@@ -2,13 +2,16 @@
 #'
 #' interactive function under development
 #' @param tardis `tardis`. An object of class 'tardis', produced by create_tardis
+#' @param weights `character`. The name of the weighting scheme column in
+#' `tardis$edges` to use. By default these are true geographic distances
+#' (`"gdist"`). Alternatively, the name of a weighting scheme added to the tardis
 #' @param geog `geoglist`. A geoglist
 #' @param time `integer`. The tardis time slice to plot and interact with
 #' @param n `integer`. the number of point pairs to run (only for click_lcp)
 #' @param col `character`. The colour to use for plotting interactive features.
 #' @import terra sf scales
 
-click_lcp <- function(tardis, geog, time = NULL, n = 1, col = "gold") {
+click_lcp <- function(tardis, weights = "gdist", geog, time = NULL, n = 1, col = "gold") {
 
   # tardis = rtdw
   # geog = rasts
@@ -40,7 +43,7 @@ click_lcp <- function(tardis, geog, time = NULL, n = 1, col = "gold") {
 
   hpts <- point_check(tardis, rbind(org, dst))
 
-  hlcp <- least_cost(tardis, origin = hpts[1:n,], dest = hpts[(n + 1):(n * 2),])
+  hlcp <- least_cost(tardis, weights = weights, origin = hpts[1:n,], dest = hpts[(n + 1):(n * 2),])
 
   plot(hpts$geometry, col = col, pch = 16, add = T)
   plot(st_wrap_dateline(hlcp$geometry, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180")), add = T, col = col, lwd = 2)
