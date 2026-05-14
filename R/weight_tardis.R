@@ -103,14 +103,14 @@
 
 weight_tardis <- function(tardis, name, vars = NULL, wfun = function(origin, dest, lnum = NULL, ...) {sqrt(origin$hdist^2 + abs(origin$vdist)^2)}, mfun = NULL, verbose = TRUE, ...) {
 
-  tardis = rtd
-  name = "clim"
-  vars = list(clim = tmp)
-  wfun = function(origin, dest, lnum = NULL, ...) {
-    (origin + dest) / 2
-  }
-  mfun = NULL
-  verbose = T
+  # tardis = rtd
+  # name = "clim"
+  # vars = list(clim = tmp)
+  # wfun = function(origin, dest, lnum = NULL, ...) {
+  #   (origin$clim + dest$clim) / 2
+  # }
+  # mfun = NULL
+  # verbose = T
 
   if(!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
