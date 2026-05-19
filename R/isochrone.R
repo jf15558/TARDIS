@@ -52,12 +52,12 @@
 
 isochrone <- function(tardis, weights = "tdist", origin, cost = 1e5, verbose = TRUE) {
 
-  tardis = rtd
-  weights = "gdist"
-  origin = point_check(rtd, rbind(c(-160.559, 82.33975, 115)))
-  cost = 1e7
-  restrict = T
-  verbose = T
+  # tardis = rtd
+  # weights = "gdist"
+  # origin = point_check(rtd, rbind(c(-160.559, 82.33975, 115)))
+  # cost = 1e7
+  # restrict = T
+  # verbose = T
 
   if (!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
