@@ -50,7 +50,7 @@
 #' foo <- isochrone(rtd, origin = rpts[3:4,], cost = 100000)
 #' }
 
-isochrone <- function(tardis, weights = "tdist", origin, cost = 1e5, verbose = TRUE) {
+isochrone <- function(tardis, weights = "gdist", origin, cost = 1e5, verbose = TRUE) {
 
   # tardis = rtd
   # weights = "gdist"
