@@ -50,14 +50,14 @@
 #' foo <- isochrone(rtd, origin = rpts[3:4,], cost = 100000)
 #' }
 
-isochrone <- function(tardis, weights = "gdist", origin, cost = 1e5, verbose = TRUE) {
+isochrone <- function(tardis, weights = "tdist", origin, cost = 1e5, verbose = TRUE) {
 
-  # tardis = rtd
-  # weights = "tdist"
-  # origin = rpt[3:4,]
-  # cost = 1e4
-  # restrict = T
-  # verbose = T
+  tardis = rtd
+  weights = "gdist"
+  origin = point_check(rtd, rbind(c(-160.559, 82.33975, 115)))
+  cost = 1e7
+  restrict = T
+  verbose = T
 
   if (!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
@@ -125,14 +125,16 @@ isochrone <- function(tardis, weights = "gdist", origin, cost = 1e5, verbose = T
 
     out <- tapply(rwp, rwt, function(x) {
       if(!is.na(tardis$gdat[7])) {
-        iso_xy <- st_sfc(st_union(cell_to_polygon(grid[x])))
+
+        baz <-  st_wrap_dateline(cell_to_polygon(grid[x]), options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
+        iso_xy <- st_sfc(st_union(baz))
 
       } else {
         tmprast <- samprast
         tmprast[x] <- 1
         iso_xy <- st_as_sf(as.polygons(tmprast))$geometry
       }
-      iso_xy
+      st_wrap_dateline(st_make_valid(iso_xy), options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
     }, simplify = F)
     if(length(out) > 1) {out <- do.call(rbind, out)} else {out <- out[[1]]}
     ob_list[[i]] <- out
@@ -141,8 +143,7 @@ isochrone <- function(tardis, weights = "gdist", origin, cost = 1e5, verbose = T
 
   ids <- paste0(rep(1:nrow(origin), sapply(ob_list, length)), "_", unlist(t_list), "-", unlist(t_list))
   out <- data.frame(path = rep(1:nrow(origin), unlist(lapply(ob_list, length))), bin = unlist(t_list))
-  geom <- st_make_valid(Reduce(c, ob_list))
-  st_geometry(out) <- st_wrap_dateline(geom, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
+  st_geometry(out) <- Reduce(c, ob_list)
   rownames(out) <- ids
 
   # summarise and return
