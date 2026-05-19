@@ -14,10 +14,12 @@
 click_iso <- function(tardis, weights = "gdist", geog, time = NULL, cost = 1e6, col = "gold") {
 
   # tardis = rtd
-  # geog = hexes
-  # mlink = NULL
-  # time = NULL
+  # geog = rasts
+  # weights = "gdist"
+  # time = 115
   # n = 1
+  # col = "gold"
+  # cost = 1e7
 
   if(is.null(time)) {
     bin <- 1
@@ -42,8 +44,8 @@ click_iso <- function(tardis, weights = "gdist", geog, time = NULL, cost = 1e6, 
 
   hpts <- point_check(tardis, org)
 
-  hlcp <- st_make_valid(isochrone(tardis, origin = hpts, cost = cost))
+  hlcp <- isochrone(tardis, origin = hpts, cost = cost)
 
   plot(hpts$geometry, col = col, pch = 16, add = T)
-  plot(st_wrap_dateline(hlcp$geometry, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180")), add = T, border = col, col = scales::alpha(col, 0.2), lwd = 2)
+  plot(hlcp$geometry, add = T, border = col, col = scales::alpha(col, 0.2), lwd = 2)
 }
