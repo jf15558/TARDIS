@@ -134,7 +134,7 @@ isochrone <- function(tardis, weights = "gdist", origin, cost = 1e5, verbose = T
         tmprast[x] <- 1
         iso_xy <- st_as_sf(as.polygons(tmprast))$geometry
       }
-      st_wrap_dateline(st_make_valid(iso_xy), options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
+      iso_xy
     }, simplify = F)
     if(length(out) > 1) {out <- do.call(rbind, out)} else {out <- out[[1]]}
     ob_list[[i]] <- out
