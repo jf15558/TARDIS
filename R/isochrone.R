@@ -141,7 +141,8 @@ isochrone <- function(tardis, weights = "gdist", origin, cost = 1e5, verbose = T
 
   ids <- paste0(rep(1:nrow(origin), sapply(ob_list, length)), "_", unlist(t_list), "-", unlist(t_list))
   out <- data.frame(path = rep(1:nrow(origin), unlist(lapply(ob_list, length))), bin = unlist(t_list))
-  st_geometry(out) <- Reduce(c, ob_list)
+  geom <- st_make_valid(Reduce(c, ob_list))
+  st_geometry(out) <- st_wrap_dateline(geom, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
   rownames(out) <- ids
 
   # summarise and return
