@@ -78,8 +78,8 @@
 
 link_islands <- function(geog, klink = NULL, verbose = T) {
   #
-  # geog = foo
-  # klink = NULL
+  # geog = rasts
+  # klink = 1
   # verbose = T
   #
   if(!exists("geog")) {
@@ -99,161 +99,149 @@ link_islands <- function(geog, klink = NULL, verbose = T) {
   if(!is.logical(verbose) | length(verbose) != 1) {
     stop("verbose should be logical")
   }
-
+  
   if(inherits(geog$layers, "SpatRaster")) {
-
-    bounds <- rast(lapply(geog$layers, patches, directions = 8, allowGaps = F))
-    islands <- lapply(bounds, as.polygons)
-
+    
+    islands <- rast(lapply(geog$layers, patches, directions = 8, allowGaps = F))
+    bounds <- lapply(1:nlyr(islands), function(x) {
+      pt <- as.points(mask(islands[[x]], classify(boundaries(islands[[x]]), cbind(0, NA))))
+      aggregate(pt, by = "patches")
+    })
+    
   } else {
-
+    
     grid <- get_grid(geog$gdat[1:4], geog$gdat[7])
-    islands <- lapply(geog$layers, function(z) {
-
+    dat <- lapply(geog$layers, function(z) {
       bar <- st_touches(z)
-      bar <- do.call(rbind, sapply(1:length(bar), function(x) {rbind(c(x, x), cbind(rep(x, length(bar[[x]])), bar[[x]]))}))
-      z$patches <- components(graph_from_edgelist(bar))$membership
-      z <- aggregate(z, list(z$patches), "max")
-      names(z)[1] <- "patches"
-      vect(z[,1])
+      bar2 <- do.call(rbind, sapply(1:length(bar), function(x) {rbind(c(x, x), cbind(rep(x, length(bar[[x]])), bar[[x]]))}))
+      z$patches <- components(graph_from_edgelist(bar2))$membership
+      z <- vect(z[,"patches"])
+      z2 <- centroids(z[sapply(bar, length) != 6,])
+      list(z, aggregate(z2, by = "patches"))
     })
-    pols <- lapply(geog$layers, function(z) {
-      vect(z[,"id"])
-    })
+    islands <- lapply(dat, `[[`, 1)
+    bounds <- lapply(dat, `[[`, 2)
   }
-
+  
   res_list <- list()
-  for (i in 1:length(islands)) {
-
+  for (i in 1:length(bounds)) {
+    
     if (verbose) {
-      cat(paste0("Resolving layers [", i, "/", length(islands), "]\r"))
-      if (i == length(islands)) {cat("\n")}
+      cat(paste0("Resolving layers [", i, "/", length(bounds), "]\r"))
+      if (i == length(bounds)) {cat("\n")}
     }
-
-    if(!all(islands[[i]]$patches == 1)) {
-
+    
+    if(!all(bounds[[i]]$patches == 1)) {
+      
       crds <- list()
       iter <- 1
-
-      while(length(unique(islands[[i]]$patches)) != 1) {
-
-        poly <- islands[[i]]
-        poly <- aggregate(poly, by = "patches")
-        #poly <- fillHoles(poly)
+      
+      while(!all(bounds[[i]]$patches == 1)) {
+        
+        poly <- bounds[[i]]
         vv <- voronoi(poly, bnd = poly)
-
-        ######## SPHERICAL METHOD (NOT IMPLEMENTED) ########
-        #
-        # library(sphereTessellation) # removed from CRAN, manual installation needed, possibly unreliable
-        # pts <- as.points(poly)
-        #
-        # #pt <- icosa::PolToCar(geom(pts)[,3:4]) # convert from lon-lat to Cartesian
-        # xlat = geom(pts)[,4] * pi/180
-        # xlon = geom(pts)[,3] * pi/180
-        # x = cos(xlat) * cos(xlon)
-        # y = cos(xlat) * sin(xlon)
-        # z = sin(xlat)
-        # outvec = c(x, y, z)
-        # pt <- matrix(outvec/sqrt(sum(outvec^2)), ncol = 3)
-        #
-        # #vor <- VoronoiOnSphere(pt, radius = 6371.007)
-        # vor <- VoronoiOnSphere(unique(pt)) # spherical voronoi, then get cell coordinates
-        # vor <- lapply(vor, `[[`, "cell")
-        #
-        # #vor <- lapply(vor, function(x) {icosa::CarToPol(t(x))[,1:2]}) # convert from Cartesian to lon-lat
-        # vor <- lapply(vor, function(x) {
-        #   xyz <- t(x)
-        #   x = xyz[,1]
-        #   y = xyz[,2]
-        #   z = xyz[,3]
-        #   latitude = 180 * asin(z)/pi
-        #   longitude = 180 * atan2(y, x)/pi
-        #   cbind(longitude, latitude)
-        # })
-        #
-        # vor <- lapply(vor, function(x) {x[c(1:nrow(x), 1),]})
-        # vor <- lapply(vor, function(x) {st_polygon(list(x))})
-        # vor <- st_sfc(vor, crs = "+proj=lonlat")
-        # vor2 <- data.frame(patches = pts$patches)
-        # st_geometry(vor2) <- vor
-        # vor2 <- st_wrap_dateline(vor2, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
-        # vor3 <- vect(vor2)
-        # vor3 <- makeValid(vor3)
-        # vor3 <- erase(vor3, poly)
-        # vv <- vor3[which(tapply(geom(vor3)[,2], geom(vor3)[,1], function(x) {length(unique(x))}) == 1)]
-        #
-        ##################################
-
+        
+        if(FALSE) {
+          ######## SPHERICAL METHOD (NOT IMPLEMENTED) ########
+          #
+          # library(sphereTessellation) # removed from CRAN, manual installation needed, possibly unreliable
+          # pts <- as.points(poly)
+          #
+          # #pt <- icosa::PolToCar(geom(pts)[,3:4]) # convert from lon-lat to Cartesian
+          # xlat = geom(pts)[,4] * pi/180
+          # xlon = geom(pts)[,3] * pi/180
+          # x = cos(xlat) * cos(xlon)
+          # y = cos(xlat) * sin(xlon)
+          # z = sin(xlat)
+          # outvec = c(x, y, z)
+          # pt <- matrix(outvec/sqrt(sum(outvec^2)), ncol = 3)
+          #
+          # #vor <- VoronoiOnSphere(pt, radius = 6371.007)
+          # vor <- VoronoiOnSphere(unique(pt)) # spherical voronoi, then get cell coordinates
+          # vor <- lapply(vor, `[[`, "cell")
+          #
+          # #vor <- lapply(vor, function(x) {icosa::CarToPol(t(x))[,1:2]}) # convert from Cartesian to lon-lat
+          # vor <- lapply(vor, function(x) {
+          #   xyz <- t(x)
+          #   x = xyz[,1]
+          #   y = xyz[,2]
+          #   z = xyz[,3]
+          #   latitude = 180 * asin(z)/pi
+          #   longitude = 180 * atan2(y, x)/pi
+          #   cbind(longitude, latitude)
+          # })
+          #
+          # vor <- lapply(vor, function(x) {x[c(1:nrow(x), 1),]})
+          # vor <- lapply(vor, function(x) {st_polygon(list(x))})
+          # vor <- st_sfc(vor, crs = "+proj=lonlat")
+          # vor2 <- data.frame(patches = pts$patches)
+          # st_geometry(vor2) <- vor
+          # vor2 <- st_wrap_dateline(vor2, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
+          # vor3 <- vect(vor2)
+          # vor3 <- makeValid(vor3)
+          # vor3 <- erase(vor3, poly)
+          # vv <- vor3[which(tapply(geom(vor3)[,2], geom(vor3)[,1], function(x) {length(unique(x))}) == 1)]
+          #
+          ##################################
+        }
+        
         vv <- aggregate(vv, by = "patches")
         ii <- adjacent(vv)
-
+        
         # dropping duplicates helps resolve cases where start-end cell for a link pair are not the same
-        ii <- unique(t(apply(ii, 1, sort)))
-        nr <- do.call(rbind, apply(ii, 1, function(x) {
-          nearest(poly[x[1]], poly[x[2]], centroids = F, lines = T)
+        #ii <- unique(t(apply(ii, 1, sort)))
+        dl <- do.call(rbind, apply(ii, 1, function(x) {
+          ln <- nearest(poly[x[1]], poly[x[2]], centroids = F, lines = T)
+          ln[which.min(ln$distance)]
         }))
-        nr <- rbind(nr, vect(st_reverse(st_as_sf(nr))))
-        ii <- rbind.data.frame(ii, ii[,2:1])
-        colnames(ii) <- c("from", "to")
-        nr <- geom(nr)
-        nr[which(nr[,4] == 90),4] <- 89.99
-        nr[which(nr[,4] == -90),4] <- -89.99
-        nr <- buffer(vect(nr[,3:4], crs = crs(poly)), 1)
-        nr <- crop(nr, poly)
-
+        
         if(inherits(geog$layers, "SpatRaster")) {
-
-          bnd <- mask(bounds[[i]], classify(boundaries(bounds[[i]]), cbind(0, NA)))
-          nr <- extract(bnd, nr, xy = T, cells = T)
-          nr <- nr[complete.cases(nr),]
-          nr <- nr[!duplicated(nr$ID),]
-          cls <- as.data.frame(matrix(nr$cell, ncol = 2, byrow = T))
-
-          nr <- st_cast(st_sfc(apply(nr[,4:5], 1, st_point, simplify = F), crs = st_crs(poly)), "LINESTRING", ids = rep(1:nrow(cls), each = 2))
-          nr <- vect(nr)
-
+          nr <- extract(islands[[i]], dl)
+          nr <- subset(nr, complete.cases(nr))
+          to_keep <- which(tapply(nr$patches, nr$ID, length) == 2)
+          dl <- dl[to_keep]
+          ii <- ii[to_keep,]
+          cl <- cellFromXY(geog$layers[[1]], geom(dl)[,3:4])
+          cls <- as.data.frame(matrix(cl, ncol = 2, byrow = T))
+          
         } else {
-
-          nr <- apply(relate(nr, pols[[i]], "intersects"), 1, which)
-          cls <- as.data.frame(matrix(geog$layers[[i]]$id[nr], ncol = 2, byrow = T))
-
-          nr <- st_cast(st_sfc(apply(geom(terra::centroids(pols[[i]][nr]))[,3:4], 1, st_point, simplify = F), crs = st_crs(poly)), "LINESTRING", ids = rep(1:nrow(cls), each = 2))
-          nr <- vect(nr)
+          
+          nr <- apply(relate(dl, islands[[i]], "intersects"), 1, which, simplify = F)
+          to_keep <- which(sapply(nr, length) == 2)
+          dl <- dl[to_keep]
+          ii <- ii[to_keep,]
+          cl <- suppressMessages(point_to_cell(geom(dl)[,3:4], res = geog$gdat[7]))
+          cl <- match(cl, grid)
+          cls <- as.data.frame(matrix(cl, ncol = 2, byrow = T))
         }
-
-        #distGeo(geom(nr)[,3:4])[seq(1, (length(nr) * 2), 2)]
-        dists <- perim(nr)
+        
+        dists <- perim(dl)
         links <- cbind.data.frame(ii, dists)
-        nr <- nr[order(links$from, links$dists)]
+        colnames(links) <- c("from", "to", "dists")
+        dl <- dl[order(links$from, links$dists)]
         cls <- cls[order(links$from, links$dists),]
         links <- links[order(links$from, links$dists),]
-
-        checks <- st_intersects(st_make_valid(st_as_sf(nr)), st_make_valid(st_as_sf(poly)))
-        checks <- which(sapply(checks, length) > 2)
-        if(length(checks) != 0) {
-          nr <- nr[-checks]
-          links <- links[-checks,]
-          cls <- cls[-checks,]
-        }
-
+        
         newlink <- tapply(links$dists, links$from, function(x) {
           getlink <- ifelse(is.null(klink), length(x), klink)
           1:ifelse(getlink < length(x), getlink, length(x))
         })
         newlink <- unlist(mapply(x = newlink, y = which(!duplicated(links$from)) - 1, function(x, y) {x + y}, SIMPLIFY = F))
-
+        
         colnames(cls) <- c("srt", "end")
         cls$layer <- i
         cls$distance <- links$dists
-        st_geometry(cls) <- st_as_sf(nr)$geometry
-        crds[[iter]] <- cls[newlink,]
-
+        st_geometry(cls) <- st_as_sf(dl)$geometry
+        finals <- cls[newlink,]
+        crds[[iter]] <- finals
+        
         newlink <- as.matrix(links[newlink, 1:2])
         newid <-  components(graph_from_edgelist(newlink))$membership
-        islands[[i]]$patches <- newid
-
+        bounds[[i]]$patches <- newid
+        bounds[[i]] <- aggregate(bounds[[i]], by = "patches")
+        
         iter <- iter + 1
-        if (all(islands[[i]]$patches == 1)) {
+        if (all(bounds[[i]]$patches == 1)) {
           iter <- FALSE
         }
       }
