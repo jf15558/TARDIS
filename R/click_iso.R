@@ -40,7 +40,7 @@ click_iso <- function(tardis, weights = "gdist", geog, time = NULL, cost = 1e6, 
   # tardis = rtd
   # geog = rasts
   # weights = "gdist"
-  # time = 115
+  # time = NULL
   # n = 1
   # col = "gold"
   # cost = 1e7
