@@ -12,7 +12,9 @@
 #' @return A `geoglist` as supplied in `geog` with the additional element, `links`.
 #' This contains an `sf data.frame` of linestrings representing the island links,
 #' recording their start and end cell IDs, the landscape layer to which they belong
-#' and their lengths in metres. If no landscape layers contained islands, then
+#' and their lengths in metres. If links were already generated using another
+#' function from TARDIS, they are appended to the existing element `links` and
+#' duplicate entries removed. If no landscape layers contained islands, then
 #' `geog` is returned without this additional slot.
 #' @import terra sf h3jsr
 #' @export
@@ -76,7 +78,7 @@
 
 link_islands <- function(geog, klink = NULL, verbose = T) {
   #
-  # geog = rasts
+  # geog = foo
   # klink = NULL
   # verbose = T
   #
@@ -85,9 +87,6 @@ link_islands <- function(geog, klink = NULL, verbose = T) {
   }
   if(!inherits(geog, "geoglist")) {
     stop("Supply geog as a geoglist from rast_to_geoglist()")
-  }
-  if(!is.null(geog$links)) {
-    warning("This geoglist already contains island links. They will be overwritten")
   }
   if(!is.null(klink)) {
     if (length(klink) != 1 | !inherits(klink, "numeric")) {
@@ -142,6 +141,49 @@ link_islands <- function(geog, klink = NULL, verbose = T) {
         poly <- aggregate(poly, by = "patches")
         #poly <- fillHoles(poly)
         vv <- voronoi(poly, bnd = poly)
+
+        ######## SPHERICAL METHOD (NOT IMPLEMENTED) ########
+        #
+        # library(sphereTessellation) # removed from CRAN, manual installation needed, possibly unreliable
+        # pts <- as.points(poly)
+        #
+        # #pt <- icosa::PolToCar(geom(pts)[,3:4]) # convert from lon-lat to Cartesian
+        # xlat = geom(pts)[,4] * pi/180
+        # xlon = geom(pts)[,3] * pi/180
+        # x = cos(xlat) * cos(xlon)
+        # y = cos(xlat) * sin(xlon)
+        # z = sin(xlat)
+        # outvec = c(x, y, z)
+        # pt <- matrix(outvec/sqrt(sum(outvec^2)), ncol = 3)
+        #
+        # #vor <- VoronoiOnSphere(pt, radius = 6371.007)
+        # vor <- VoronoiOnSphere(unique(pt)) # spherical voronoi, then get cell coordinates
+        # vor <- lapply(vor, `[[`, "cell")
+        #
+        # #vor <- lapply(vor, function(x) {icosa::CarToPol(t(x))[,1:2]}) # convert from Cartesian to lon-lat
+        # vor <- lapply(vor, function(x) {
+        #   xyz <- t(x)
+        #   x = xyz[,1]
+        #   y = xyz[,2]
+        #   z = xyz[,3]
+        #   latitude = 180 * asin(z)/pi
+        #   longitude = 180 * atan2(y, x)/pi
+        #   cbind(longitude, latitude)
+        # })
+        #
+        # vor <- lapply(vor, function(x) {x[c(1:nrow(x), 1),]})
+        # vor <- lapply(vor, function(x) {st_polygon(list(x))})
+        # vor <- st_sfc(vor, crs = "+proj=lonlat")
+        # vor2 <- data.frame(patches = pts$patches)
+        # st_geometry(vor2) <- vor
+        # vor2 <- st_wrap_dateline(vor2, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
+        # vor3 <- vect(vor2)
+        # vor3 <- makeValid(vor3)
+        # vor3 <- erase(vor3, poly)
+        # vv <- vor3[which(tapply(geom(vor3)[,2], geom(vor3)[,1], function(x) {length(unique(x))}) == 1)]
+        #
+        ##################################
+
         vv <- aggregate(vv, by = "patches")
         ii <- adjacent(vv)
 
@@ -169,17 +211,6 @@ link_islands <- function(geog, klink = NULL, verbose = T) {
 
           nr <- st_cast(st_sfc(apply(nr[,4:5], 1, st_point, simplify = F), crs = st_crs(poly)), "LINESTRING", ids = rep(1:nrow(cls), each = 2))
           nr <- vect(nr)
-
-
-          #
-          # plot(nr[51], xlim = c(-140, -110), ylim = c(-90, -86), asp = 1, col = 2) # line
-          # plot(poly, add = T)
-          # points(nr[101:102,3:4]) # from buffer
-          #
-          # plot(nr[101:102],add = T) # buffer
-          # plot(poly, add = T)
-          # points(geom(centroids(nr[101:102]))[,3:4]) # from buffer
-          # points(nr[101:102,][,4:5]) # resolved
 
         } else {
 
@@ -230,10 +261,11 @@ link_islands <- function(geog, klink = NULL, verbose = T) {
     }
   }
   if(all(sapply(res_list, is.null))) {
-    message("No islands found in any layers, returning NULL")
+    message("No islands found in any layers, no links will be returned")
     return(NULL)
   } else {
-    geog$links <- do.call(rbind, res_list)
+    lnks <- unique(rbind(geog$links, do.call(rbind, res_list)))
+    geog$links <- st_wrap_dateline(lnks, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
     return(geog)
   }
 }
