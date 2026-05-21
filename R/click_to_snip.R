@@ -7,11 +7,30 @@
 #' @param geog `geoglist`. The output of `rast_to_geoglist()`.
 #' @param layer `numeric`. The layer in the geoglist to be plotted, along with
 #' its links.
-#' @param nsips `numeric`. The number of snipping lines you wish to generate.
+#' @param nsnips `numeric`. The number of snipping lines you wish to generate.
 #' Simply rerun the function if you need to remove more lines, or add unwanted
 #' remaining lines such that they do not intersect any links.
 #' @return The input `geoglist` with the snipped links removed.
 #' @import terra sf h3jsr
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' library(terra)
+#' library(TARDIS)
+#'
+#' # load data
+#' gal <- TARDIS::galapagos()
+#' gal <- crop(gal, ext(-92, -88, -2, 1))
+#' gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
+#'
+#' # make geoglist and add links
+#' rasts <- rast_to_geoglist(gal, gal_m)
+#' rasts <- link_islands(rasts)
+#'
+#' # click to either side of a link to remove it
+#' click_to_snip(rasts)
+#' }
 
 click_to_snip <- function(geog, layer = 1, nsnips = 1) {
 

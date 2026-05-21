@@ -1,21 +1,21 @@
 #' rast_to_geoglist
 #'
-#' Convert a time-ordered set of rasters to a `geoglist` compatible with downstream
-#' TARDIS functions. The set of rasters could represent one of a wide range of
-#' possible geographic properties. Some TARDIS functions, however, will assume
-#' that the resultant `geoglist` records topographic and/or bathymetric data
-#' measured in metres.
+#' Convert a set of rasters to a `geoglist` compatible with downstream TARDIS
+#' functions. Typically, these rasters will record topography and/or bathymetry
+#' measured in metres, but could record other geographic properties instead.
+#' Some downstream functions will also assume that the set represents the same
+#' geographic area ordered forwards in time (i.e., the first raster in the set
+#' is the oldest).
 #'
-#' @param geog `SpatRaster`. A set of geographic rasters ordered forwards in
-#' time (i.e. the first layer is the oldest). These must be in longitude-latitude.
-#' projection. Missing values are not permitted and should be replaced (e.g.
-#' with the average of the surrounding cells, or a dummy value).
-#' @param mask `SpatRaster`. or `NULL`. If the former, this will be used
-#' to designate non-accessible areas in `geog`. It must be fully contiguous
-#' with `geog` (i.e., share the same resolution, extent and number of layers)
-#' and contain only `1` (unmasked, accessible) `NA` (masked, non-accessible) values.
-#' @param as.hex `logical`. Should `geog` be resampled to using the hexagonal
-#' grid system defined by Uber's H3 library? Defaults to `FALSE`.
+#' @param geog `SpatRaster`. A set of geographic rasters. These must be in
+#' longitude-latitude projection. Missing values are not permitted and should
+#' be replaced (e.g. with the average of the surrounding cells, or a dummy value).
+#' @param mask `SpatRaster` or `NULL`. If not `NULL`, this will be used to
+#' designate non-accessible areas in `geog`. It must be fully contiguous with
+#' `geog` (i.e., share the same resolution, extent and number of layers) and
+#' contain only `1` (unmasked, accessible) or `NA` (masked, non-accessible) values.
+#' @param as.hex `logical`. Should `geog` be resampled to the hexagonal grid
+#' system defined by Uber's H3 library? Defaults to `FALSE`.
 #' @param hex `"auto"` or `integer`. The desired H3 resolution to be used for
 #' resampling rasters. Defaults to `"auto"`, resulting in the function selecting
 #' the H3 resolution closest to the resolution of `geog`. Otherwise an integer in
@@ -26,9 +26,9 @@
 #' @param verbose `logical`. Should function progress should be reported to the user?
 #' @param ... Additional arguments passed internally to `exactextractr::exact_extract()`
 #' for resampling of raster grids.
-#' @return A `geoglist` with list elements `gdat` and `layers`. The former records spatial
-#' properties of the input rasters used throughout downstream TARDIS functions.
-#' The latter is a set of geographic layers, either as a `SpatRaster`, or an 'sf data.frame' of
+#' @return A `geoglist` with list elements `gdat` and `layers`. The former records
+#' spatial properties of the input rasters used throughout downstream TARDIS functions.
+#' The latter is a set of geographic layers, either as a `SpatRaster`, or an `sf data.frame` of
 #' polygons if resampling was implemented.
 #' @import terra exactextractr h3jsr
 #' @export
@@ -171,7 +171,7 @@ rast_to_geoglist <- function(geog, mask = NULL, as.hex = FALSE, hex = "auto", me
       st_geometry(dat) <- clsp
       hex_list[[i]] <- dat[st_is_valid(dat),]
     }
-    out <- list(gdat = c(as.vector(ext(geog)), ncell = length(clist), ncol = ncol(geog), hex = hex), layers = hex_list)
+    out <- list(gdat = c(as.vector(ext(geog)), ncell = length(clist), ncol = NA, hex = hex), layers = hex_list)
 
   } else {
     out <- list(gdat = c(as.vector(ext(geog)), ncell = ncell(geog), ncol = ncol(geog), hex = NA), layers = geog)

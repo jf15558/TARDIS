@@ -10,12 +10,18 @@
 #' `tardis$edges` to use. By default these are true geographic distances
 #' (`"gdist"`). Alternatively, the name of a weighting scheme added to the tardis
 #' object with `weight_tardis()`.
-#' @param points `sf data.frame` A simple features collection produced by `point_check()`,
+#' @param points `sf data.frame`. A simple features collection produced by `point_check()`,
 #' denoting the points to be linked.
-#' @param verbose `logical` Should function progress be reported to the user?
-#' @return An `sf data.frame` containing time-discrete linestrings that comprising
+#' @param loop `logical`. Should the optimal route additionally be closed from
+#' end point to start point to return a polygon? Defaults to `FALSE`.
+#' @param verbose `logical`. Should function progress be reported to the user?
+#' @return An `sf data.frame`. containing time-discrete linestrings that comprising
 #' the optimal visiting route for the set of input points.
-#' @import terra sf cppRouting rlemon h3jsr igraph
+#' @import terra sf cppRouting h3jsr
+#' @importFrom igraph graph_from_adjacency_matrix
+#' @importFrom igraph as_edgelist
+#' @importFrom igraph E
+#' @importFrom rlemon TravellingSalesperson
 #' @export
 #'
 #' @examples
@@ -48,7 +54,7 @@
 #' rlcp <- lcp(rtd, origin = rpts[1:2,], dest = rpts[3:4,])
 #' }
 
-optim_route <- function(tardis, weights = "gdist", points, verbose = TRUE) {
+optim_route <- function(tardis, weights = "gdist", points, loop = FALSE, verbose = TRUE) {
 
   # tardis = rtd
   # weights = "tdist"
@@ -71,6 +77,9 @@ optim_route <- function(tardis, weights = "gdist", points, verbose = TRUE) {
 
   if (!class(points)[1] == c("sf")) {
     stop("Supply origin as the output of stp")
+  }
+  if(!is.logical(loop)) {
+    stop("Loop should be logical")
   }
 
   if(!is.na(tardis$gdat[7])) {
@@ -108,6 +117,11 @@ optim_route <- function(tardis, weights = "gdist", points, verbose = TRUE) {
 
   srt <- points$cell[mca$node_order[-length(mca$node_order)]]
   end <- points$cell[mca$node_order[-1]]
+
+  if(loop) {
+    srt <- c(srt, end[length(end)])
+    end <- c(end, srt[1])
+  }
 
   srt_t <- srt %/% tardis$gdat[5] + 1
   end_t <- end %/% tardis$gdat[5] + 1

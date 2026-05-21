@@ -4,7 +4,7 @@
 \alias{optim_route}
 \title{optim_route}
 \usage{
-optim_route(tardis, weights = "gdist", points, verbose = TRUE)
+optim_route(tardis, weights = "gdist", points, loop = FALSE, verbose = TRUE)
 }
 \arguments{
 \item{tardis}{\code{tardis}. The output of \code{build_tardis()} or \code{weight_tardis()}.}
@@ -14,13 +14,16 @@ optim_route(tardis, weights = "gdist", points, verbose = TRUE)
 (\code{"gdist"}). Alternatively, the name of a weighting scheme added to the tardis
 object with \code{weight_tardis()}.}
 
-\item{points}{\verb{sf data.frame} A simple features collection produced by \code{point_check()},
+\item{points}{\verb{sf data.frame}. A simple features collection produced by \code{point_check()},
 denoting the points to be linked.}
 
-\item{verbose}{\code{logical} Should function progress be reported to the user?}
+\item{loop}{\code{logical}. Should the optimal route additionally be closed from
+end point to start point to return a polygon? Defaults to \code{FALSE}.}
+
+\item{verbose}{\code{logical}. Should function progress be reported to the user?}
 }
 \value{
-An \verb{sf data.frame} containing time-discrete linestrings that comprising
+An \verb{sf data.frame}. containing time-discrete linestrings that comprising
 the optimal visiting route for the set of input points.
 }
 \description{

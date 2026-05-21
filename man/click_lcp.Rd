@@ -2,21 +2,45 @@
 % Please edit documentation in R/click_lcp.R
 \name{click_lcp}
 \alias{click_lcp}
-\title{click functions}
+\title{click_lcp}
 \usage{
-click_lcp(tardis, geog, time = NULL, n = 1, col = "gold")
+click_lcp(tardis, weights = "gdist", geog, time = NULL, n = 1, col = "gold")
 }
 \arguments{
 \item{tardis}{\code{tardis}. An object of class 'tardis', produced by create_tardis}
 
+\item{weights}{\code{character}. The name of the weighting scheme column in
+\code{tardis$edges} to use. By default these are true geographic distances
+(\code{"gdist"}). Alternatively, the name of a weighting scheme added to the tardis}
+
 \item{geog}{\code{geoglist}. A geoglist}
 
-\item{time}{\code{integer}. The tardis time slice to plot and interact with}
+\item{time}{\code{integer}. The tardis time slice to plot and interact with.
+Defaults to \code{NULL}, in which case the first slice is used.}
 
 \item{n}{\code{integer}. the number of point pairs to run (only for click_lcp)}
 
 \item{col}{\code{character}. The colour to use for plotting interactive features.}
 }
 \description{
-interactive function under development
+Interactively calculate and plot \code{n} least cost paths by clicking their start
+and end points on the landscape displayed by the function. Clicked points
+falling in masked regions are automatically resolved to the nearest available
+cell.
+}
+\examples{
+\dontrun{
+library(terra)
+library(TARDIS)
+
+gal <- TARDIS::galapagos()
+gal <- crop(gal, ext(-92, -88, -2, 1))
+gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
+hexes <- rast_to_geoglist(gal, gal_m, as.hex = T, hex = 7)
+hlink <- link_islands(hexes)
+htd <- build_tardis(hexes, times = c(seq(2.25, 0, -0.5), 0))
+
+# click two start and end points on the map
+click_iso(tardis = rtd, geog = hexes, time = 2, n = 2)
+}
 }

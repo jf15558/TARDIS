@@ -20,7 +20,9 @@ be useful when dealing with large rasters (high resolution and/or many layers).}
 A \code{geoglist} as supplied in \code{geog} with the additional element, \code{links}.
 This contains an \verb{sf data.frame} of linestrings representing the island links,
 recording their start and end cell IDs, the landscape layer to which they belong
-and their lengths in metres. If no landscape layers contained islands, then
+and their lengths in metres. If links were already generated using another
+function from TARDIS, they are appended to the existing element \code{links} and
+duplicate entries removed. If no landscape layers contained islands, then
 \code{geog} is returned without this additional slot.
 }
 \description{

@@ -17,6 +17,8 @@
 #' duplicate entries removed. If no landscape layers contained islands, then
 #' `geog` is returned without this additional slot.
 #' @import terra sf h3jsr
+#' @importFrom igraph components
+#' @importFrom igraph graph_from_edgelist
 #' @export
 #'
 #' @details
@@ -99,17 +101,17 @@ link_islands <- function(geog, klink = NULL, verbose = T) {
   if(!is.logical(verbose) | length(verbose) != 1) {
     stop("verbose should be logical")
   }
-  
+
   if(inherits(geog$layers, "SpatRaster")) {
-    
+
     islands <- rast(lapply(geog$layers, patches, directions = 8, allowGaps = F))
     bounds <- lapply(1:nlyr(islands), function(x) {
       pt <- as.points(mask(islands[[x]], classify(boundaries(islands[[x]]), cbind(0, NA))))
       aggregate(pt, by = "patches")
     })
-    
+
   } else {
-    
+
     grid <- get_grid(geog$gdat[1:4], geog$gdat[7])
     dat <- lapply(geog$layers, function(z) {
       bar <- st_touches(z)
@@ -122,25 +124,25 @@ link_islands <- function(geog, klink = NULL, verbose = T) {
     islands <- lapply(dat, `[[`, 1)
     bounds <- lapply(dat, `[[`, 2)
   }
-  
+
   res_list <- list()
   for (i in 1:length(bounds)) {
-    
+
     if (verbose) {
       cat(paste0("Resolving layers [", i, "/", length(bounds), "]\r"))
       if (i == length(bounds)) {cat("\n")}
     }
-    
+
     if(!all(bounds[[i]]$patches == 1)) {
-      
+
       crds <- list()
       iter <- 1
-      
+
       while(!all(bounds[[i]]$patches == 1)) {
-        
+
         poly <- bounds[[i]]
         vv <- voronoi(poly, bnd = poly)
-        
+
         if(FALSE) {
           ######## SPHERICAL METHOD (NOT IMPLEMENTED) ########
           #
@@ -184,17 +186,17 @@ link_islands <- function(geog, klink = NULL, verbose = T) {
           #
           ##################################
         }
-        
+
         vv <- aggregate(vv, by = "patches")
         ii <- adjacent(vv)
-        
+
         # dropping duplicates helps resolve cases where start-end cell for a link pair are not the same
         #ii <- unique(t(apply(ii, 1, sort)))
         dl <- do.call(rbind, apply(ii, 1, function(x) {
           ln <- nearest(poly[x[1]], poly[x[2]], centroids = F, lines = T)
           ln[which.min(ln$distance)]
         }))
-        
+
         if(inherits(geog$layers, "SpatRaster")) {
           nr <- extract(islands[[i]], dl)
           nr <- subset(nr, complete.cases(nr))
@@ -203,9 +205,9 @@ link_islands <- function(geog, klink = NULL, verbose = T) {
           ii <- ii[to_keep,]
           cl <- cellFromXY(geog$layers[[1]], geom(dl)[,3:4])
           cls <- as.data.frame(matrix(cl, ncol = 2, byrow = T))
-          
+
         } else {
-          
+
           nr <- apply(relate(dl, islands[[i]], "intersects"), 1, which, simplify = F)
           to_keep <- which(sapply(nr, length) == 2)
           dl <- dl[to_keep]
@@ -214,32 +216,32 @@ link_islands <- function(geog, klink = NULL, verbose = T) {
           cl <- match(cl, grid)
           cls <- as.data.frame(matrix(cl, ncol = 2, byrow = T))
         }
-        
+
         dists <- perim(dl)
         links <- cbind.data.frame(ii, dists)
         colnames(links) <- c("from", "to", "dists")
         dl <- dl[order(links$from, links$dists)]
         cls <- cls[order(links$from, links$dists),]
         links <- links[order(links$from, links$dists),]
-        
+
         newlink <- tapply(links$dists, links$from, function(x) {
           getlink <- ifelse(is.null(klink), length(x), klink)
           1:ifelse(getlink < length(x), getlink, length(x))
         })
         newlink <- unlist(mapply(x = newlink, y = which(!duplicated(links$from)) - 1, function(x, y) {x + y}, SIMPLIFY = F))
-        
+
         colnames(cls) <- c("srt", "end")
         cls$layer <- i
         cls$distance <- links$dists
         st_geometry(cls) <- st_as_sf(dl)$geometry
         finals <- cls[newlink,]
         crds[[iter]] <- finals
-        
+
         newlink <- as.matrix(links[newlink, 1:2])
         newid <-  components(graph_from_edgelist(newlink))$membership
         bounds[[i]]$patches <- newid
         bounds[[i]] <- aggregate(bounds[[i]], by = "patches")
-        
+
         iter <- iter + 1
         if (all(bounds[[i]]$patches == 1)) {
           iter <- FALSE

@@ -15,18 +15,17 @@ rast_to_geoglist(
 )
 }
 \arguments{
-\item{geog}{\code{SpatRaster}. A set of geographic rasters ordered forwards in
-time (i.e. the first layer is the oldest). These must be in longitude-latitude.
-projection. Missing values are not permitted and should be replaced (e.g.
-with the average of the surrounding cells, or a dummy value).}
+\item{geog}{\code{SpatRaster}. A set of geographic rasters. These must be in
+longitude-latitude projection. Missing values are not permitted and should
+be replaced (e.g. with the average of the surrounding cells, or a dummy value).}
 
-\item{mask}{\code{SpatRaster}. or \code{NULL}. If the former, this will be used
-to designate non-accessible areas in \code{geog}. It must be fully contiguous
-with \code{geog} (i.e., share the same resolution, extent and number of layers)
-and contain only \code{1} (unmasked, accessible) \code{NA} (masked, non-accessible) values.}
+\item{mask}{\code{SpatRaster} or \code{NULL}. If not \code{NULL}, this will be used to
+designate non-accessible areas in \code{geog}. It must be fully contiguous with
+\code{geog} (i.e., share the same resolution, extent and number of layers) and
+contain only \code{1} (unmasked, accessible) or \code{NA} (masked, non-accessible) values.}
 
-\item{as.hex}{\code{logical}. Should \code{geog} be resampled to using the hexagonal
-grid system defined by Uber's H3 library? Defaults to \code{FALSE}.}
+\item{as.hex}{\code{logical}. Should \code{geog} be resampled to the hexagonal grid
+system defined by Uber's H3 library? Defaults to \code{FALSE}.}
 
 \item{hex}{\code{"auto"} or \code{integer}. The desired H3 resolution to be used for
 resampling rasters. Defaults to \code{"auto"}, resulting in the function selecting
@@ -43,17 +42,18 @@ Defaults to \code{"mean"}.}
 for resampling of raster grids.}
 }
 \value{
-A \code{geoglist} with list elements \code{gdat} and \code{layers}. The former records spatial
-properties of the input rasters used throughout downstream TARDIS functions.
-The latter is a set of geographic layers, either as a \code{SpatRaster}, or an 'sf data.frame' of
+A \code{geoglist} with list elements \code{gdat} and \code{layers}. The former records
+spatial properties of the input rasters used throughout downstream TARDIS functions.
+The latter is a set of geographic layers, either as a \code{SpatRaster}, or an \verb{sf data.frame} of
 polygons if resampling was implemented.
 }
 \description{
-Convert a time-ordered set of rasters to a \code{geoglist} compatible with downstream
-TARDIS functions. The set of rasters could represent one of a wide range of
-possible geographic properties. Some TARDIS functions, however, will assume
-that the resultant \code{geoglist} records topographic and/or bathymetric data
-measured in metres.
+Convert a set of rasters to a \code{geoglist} compatible with downstream TARDIS
+functions. Typically, these rasters will record topography and/or bathymetry
+measured in metres, but could record other geographic properties instead.
+Some downstream functions will also assume that the set represents the same
+geographic area ordered forwards in time (i.e., the first raster in the set
+is the oldest).
 }
 \details{
 Masking is a key feature of TARDIS. Often landscapes will contain

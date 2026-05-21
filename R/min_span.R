@@ -15,7 +15,11 @@
 #' @param verbose `logical` Should function progress be reported to the user?
 #' @return An `sf data.frame` containing time-discrete linestrings that comprising the minimum
 #' spanning arboresence for the set of input points.
-#' @import terra sf cppRouting rlemon h3jsr igraph
+#' @import terra sf cppRouting rlemon h3jsr
+#' @importFrom igraph graph_from_adjacency_matrix
+#' @importFrom igraph as_edgelist
+#' @importFrom igraph E
+#' @importFrom rlemon MinCostArborescence
 #' @export
 #'
 #' @details
@@ -43,19 +47,19 @@
 #' hlink <- link_islands(hexes)
 #' rlink <- link_islands(rasts)
 
-#' htd <- build_tardis(hexes, times = c(seq(2.25, 0, -0.5), 0), mlink = hlink)
-#' rtd <- build_tardis(rasts, times = c(seq(2.25, 0, -0.5), 0), mlink = rlink)
+#' htd <- build_tardis(hexes, times = c(seq(2.25, 0, -0.5), 0))
+#' rtd <- build_tardis(rasts, times = c(seq(2.25, 0, -0.5), 0))
 
 #' org <- rbind(c(-89.78873, -1.420627, 2),
 #'              c(-89.58525, -1.473917, 2))
 #' dst <- rbind(c(-88.70836, -0.2627832, 2),
 #'              c(-90.44276,  0.2943382, 2))
 #'
-#' hpts <- stp(htd, rbind(org, dst))
-#' rpts <- stp(rtd, rbind(org, dst))
+#' hpts <- point_check(htd, rbind(org, dst))
+#' rpts <- point_check(rtd, rbind(org, dst))
 #'
-#' hlcp <- lcp(htd, origin = hpts[1:2,], dest = hpts[3:4,])
-#' rlcp <- lcp(rtd, origin = rpts[1:2,], dest = rpts[3:4,])
+#' hlcp <- min_span(htd, origin = hpts[1:2,], dest = hpts[3:4,])
+#' rlcp <- min_span(rtd, origin = rpts[1:2,], dest = rpts[3:4,])
 #' }
 
 min_span <- function(tardis, weights = "gdist", points, verbose = TRUE) {
