@@ -46,6 +46,9 @@ click_iso <- function(tardis, weights = "gdist", geog, time = NULL, cost = 1e6, 
   # cost = 1e7
 
   if(is.null(time)) {
+    if(!is.null(tardis$tdat)) {
+      time <- sum(tardis$tdat[1:2]) / 2
+    }
     bin <- 1
   } else {
     if(time > tardis$tdat[1] | time < tardis$tdat[length(tardis$tdat)]) {

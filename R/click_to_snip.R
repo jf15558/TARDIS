@@ -34,9 +34,9 @@
 
 click_to_snip <- function(geog, layer = 1, nsnips = 1) {
 
-  # geog = rasts
-  # layer = 1
-  # nsnips = 1
+  geog = rasts
+  layer = 1
+  nsnips = 1
 
   if(!exists("geog")) {
     stop("Supply geog as a geoglist with rast_to_geoglist()")
@@ -84,7 +84,8 @@ click_to_snip <- function(geog, layer = 1, nsnips = 1) {
     for(i in 1:nsnips) {
       ln <- st_sfc(st_linestring(click(n = 2)), crs = "+proj=lonlat")
       plot(ln, add = T, col = 2, lwd = 2)
-      snips[[i]] <- unlist(st_intersects(ln, geog$links[which(geog$links$layer == layer),]))
+      lnks <- which(geog$links$layer == layer)
+      snips[[i]] <- lnks[unlist(st_intersects(ln, geog$links[lnks,]))]
     }
     snips <- unlist(snips)
     if(length(snips) == 0) {
