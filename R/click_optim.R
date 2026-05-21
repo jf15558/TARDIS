@@ -17,7 +17,7 @@
 #' @param loop `logical`. Should the optimal route additionally be closed from
 #' end point to start point to return a polygon? Defaults to `FALSE`.
 #' @param col `character`. The colour to use for plotting interactive features.
-#' @import terra sf scales
+#' @import terra sf
 #' @export
 #'
 #' @examples

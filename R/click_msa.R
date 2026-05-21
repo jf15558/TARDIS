@@ -15,7 +15,7 @@
 #' @param n `integer`. the number of points to link with a minimum spanning
 #' arborescence.
 #' @param col `character`. The colour to use for plotting interactive features.
-#' @import terra sf scales
+#' @import terra sf
 #' @export
 #'
 #' @examples

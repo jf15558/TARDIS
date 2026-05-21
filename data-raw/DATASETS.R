@@ -54,10 +54,12 @@ galapagos <- terra::wrap(galapagos)
 # save
 foo <- readRDS("galap_hr.RData")
 foo <- rast(lapply(foo, terra::rast))
+foo <- crop(foo, ext(-92, -88, -2, 1))
+
 foo <- terra::wrap(foo)
 galapagos <- foo
 #usethis::use_data(galapagos, internal = F)
-writeRaster(galapagos, "../inst/extdata/galapagos.tif")
+writeRaster(galapagos, "../inst/extdata/galapagos.tif", overwrite=T)
 
 
 # PHYLOGENY

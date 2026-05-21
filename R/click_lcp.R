@@ -14,7 +14,7 @@
 #' Defaults to `NULL`, in which case the first slice is used.
 #' @param n `integer`. the number of point pairs to run (only for click_lcp)
 #' @param col `character`. The colour to use for plotting interactive features.
-#' @import terra sf scales
+#' @import terra sf
 #' @export
 #'
 #' @examples
