@@ -200,7 +200,7 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
         stop("geog$links contains values exceeding the number of layers present in geog")
       }
     }
-    if (!all(as.vector(st_geometry_type(geog$links)) %in% c("LINESTRING", "MULTILINESTRING"))) {
+    if (!all(as.vector(st_geometry_type(geog$links)) %in% c("LINESTRING"))) {
       stop("All geometries in geog$links should be lines")
     }
     if (!all(table(st_coordinates(geog$links)[, 3]) == 2)) {

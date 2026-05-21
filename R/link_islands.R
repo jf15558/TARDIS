@@ -264,8 +264,8 @@ link_islands <- function(geog, klink = NULL, verbose = T) {
     message("No islands found in any layers, no links will be returned")
     return(NULL)
   } else {
-    lnks <- unique(rbind(geog$links, do.call(rbind, res_list)))
-    geog$links <- st_wrap_dateline(lnks, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
+    geog$lnks <- unique(rbind(geog$links, do.call(rbind, res_list)))
+    #geog$links <- st_wrap_dateline(lnks, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
     return(geog)
   }
 }
