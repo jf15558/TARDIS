@@ -234,7 +234,7 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
         } else {
           neigh <- sapply(st_touches(geog$layers[[x]]), length)
           crds <- unique(unlist(st_drop_geometry(lnk[,c("srt", "end")])))
-          if(any(neigh[match(crds, geog$layers[[x]]$id)] == 6)) {
+          if(any(neigh[match(crds, as.numeric(rownames(geog$layers[[x]]))] == 6)) {
             stop(paste0("In layer ", x, ", one or more line start/end points do not fall on cells at the edges of islands"))
           }
           #ints <- st_intersects(lnk, geog$layers[[x]])
@@ -282,7 +282,7 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
     if(inherits(geog$layers, "SpatRaster")) {
       matched <- which(ed[,1] %in% which(!is.na(geog$layers[[i]][])) & ed[,2] %in% which(!is.na(geog$layers[[i]][])))
     } else {
-      matched <- which(ed[,1] %in% geog$layers[[i]]$id & ed[,2] %in% geog$layers[[i]]$id)
+      matched <- which(ed[,1] %in% as.numeric(rownames(geog$layers[[i]])) & ed[,2] %in% as.numeric(rownames(geog$layers[[i]])))
     }
 
     ed2 <- ed[matched,]
@@ -303,7 +303,7 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
     if(inherits(geog$layers, "SpatRaster")) {
       v_dists <- geog$layers[[i]][][ed2[, 2]] - geog$layers[[i]][][ed2[, 1]]
     } else {
-      v_dists <- geog$layers[[i]][[1]][match(ed2[,1], geog$layers[[i]]$id)] - geog$layers[[i]][[1]][match(ed2[,2], geog$layers[[i]]$id)]
+      v_dists <- geog$layers[[i]][[1]][match(ed2[,1], as.numeric(rownames(geog$layers[[i]])))] - geog$layers[[i]][[1]][match(ed2[,2], as.numeric(rownames(geog$layers[[i]])))]
     }
 
     t_dists <- sqrt(h_dists2^2 + (abs(v_dists)^2))

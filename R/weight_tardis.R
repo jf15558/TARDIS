@@ -182,9 +182,9 @@ weight_tardis <- function(tardis, name, vars = NULL, wfun = function(origin, des
     origin <- as.data.frame(links[,c(1, 4:6)])
     dest <- as.data.frame(links[,c(2, 4:6)])
     if(!is.null(vars)) {
-      vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][match(links[,1], y$layers[[i]]$id)]})
+      vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][match(links[,1], as.numeric(rownames(y$layers[[i]])))]})
       origin <- cbind.data.frame(origin, vrs)
-      vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][match(links[,2], y$layers[[i]]$id)]})
+      vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][match(links[,2], as.numeric(rownames(y$layers[[i]])))]})
       dest <- cbind.data.frame(dest, vrs)
     }
     colnames(origin) <- colnames(dest) <- c("cell", "bearing", "hdist", "vdist", names(vars))
