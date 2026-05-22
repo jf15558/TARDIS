@@ -15,6 +15,7 @@
 #' @param hex.border `character` or `integer`. The colour to be used for plotting
 #' hexagonal grids. By default none.
 #' @return None.
+#' @export
 
 plot.geoglist <- function(geog, layer = 1, pal = terrain.colors(100), links = T,
                           lcol = 1, lwd = 1, lty = 1, hex.border = NA) {
