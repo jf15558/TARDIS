@@ -23,7 +23,7 @@
 plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
                           lcol = 1, lwd = 1, lty = 1, hex.border = NA, legend = T) {
 
-  # geog = foo
+  # geog = foo2
   # layer = 1
   # pal = sf.colors(10)
   # links = T
@@ -54,8 +54,7 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
   }
 
   if(legend) {
-    pr <- par()
-    newmar <- pr$mar
+    pr <- newmar <- par("mar")
     newmar[4] <- 5.1
     par(mar = newmar)
   }
