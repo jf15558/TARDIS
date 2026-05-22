@@ -41,14 +41,14 @@ plot.geoglist <- function(geog, layer = 1, pal = terrain.colors(100), links = T,
   }
   
   if(inherits(geog$layers[[1]], "SpatRaster")) {
-    plot(geog$layers[[bin]], col = pal, legend = F)
+    plot(geog$layers[[layer]], col = pal, legend = F)
   } else {
-    plot(geog$layers[[bin]]$geometry, border = NA)
-    plot(geog$layers[[bin]][,1], add = T, col = pal, border = hex.border)
+    plot(geog$layers[[layer]]$geometry, border = NA)
+    plot(geog$layers[[layer]][,1], add = T, col = pal, border = hex.border)
   }
   if(links) {
     if(!is.null(geog$links)) {
-      plot(geog$links[which(geog$links$layer == bin),"geometry"], add = T,
+      plot(geog$links[which(geog$links$layer == layer),"geometry"], add = T,
            col = lcol, lwd = lwd, lty = lty)
     }
   }
