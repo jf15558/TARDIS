@@ -14,6 +14,8 @@
 #' @param lty `integer`. The line type to be used for plotting links.
 #' @param hex.border `character` or `integer`. The colour to be used for plotting
 #' hexagonal grids. By default none.
+#' @param legend `logical`. Should a legend be added to the plot? Defaults to
+#' `TRUE`.
 #' @return None.
 #' @import sf terra
 #' @export

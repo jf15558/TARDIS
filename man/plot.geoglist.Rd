@@ -7,12 +7,13 @@
 plot.geoglist(
   geog,
   layer = 1,
-  pal = terrain.colors(100),
+  pal = sf.colors(10),
   links = T,
   lcol = 1,
   lwd = 1,
   lty = 1,
-  hex.border = NA
+  hex.border = NA,
+  legend = T
 )
 }
 \arguments{
@@ -34,6 +35,9 @@ such as those returned by an R colour palette.}
 
 \item{hex.border}{\code{character} or \code{integer}. The colour to be used for plotting
 hexagonal grids. By default none.}
+
+\item{legend}{\code{logical}. Should a legend be added to the plot? Defaults to
+\code{TRUE}.}
 }
 \value{
 None.
