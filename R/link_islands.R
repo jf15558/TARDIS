@@ -203,7 +203,7 @@ link_islands <- function(geog, klink = NULL, verbose = T) {
           to_keep <- which(tapply(nr$patches, nr$ID, length) == 2)
           #to_keep <- which(tapply(nr$patches, nr$ID, function(x) {length(unique(x))}) == 2)
           dl <- dl[to_keep]
-          ii <- ii[to_keep,]
+          ii <- ii[to_keep,,drop = F]
           cl <- cellFromXY(geog$layers[[1]], geom(dl)[,3:4])
           cls <- as.data.frame(matrix(cl, ncol = 2, byrow = T))
 
@@ -212,7 +212,7 @@ link_islands <- function(geog, klink = NULL, verbose = T) {
           nr <- apply(relate(dl, islands[[i]], "intersects"), 1, which, simplify = F)
           to_keep <- which(sapply(nr, length) == 2)
           dl <- dl[to_keep]
-          ii <- ii[to_keep,]
+          ii <- ii[to_keep,,drop = F]
           cl <- suppressMessages(point_to_cell(geom(dl)[,3:4], res = geog$gdat[7]))
           cl <- match(cl, grid)
           cls <- as.data.frame(matrix(cl, ncol = 2, byrow = T))
