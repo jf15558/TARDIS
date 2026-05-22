@@ -201,12 +201,12 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
         stop("geog$links contains values exceeding the number of layers present in geog")
       }
     }
-    if (!all(as.vector(st_geometry_type(geog$links)) %in% c("LINESTRING"))) {
+    if (!all(as.vector(st_geometry_type(geog$links)) %in% c("LINESTRING", "MULTILINESTRING"))) {
       stop("All geometries in geog$links should be lines")
     }
-    if (!all(table(st_coordinates(geog$links)[, 3]) == 2)) {
-      stop("Each line in geog$links can only contain 2 coordinates (start and end)")
-    }
+    #if (!all(table(st_coordinates(geog$links)[, 3]) == 2)) {
+    #  stop("Each line in geog$links can only contain 2 coordinates (start and end)")
+    #}
     tests <- sapply(1:nlayers, function(x) {
       ext1 <- geog$gdat[1:4]
       ext2 <- st_bbox(geog$links[which(geog$links$layer == x),])[c(1, 3, 2, 4)]
@@ -293,8 +293,14 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
       lnk <- as.matrix(st_drop_geometry(add_links[[i]][,1:2]))
       ed2 <- rbind(ed2, lnk)
       h_dists2 <- c(h_dists2, add_links[[i]]$distance)
-      angs <- bearing(st_coordinates(add_links[[i]])[seq(1, nrow(add_links[[i]]) * 2, 2),1:2],
-                      st_coordinates(add_links[[i]])[seq(2, nrow(add_links[[i]]) * 2, 2),1:2])
+      if(inherits(geog$layers, "SpatRaster")) {
+        crd1 <- xyFromCell(lnk[,1], geog$layers[[1]])
+        crd2 <- xyFromCell(lnk[,2], geog$layers[[1]])
+      } else {
+        crd1 <- st_coordinates(cell_to_point(grid[lnk[,1]], geog$gdat[7]))
+        crd2 <- st_coordinates(cell_to_point(grid[lnk[,2]], geog$gdat[7]))
+      }
+      angs <- bearing(crd1, crd2)
       h_ang2 <- c(h_ang2, angs)
       type <- c(type, rep(1, length(add_links[[i]]$distance)))
     }
