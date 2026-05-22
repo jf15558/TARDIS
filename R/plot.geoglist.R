@@ -76,7 +76,7 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
     if(inherits(geog$layers[[1]], "SpatRaster")) {
       rng <- c(minmax(geog$layers[[layer]]))
     } else {
-      rng <- range(st_drop_geometry(foo2$layers[[1]][,1]), na.rm = T)
+      rng <- range(st_drop_geometry(geog$layers[[1]][,1]), na.rm = T)
     }
     legend_cont("right", legend = rng, col = pal)
     suppressWarnings(par(mar = pr))
