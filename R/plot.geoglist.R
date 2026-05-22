@@ -80,6 +80,6 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
       rng <- range(st_drop_geometry(foo2$layers[[1]][,1]), na.rm = T)
     }
     legend_cont("right", legend = rng, col = pal)
-    suppressWarnings(par(pr))
+    suppressWarnings(par(mar = pr))
   }
 }
