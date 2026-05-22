@@ -42,8 +42,8 @@ click_optim <- function(tardis, weights = "gdist", geog, time = NULL, n = 3, loo
   # tardis = rtd
   # geog = rasts
   # weights = "gdist"
-  # time = 115
-  # n = 1
+  # time = 2
+  # n = 3
   # col = "gold"
   # cost = 1e7
 

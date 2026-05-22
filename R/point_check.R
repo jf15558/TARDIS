@@ -45,7 +45,7 @@ point_check <- function(tardis, points, verbose = TRUE) {
   # org <- hpts[1,]
   # dst <- hpts[2,]
   # tardis = rtd
-  # points = rbind(org, dst)
+  # points = org
   # verbose = T
 
   if (!exists("tardis")) {
@@ -112,7 +112,7 @@ point_check <- function(tardis, points, verbose = TRUE) {
           cpt <- st_coordinates(cell_to_point(cls))
           dists <- distGeo(points[i,1:2], cpt)
           pmod[i] <- min(dists)
-          pcell[i] <- match(suppressMessages(point_to_cell(cpt[which.min(dists),], tardis$gdat[7]), grid))
+          pcell[i] <- match(suppressMessages(point_to_cell(cpt[which.min(dists),], tardis$gdat[7])), grid)
           ptcell[i] <- pcell[i] + pt[i]
 
         } else {
