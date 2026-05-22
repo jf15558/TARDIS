@@ -15,10 +15,20 @@
 #' @param hex.border `character` or `integer`. The colour to be used for plotting
 #' hexagonal grids. By default none.
 #' @return None.
+#' @import sf terra
 #' @export
 
-plot.geoglist <- function(geog, layer = 1, pal = terrain.colors(100), links = T,
+plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
                           lcol = 1, lwd = 1, lty = 1, hex.border = NA) {
+  
+  # geog = foo
+  # layer = 1
+  # pal = sf.colors(10)
+  # links = T
+  # lcol = 1
+  # lwd = 1
+  # lty = 1
+  # hex.border = NA
   
   if(!exists("geog")) {
     stop("Supply geog as a geoglist with rast_to_geoglist()")
