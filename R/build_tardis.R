@@ -234,7 +234,7 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
         } else {
           neigh <- sapply(st_touches(geog$layers[[x]]), length)
           crds <- unique(unlist(st_drop_geometry(lnk[,c("srt", "end")])))
-          if(any(neigh[match(crds, as.numeric(rownames(geog$layers[[x]]))] == 6)) {
+          if(any(neigh[match(crds, as.numeric(rownames(geog$layers[[x]])))] == 6)) {
             stop(paste0("In layer ", x, ", one or more line start/end points do not fall on cells at the edges of islands"))
           }
           #ints <- st_intersects(lnk, geog$layers[[x]])
