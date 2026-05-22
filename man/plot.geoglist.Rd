@@ -39,6 +39,6 @@ hexagonal grids. By default none.}
 None.
 }
 \description{
-Plotting method for geoglist. If the geoglist contains multiple layers, then
-default behaviour is to plot the first one.
+Plotting method for a geoglist layer. If the geoglist contains multiple
+layers, then default behaviour is to plot the first one.
 }
