@@ -44,7 +44,7 @@ plot.geoglist <- function(geog, layer = 1, pal = terrain.colors(100), links = T,
     plot(geog$layers[[layer]], col = pal, legend = F)
   } else {
     plot(geog$layers[[layer]]$geometry, border = NA)
-    plot(geog$layers[[layer]][,1], add = T, col = pal, border = hex.border)
+    plot(geog$layers[[layer]][,1], add = T, pal = pal, border = hex.border)
   }
   if(links) {
     if(!is.null(geog$links)) {
