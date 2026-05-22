@@ -73,7 +73,7 @@ point_check <- function(tardis, points, verbose = TRUE) {
   if(!is.na(tardis$gdat[7])) {
 
     grid <- get_grid(tardis$gdat[1:4], tardis$gdat[7])
-    pcell <- point_to_cell(points[, 1:2, drop = F], tardis$gdat[7])
+    pcell <- suppressMessages(point_to_cell(points[, 1:2, drop = F], tardis$gdat[7]))
     pcell <- match(pcell, grid)
     pt <- unlist(lapply(points[, 3], function(y) {
       sum(y < tardis$tdat[-1]) * tardis$gdat[5]
@@ -112,7 +112,7 @@ point_check <- function(tardis, points, verbose = TRUE) {
           cpt <- st_coordinates(cell_to_point(cls))
           dists <- distGeo(points[i,1:2], cpt)
           pmod[i] <- min(dists)
-          pcell[i] <- match(point_to_cell(cpt[which.min(dists),], tardis$gdat[7]), grid)
+          pcell[i] <- match(suppressMessages(point_to_cell(cpt[which.min(dists),], tardis$gdat[7]), grid))
           ptcell[i] <- pcell[i] + pt[i]
 
         } else {

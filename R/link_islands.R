@@ -80,9 +80,9 @@
 
 link_islands <- function(geog, klink = NULL, verbose = T) {
   #
-  # geog = rasts
-  # klink = 1
-  # verbose = T
+  geog = rasts
+  klink = 1
+  verbose = T
   #
   if(!exists("geog")) {
     stop("Supply geog as a geoglist from rast_to_geoglist()")
@@ -191,7 +191,7 @@ link_islands <- function(geog, klink = NULL, verbose = T) {
         ii <- adjacent(vv)
 
         # dropping duplicates helps resolve cases where start-end cell for a link pair are not the same
-        #ii <- unique(t(apply(ii, 1, sort)))
+        ii <- unique(t(apply(ii, 1, sort)))
         dl <- do.call(rbind, apply(ii, 1, function(x) {
           ln <- nearest(poly[x[1]], poly[x[2]], centroids = F, lines = T)
           ln[which.min(ln$distance)]
@@ -201,6 +201,7 @@ link_islands <- function(geog, klink = NULL, verbose = T) {
           nr <- extract(islands[[i]], dl)
           nr <- subset(nr, complete.cases(nr))
           to_keep <- which(tapply(nr$patches, nr$ID, length) == 2)
+          #to_keep <- which(tapply(nr$patches, nr$ID, function(x) {length(unique(x))}) == 2)
           dl <- dl[to_keep]
           ii <- ii[to_keep,]
           cl <- cellFromXY(geog$layers[[1]], geom(dl)[,3:4])
@@ -218,8 +219,14 @@ link_islands <- function(geog, klink = NULL, verbose = T) {
         }
 
         dists <- perim(dl)
-        links <- cbind.data.frame(ii, dists)
+        links <- cbind(ii, dists)
+
+        # duplicate
+        links <- rbind.data.frame(links, links[,c(2, 1, 3)])
+        dl <- rbind(dl, dl)
+        cls <- rbind.data.frame(cls, cls[,2:1])
         colnames(links) <- c("from", "to", "dists")
+
         dl <- dl[order(links$from, links$dists)]
         cls <- cls[order(links$from, links$dists),]
         links <- links[order(links$from, links$dists),]
@@ -237,7 +244,8 @@ link_islands <- function(geog, klink = NULL, verbose = T) {
         finals <- cls[newlink,]
         crds[[iter]] <- finals
 
-        newlink <- as.matrix(links[newlink, 1:2])
+        newlink <- rbind(as.matrix(links[newlink, 1:2]), cbind(1:max(bounds[[i]]$patches),
+                                                               1:max(bounds[[i]]$patches)))
         newid <-  components(graph_from_edgelist(newlink))$membership
         bounds[[i]]$patches <- newid
         bounds[[i]] <- aggregate(bounds[[i]], by = "patches")
@@ -255,7 +263,7 @@ link_islands <- function(geog, klink = NULL, verbose = T) {
     return(NULL)
   } else {
     geog$links <- unique(rbind(geog$links, do.call(rbind, res_list)))
-    #geog$links <- st_wrap_dateline(lnks, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
+    geog$links <- st_wrap_dateline(lnks, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
     return(geog)
   }
 }

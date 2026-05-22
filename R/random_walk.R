@@ -173,7 +173,7 @@ random_walk <- function(tardis, weights = "gdist", origin, mode = "steps", rwlen
 
       freq <- rw[which(rwt == x)]
       if(!is.na(tardis$gdat[7])) {
-        cls <- cell_to_polygon(grid[rwp[which(rwt == x)]])
+        cls <- st_wrap_dateline(cell_to_polygon(grid[rwp[which(rwt == x)]]), options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
         freqs <- cbind.data.frame(point = i, bin = x, freq = as.vector(rw[which(rwt == x)]))
         st_geometry(freqs) <- cls
         colnames(freqs) <- c("point", "bin", "freq", "geometry")
