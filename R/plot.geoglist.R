@@ -1,7 +1,7 @@
 #' plot.geoglist
 #' 
-#' Plotting method for geoglist. If the geoglist contains multiple layers, then
-#' default behaviour is to plot the first one.
+#' Plotting method for a geoglist layer. If the geoglist contains multiple
+#' layers, then default behaviour is to plot the first one.
 #' 
 #' @param geog `geoglist`. The output of `rast_to_geoglist()`.
 #' @param layer `numeric`. The layer in the geoglist to be plotted, along with
