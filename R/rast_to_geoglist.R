@@ -166,7 +166,8 @@ rast_to_geoglist <- function(geog, mask = NULL, as.hex = FALSE, hex = "auto", me
       clsp <- st_wrap_dateline(clsp, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
       id <- match(cls, clist)
       vrs <- exact_extract(geog[[i]], clsp, fun = method, weights = "area", ...)
-      dat <- data.frame(vrs, id)
+      dat <- data.frame(vrs)
+      rownames(dat) <- id
       colnames(dat)[1] <- names(geog[[i]])
       st_geometry(dat) <- clsp
       hex_list[[i]] <- dat[st_is_valid(dat),]
