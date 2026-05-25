@@ -89,14 +89,14 @@
 
 build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, klink = NULL, rotations = NULL, verbose = TRUE) {
 
-  geog = rasts
-  times = c(seq(2.25, 0, -0.5), 0)
-  #times = c(117, 114, 112)
-  tlink = 1
-  island.check = F
-  klink = 2
-  rotations = NULL
-  verbose = TRUE
+  # geog = rasts
+  # times = c(seq(2.25, 0, -0.5), 0)
+  # #times = c(117, 114, 112)
+  # tlink = 1
+  # island.check = F
+  # klink = 2
+  # rotations = NULL
+  # verbose = TRUE
 
   nlayers <- length(geog$layers)
   if(is.na(geog$gdat[7])) {nlayers <- nlyr(geog$layers)}
