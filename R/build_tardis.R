@@ -89,14 +89,14 @@
 
 build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, klink = NULL, rotations = NULL, verbose = TRUE) {
 
-  # geog = rasts
-  # #times = c(seq(2.25, 0, -0.5), 0)
-  # times = c(117, 114, 112)
-  # tlink = 1
-  # island.check = F
-  # klink = 2
-  # rotations = NULL
-  # verbose = TRUE
+  geog = rasts
+  times = c(seq(2.25, 0, -0.5), 0)
+  #times = c(117, 114, 112)
+  tlink = 1
+  island.check = F
+  klink = 2
+  rotations = NULL
+  verbose = TRUE
 
   nlayers <- length(geog$layers)
   if(is.na(geog$gdat[7])) {nlayers <- nlyr(geog$layers)}
@@ -294,8 +294,8 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
       ed2 <- rbind(ed2, lnk)
       h_dists2 <- c(h_dists2, add_links[[i]]$distance)
       if(inherits(geog$layers, "SpatRaster")) {
-        crd1 <- xyFromCell(lnk[,1], geog$layers[[1]])
-        crd2 <- xyFromCell(lnk[,2], geog$layers[[1]])
+        crd1 <- xyFromCell(geog$layers[[1]], lnk[,1])
+        crd2 <- xyFromCell(geog$layers[[1]], lnk[,1])
       } else {
         crd1 <- st_coordinates(cell_to_point(grid[lnk[,1]], geog$gdat[7]))
         crd2 <- st_coordinates(cell_to_point(grid[lnk[,2]], geog$gdat[7]))
