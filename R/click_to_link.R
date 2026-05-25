@@ -9,6 +9,7 @@
 #' its links.
 #' @param nlinks `numeric`. The number of links you wish to generate.
 #' Simply rerun the function if you need to add more lines.
+#' @param ... Additional arguments passed to `plot.geoglist()`
 #' @return The input `geoglist` with added links.
 #' @import terra sf h3jsr
 #' @export
@@ -66,23 +67,19 @@ click_to_link <- function(geog, layer = 1, nlinks = 1) {
   }
 
   if(inherits(geog$layers[[1]], "SpatRaster")) {
-    plot(geog$layers[[layer]])
 
     islands <- patches(geog$layers[[layer]], directions = 8, allowGaps = F)
     bounds <- as.points(mask(islands, classify(boundaries(islands), cbind(0, NA))))
 
   } else {
-    plot(geog$layers[[layer]]$geometry, border = NA)
-    plot(geog$layers[[layer]][,1], add = T)
 
     grid <- get_grid(geog$gdat[1:4], geog$gdat[7])
     bounds <- geog$layers[[layer]]
     bar <- st_touches(bounds)
     bounds <- centroids(vect(bounds[sapply(bar, length) != 6,]))
   }
-  if(!is.null(geog$links)) {
-    plot(geog$links[which(geog$links$layer == layer),"geometry"], add = T)
-  }
+
+  plot.geoglist(geog, layer)
 
   lnk <- list()
   for(i in 1:nlinks) {

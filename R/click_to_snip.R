@@ -10,6 +10,7 @@
 #' @param nsnips `numeric`. The number of snipping lines you wish to generate.
 #' Simply rerun the function if you need to remove more lines, or add unwanted
 #' remaining lines such that they do not intersect any links.
+#' @param ... Additional arguments passed to `plot.geoglist()`
 #' @return The input `geoglist` with the snipped links removed.
 #' @import terra sf h3jsr
 #' @export
@@ -72,13 +73,7 @@ click_to_snip <- function(geog, layer = 1, nsnips = 1) {
       stop("nsnips should be a single integer")
     }
 
-    if(inherits(geog$layers[[1]], "SpatRaster")) {
-      plot(geog$layers[[layer]])
-    } else {
-      plot(geog$layers[[layer]]$geometry, border = NA)
-      plot(geog$layers[[layer]][,1], add = T)
-    }
-    plot(geog$links[which(geog$links$layer == layer),"geometry"], add = T)
+    plot.geoglist(geog, bin)
 
     snips <- list()
     for(i in 1:nsnips) {
