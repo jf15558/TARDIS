@@ -22,8 +22,8 @@
 
 project_geoglist <- function(geog, crs) {
   
-  geog <- rasts
-  crs ="+proj=eqearth"
+  #geog <- rasts
+  #crs ="+proj=eqearth"
   
   if(!exists("geog")) {
     stop("Supply geog as a geoglist with rast_to_geoglist()")
