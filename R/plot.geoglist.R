@@ -23,7 +23,7 @@
 plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
                           lcol = 1, lwd = 1, lty = 1, hex.border = NA, legend = T) {
 
-  # geog = foo2
+  # geog = rasts
   # layer = 1
   # pal = sf.colors(10)
   # links = T
@@ -59,13 +59,18 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
     par(mar = newmar)
   }
   plot(0, 0, type = "n", xlim = geog$gdat[1:2], ylim = geog$gdat[3:4],
-       asp = 1, xaxs = "i", yaxs = "i", xlab = "", ylab = "", cex.axis = 0.7)
+       asp = 1, xaxs = "i", yaxs = "i", xlab = "", ylab = "", cex.axis = 0.7, axes = F)
   if(inherits(geog$layers[[1]], "SpatRaster")) {
     plot(geog$layers[[layer]], col = pal, legend = F, add = T)
   } else {
     plot(geog$layers[[layer]][,1], add = T, pal = pal, border = hex.border)
-    box()
   }
+  axis(1, pos = geog$gdat[3], cex.axis = 0.7, col = "grey80", padj = -1)
+  a2 <- axTicks(2)
+  axis(2, pos = geog$gdat[1], at = a2[which(a2 >= geog$gdat[3] & a2 <= geog$gdat[4])],
+       cex.axis = 0.7, col = "grey80", padj = 0.8)
+  rect(geog$gdat[1], geog$gdat[3], geog$gdat[2], geog$gdat[4])
+
   if(links) {
     if(!is.null(geog$links)) {
       plot(geog$links[which(geog$links$layer == layer),"geometry"], add = T,

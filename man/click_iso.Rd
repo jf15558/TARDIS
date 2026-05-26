@@ -10,7 +10,8 @@ click_iso(
   geog,
   time = NULL,
   cost = 1e+06,
-  col = "gold"
+  col = "gold",
+  ...
 )
 }
 \arguments{
@@ -25,9 +26,11 @@ click_iso(
 \item{time}{\code{integer}. The tardis time slice to plot and interact with.
 Defaults to \code{NULL}, in which case the first slice is used}
 
-\item{cost}{\code{numeric}. the maximum cost for calculating the isochrone}
+\item{cost}{\code{numeric}. the maximum cost for calculating the isochrone.}
 
 \item{col}{\code{character}. The colour to use for plotting interactive features.}
+
+\item{...}{Additional arguments passed to \code{plot.geoglist()}}
 }
 \description{
 Interactively calculate and plot an isochrone around a clicked point on the

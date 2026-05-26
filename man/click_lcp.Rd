@@ -21,6 +21,8 @@ Defaults to \code{NULL}, in which case the first slice is used.}
 \item{n}{\code{integer}. the number of point pairs to run (only for click_lcp)}
 
 \item{col}{\code{character}. The colour to use for plotting interactive features.}
+
+\item{...}{Additional arguments passed to \code{plot.geoglist()}}
 }
 \description{
 Interactively calculate and plot \code{n} least cost paths by clicking their start

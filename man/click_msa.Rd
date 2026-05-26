@@ -22,6 +22,8 @@ Defaults to \code{NULL}, in which case the first slice is used}
 arborescence.}
 
 \item{col}{\code{character}. The colour to use for plotting interactive features.}
+
+\item{...}{Additional arguments passed to \code{plot.geoglist()}}
 }
 \description{
 Interactively calculate and plot a minimum spanning arboresence for \code{n} points

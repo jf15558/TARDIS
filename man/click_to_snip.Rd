@@ -15,6 +15,8 @@ its links.}
 \item{nsnips}{\code{numeric}. The number of snipping lines you wish to generate.
 Simply rerun the function if you need to remove more lines, or add unwanted
 remaining lines such that they do not intersect any links.}
+
+\item{...}{Additional arguments passed to \code{plot.geoglist()}}
 }
 \value{
 The input \code{geoglist} with the snipped links removed.

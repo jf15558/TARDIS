@@ -14,6 +14,8 @@ its links.}
 
 \item{nlinks}{\code{numeric}. The number of links you wish to generate.
 Simply rerun the function if you need to add more lines.}
+
+\item{...}{Additional arguments passed to \code{plot.geoglist()}}
 }
 \value{
 The input \code{geoglist} with added links.

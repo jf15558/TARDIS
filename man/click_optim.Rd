@@ -33,6 +33,8 @@ should be greater than 2.}
 end point to start point to return a polygon? Defaults to \code{FALSE}.}
 
 \item{col}{\code{character}. The colour to use for plotting interactive features.}
+
+\item{...}{Additional arguments passed to \code{plot.geoglist()}}
 }
 \description{
 Interactively calculate and plot an isochrone around a clicked point on the#
