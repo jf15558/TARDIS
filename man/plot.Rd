@@ -10,12 +10,14 @@
   layer = 1,
   pal = sf.colors(10),
   links = T,
-  lcol = 1,
+  lcol = "grey80",
   lwd = 1,
   lty = 1,
   hex.border = NA,
   legend = T,
-  axes = T
+  axes = T,
+  xlim = NULL,
+  ylim = NULL
 )
 }
 \arguments{
@@ -43,6 +45,12 @@ hexagonal grids. By default none.}
 
 \item{axes}{\code{logical}. Should axes be added to the plot? These will look
 sensible for lon-lat geoglists, but may look odd for other projection systems.}
+
+\item{xlim}{\code{numeric}. If not NULL, then a vector of two numbers to set the
+minimum and maximum x extent of the plot}
+
+\item{ylim}{\code{numeric}. If not NULL, then a vector of two numbers to set the
+minimum and maximum y extent of the plot}
 }
 \value{
 None.

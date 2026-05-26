@@ -21,6 +21,10 @@
 #' @param axes `logical`. Should axes be added to the plot? These will look
 #' sensible for lon-lat geoglists, but may look odd for other projection systems.
 #' @return None.
+#' @param xlim `numeric`. If not NULL, then a vector of two numbers to set the
+#' minimum and maximum x extent of the plot
+#' @param ylim `numeric`. If not NULL, then a vector of two numbers to set the
+#' minimum and maximum y extent of the plot
 #' @import sf terra
 #' @importFrom graphics par
 #' @importFrom graphics axis
@@ -39,7 +43,7 @@
 
 plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
                           lcol = "grey80", lwd = 1, lty = 1, hex.border = NA, legend = T,
-                          axes = T) {
+                          axes = T, xlim = NULL, ylim = NULL) {
 
   # geog = rasts2
   # layer = 1
@@ -90,7 +94,7 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
 
   #plot(0, 0, type = "n", xlim = geog$gdat[1:2], ylim = geog$gdat[3:4],
   #     asp = 1, xaxs = "i", yaxs = "i", xlab = "", ylab = "", cex.axis = 0.7, axes = F)
-  plot(bounds, col = NA, border = NA)
+  plot(bounds, col = NA, border = NA, xlim = xlim, ylim = ylim)
   if(inherits(geog$layers[[1]], "SpatRaster")) {
     rst <- mask(geog$layers[[layer]], vect(bounds))
     plot(rst, col = pal, legend = F, add = T)
