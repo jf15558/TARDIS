@@ -38,7 +38,7 @@
 #' }
 
 plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
-                          lcol = 1, lwd = 1, lty = 1, hex.border = NA, legend = T,
+                          lcol = "grey80", lwd = 1, lty = 1, hex.border = NA, legend = T,
                           axes = T) {
 
   # geog = rasts2
