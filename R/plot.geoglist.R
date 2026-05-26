@@ -3,6 +3,8 @@
 #' Plotting method for a geoglist layer. If the geoglist contains multiple
 #' layers, then default behaviour is to plot the first one.
 #'
+#' @name plot
+#' @method plot geoglist
 #' @param geog `geoglist`. The output of `rast_to_geoglist()`.
 #' @param layer `numeric`. The layer in the geoglist to be plotted, along with
 #' its links. Defaults to 1 (the first layer).
@@ -16,9 +18,24 @@
 #' hexagonal grids. By default none.
 #' @param legend `logical`. Should a legend be added to the plot? Defaults to
 #' `TRUE`.
+#' @param axes `logical`. Should axes be added to the plot? These will look
+#' sensible for lon-lat geoglists, but may look odd for other projection systems.
 #' @return None.
 #' @import sf terra
+#' @importFrom graphics par
+#' @importFrom graphics axis
+#' @importFrom graphics axTicks
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#' gal <- cretaceous()
+#' gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
+#' rasts <- rast_to_geoglist(gal, gal_m)
+#' rasts <- link_islands(rasts, klink = 1)
+#'
+#' plot(regs)
+#' }
 
 plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
                           lcol = 1, lwd = 1, lty = 1, hex.border = NA, legend = T,

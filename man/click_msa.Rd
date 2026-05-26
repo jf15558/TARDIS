@@ -4,7 +4,15 @@
 \alias{click_msa}
 \title{click_msa}
 \usage{
-click_msa(tardis, weights = "gdist", geog, time = NULL, n = 1, col = "gold")
+click_msa(
+  tardis,
+  weights = "gdist",
+  geog,
+  time = NULL,
+  n = 1,
+  col = "gold",
+  ...
+)
 }
 \arguments{
 \item{tardis}{\code{tardis}. An object of class 'tardis', produced by create_tardis}

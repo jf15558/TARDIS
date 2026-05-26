@@ -4,13 +4,16 @@
 \alias{project_geoglist}
 \title{project_geoglist}
 \usage{
-project_geoglist(geog, crs)
+project_geoglist(geog, crs, ...)
 }
 \arguments{
 \item{geog}{\code{geoglist}. The output of \code{rast_to_geoglist()}.}
 
 \item{crs}{\code{character}. A valid crs character string to which the geoglist
 will be transformed}
+
+\item{...}{Additional arguments passed to \code{terra::project} to control how
+the raster grid is resampled to the new grid geometry.}
 }
 \value{
 \code{geoglist}. The input geoglist transformed to the target crs.
@@ -21,6 +24,7 @@ desirable for plotting purposes, but will render the resulting geoglist
 incompatible with most TARDIS functions.
 }
 \examples{
+\dontrun{
 gal <- cretaceous()
 gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
 rasts <- rast_to_geoglist(gal, gal_m)
@@ -28,4 +32,5 @@ rasts <- link_islands(rasts, klink = 1)
 
 regs <- project_geoglist(geog = rasts, crs = "+proj=eqearth")
 plot.geolist(regs)
+}
 }

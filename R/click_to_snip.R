@@ -33,7 +33,7 @@
 #' click_to_snip(rasts)
 #' }
 
-click_to_snip <- function(geog, layer = 1, nsnips = 1) {
+click_to_snip <- function(geog, layer = 1, nsnips = 1, ...) {
 
   # geog = rasts
   # layer = 1
@@ -73,7 +73,7 @@ click_to_snip <- function(geog, layer = 1, nsnips = 1) {
       stop("nsnips should be a single integer")
     }
 
-    plot.geoglist(geog, bin)
+    plot.geoglist(geog, layer, ...)
 
     snips <- list()
     for(i in 1:nsnips) {

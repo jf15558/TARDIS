@@ -14,6 +14,7 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' gal <- cretaceous()
 #' gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
 #' rasts <- rast_to_geoglist(gal, gal_m)
@@ -21,6 +22,7 @@
 #'
 #' regs <- project_geoglist(geog = rasts, crs = "+proj=eqearth")
 #' plot.geolist(regs)
+#' }
 
 project_geoglist <- function(geog, crs, ...) {
 

@@ -57,7 +57,7 @@ click_iso <- function(tardis, weights = "gdist", geog, time = NULL, cost = 1e6, 
     }
     bin <- sum(time < tardis$tdat)
   }
-  plot.geoglist(geog, bin)
+  plot.geoglist(geog, bin, ...)
 
   org <- cbind(click(n = 1), rep(time, 1))
 

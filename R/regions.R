@@ -1,10 +1,10 @@
 #' regions
-#' 
+#'
 #' Classify all cells in the layers of a geoglist by which region they
 #' belong to. Optionally, only the boundary cells of these regions may be returned.
-#' 
+#'
 #' @param geog `geoglist`. The output of `rast_to_geoglist()`.
-#' @param coasts.only `logical`. Should only the boundary cells of regions be
+#' @param bounds.only `logical`. Should only the boundary cells of regions be
 #' returned?
 #' @param use.links `logical`. Should any links added to the geoglist also be
 #' accounted for when determining cell connectivity and so region membership?
@@ -14,30 +14,32 @@
 #' @importFrom igraph graph_from_edgelist
 #' @importFrom igraph components
 #' @export
-#' 
+#'
 #' @examples
+#' \dontrun{
 #' gal <- cretaceous()
 #' gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
 #' rasts <- rast_to_geoglist(gal, gal_m)
 #' rasts <- link_islands(rasts, klink = 1)
-#' 
+#'
 #' regs <- regions(geog = rasts)
+#' }
 
 regions <- function(geog, bounds.only = T, use.links = F) {
-  # 
+  #
   # geog = rasts
   # bounds.only = F
   # use.links = F
-  
+
   if(!exists("geog")) {
     stop("Supply geog as a geoglist from rast_to_geoglist()")
   }
   if(!inherits(geog, "geoglist")) {
     stop("Supply geog as a geoglist from rast_to_geoglist()")
   }
-  
+
   if(inherits(geog$layers, "SpatRaster")) {
-    
+
     ils <- rast(lapply(geog$layers, patches, directions = 8, allowGaps = F))
     if(bounds.only) {
       ils <- rast(lapply(1:nlyr(ils), function(x) {
@@ -46,7 +48,7 @@ regions <- function(geog, bounds.only = T, use.links = F) {
         foo
       }))
     }
-    
+
     if(use.links) {
       ils <- rast(lapply(1:nlyr(ils), function(x) {
         lnk <- geog$links$geometry[which(geog$links$layer == x)]
@@ -59,9 +61,9 @@ regions <- function(geog, bounds.only = T, use.links = F) {
         ils[[x]]
       }))
     }
-    
+
   } else {
-    
+
     ils <- lapply(geog$layers, function(z) {
       bar <- st_touches(z)
       bar2 <- do.call(rbind, sapply(1:length(bar), function(x) {rbind(c(x, x), cbind(rep(x, length(bar[[x]])), bar[[x]]))}))
@@ -72,7 +74,7 @@ regions <- function(geog, bounds.only = T, use.links = F) {
       }
       z
     })
-    
+
     if(use.links) {
       ils <- lapply(1:length(ils), function(x) {
         lnk <- geog$links$geometry[which(geog$links$layer == x)]
@@ -85,7 +87,7 @@ regions <- function(geog, bounds.only = T, use.links = F) {
       })
     }
   }
-  
+
   geog$layers <- ils
   return(geog)
 }

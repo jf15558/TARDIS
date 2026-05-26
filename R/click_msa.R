@@ -36,7 +36,7 @@
 #' click_iso(tardis = rtd, geog = hexes, time = 2, cost = 1e5)
 #' }
 
-click_msa <- function(tardis, weights = "gdist", geog, time = NULL, n = 1, col = "gold") {
+click_msa <- function(tardis, weights = "gdist", geog, time = NULL, n = 1, col = "gold", ...) {
 
   # tardis = rtdw
   # geog = rasts
@@ -55,7 +55,7 @@ click_msa <- function(tardis, weights = "gdist", geog, time = NULL, n = 1, col =
     }
     bin <- sum(time < tardis$tdat)
   }
-  plot.geoglist(geog, bin)
+  plot.geoglist(geog, bin, ...)
 
   org <- cbind(click(n = n), rep(time, n))
 

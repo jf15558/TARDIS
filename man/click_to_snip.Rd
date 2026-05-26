@@ -4,7 +4,7 @@
 \alias{click_to_snip}
 \title{click_to_snip}
 \usage{
-click_to_snip(geog, layer = 1, nsnips = 1)
+click_to_snip(geog, layer = 1, nsnips = 1, ...)
 }
 \arguments{
 \item{geog}{\code{geoglist}. The output of \code{rast_to_geoglist()}.}

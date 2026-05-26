@@ -4,7 +4,15 @@
 \alias{click_lcp}
 \title{click_lcp}
 \usage{
-click_lcp(tardis, weights = "gdist", geog, time = NULL, n = 1, col = "gold")
+click_lcp(
+  tardis,
+  weights = "gdist",
+  geog,
+  time = NULL,
+  n = 1,
+  col = "gold",
+  ...
+)
 }
 \arguments{
 \item{tardis}{\code{tardis}. An object of class 'tardis', produced by create_tardis}
@@ -22,7 +30,7 @@ Defaults to \code{NULL}, in which case the first slice is used.}
 
 \item{col}{\code{character}. The colour to use for plotting interactive features.}
 
-\item{...}{Additional arguments passed to \code{plot.geoglist()}}
+\item{...}{Additional arguments passed to \code{plot.geoglist()}.}
 }
 \description{
 Interactively calculate and plot \code{n} least cost paths by clicking their start

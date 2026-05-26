@@ -31,7 +31,7 @@
 #' click_to_link(rasts, nlinks = 2)
 #' }
 
-click_to_link <- function(geog, layer = 1, nlinks = 1) {
+click_to_link <- function(geog, layer = 1, nlinks = 1, ...) {
   #
   # geog = rasts
   # layer = 1
@@ -79,7 +79,7 @@ click_to_link <- function(geog, layer = 1, nlinks = 1) {
     bounds <- centroids(vect(bounds[sapply(bar, length) != 6,]))
   }
 
-  plot.geoglist(geog, layer)
+  plot.geoglist(geog, layer, ...)
 
   lnk <- list()
   for(i in 1:nlinks) {

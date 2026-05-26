@@ -14,7 +14,7 @@
 #' Defaults to `NULL`, in which case the first slice is used.
 #' @param n `integer`. the number of point pairs to run (only for click_lcp)
 #' @param col `character`. The colour to use for plotting interactive features.
-#' @param ... Additional arguments passed to `plot.geoglist()`
+#' @param ... Additional arguments passed to `plot.geoglist()`.
 #' @import terra sf
 #' @export
 #'
@@ -35,7 +35,7 @@
 #' click_iso(tardis = rtd, geog = hexes, time = 2, n = 2)
 #' }
 
-click_lcp <- function(tardis, weights = "gdist", geog, time = NULL, n = 1, col = "gold") {
+click_lcp <- function(tardis, weights = "gdist", geog, time = NULL, n = 1, col = "gold", ...) {
 
   # tardis = rtdw
   # geog = rasts
@@ -54,7 +54,7 @@ click_lcp <- function(tardis, weights = "gdist", geog, time = NULL, n = 1, col =
     }
     bin <- sum(time < tardis$tdat)
   }
-  plot.geoglist(geog, bin)
+  plot.geoglist(geog, bin, ...)
 
   org <- cbind(click(n = n), rep(time, n))
   dst <- cbind(click(n = n), rep(time, n))

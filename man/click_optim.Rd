@@ -11,7 +11,8 @@ click_optim(
   time = NULL,
   n = 3,
   loop = FALSE,
-  col = "gold"
+  col = "gold",
+  ...
 )
 }
 \arguments{

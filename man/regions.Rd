@@ -9,12 +9,12 @@ regions(geog, bounds.only = T, use.links = F)
 \arguments{
 \item{geog}{\code{geoglist}. The output of \code{rast_to_geoglist()}.}
 
+\item{bounds.only}{\code{logical}. Should only the boundary cells of regions be
+returned?}
+
 \item{use.links}{\code{logical}. Should any links added to the geoglist also be
 accounted for when determining cell connectivity and so region membership?
 This argument will have no effect if the geoglist does not contain any links.}
-
-\item{coasts.only}{\code{logical}. Should only the boundary cells of regions be
-returned?}
 }
 \value{
 A geoglist recording the region affinity of the cells in each layer.
@@ -24,10 +24,12 @@ Classify all cells in the layers of a geoglist by which region they
 belong to. Optionally, only the boundary cells of these regions may be returned.
 }
 \examples{
+\dontrun{
 gal <- cretaceous()
 gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
 rasts <- rast_to_geoglist(gal, gal_m)
 rasts <- link_islands(rasts, klink = 1)
 
 regs <- regions(geog = rasts)
+}
 }
