@@ -135,9 +135,9 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
   # add geoglist layers
   if(inherits(geog$layers[[1]], "SpatRaster")) {
     rst <- mask(geog$layers[[layer]], vect(bounds))
-    plot(rst, col = pal, legend = F, add = T, xlim = xlim, ylim = ylim)
+    plot(rst, col = pal, legend = F, add = T)
   } else {
-    plot(geog$layers[[layer]][,1], add = T, pal = pal, border = hex.border, xlim = xlim, ylim = ylim)
+    plot(geog$layers[[layer]][,1], add = T, pal = pal, border = hex.border)
   }
   if(axes) {
     if(!is.null(xlim)) {
