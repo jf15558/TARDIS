@@ -129,7 +129,8 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
   bounds <- st_crop(st_make_valid(bounds), pol)
 
   # transform to geoglist CRS and plot
-  plot(bounds, col = NA, border = NA, xlim = xlim, ylim = ylim, xaxs = "i", yaxs = "i")
+  #plot(bounds, col = NA, border = NA, xlim = xlim, ylim = ylim, xaxs = "i", yaxs = "i")
+  plot(bounds, col = NA, border = NA)
 
   # add geoglist layers
   if(inherits(geog$layers[[1]], "SpatRaster")) {
