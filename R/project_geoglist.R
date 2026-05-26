@@ -7,6 +7,8 @@
 #' @param geog `geoglist`. The output of `rast_to_geoglist()`.
 #' @param crs `character`. A valid crs character string to which the geoglist
 #' will be transformed
+#' @param ... Additional arguments passed to `terra::project` to control how
+#' the raster grid is resampled to the new grid geometry.
 #' @return `geoglist`. The input geoglist transformed to the target crs.
 #' @import sf terra
 #' @export
@@ -20,7 +22,7 @@
 #' regs <- project_geoglist(geog = rasts, crs = "+proj=eqearth")
 #' plot.geolist(regs)
 
-project_geoglist <- function(geog, crs) {
+project_geoglist <- function(geog, crs, ...) {
 
   # geog <- rasts
   # crs ="+proj=eqearth"
@@ -43,7 +45,7 @@ project_geoglist <- function(geog, crs) {
   }
 
   if(inherits(geog$layers[[1]], "SpatRaster")) {
-    geog$layers <- project(geog$layers, crs)
+    geog$layers <- project(geog$layers, crs, ...)
   } else {
     geog$layers <- lapply(geog$layers, st_transform, crs = crs("+proj=eqearth"))
   }
