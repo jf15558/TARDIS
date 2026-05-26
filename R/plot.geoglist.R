@@ -45,7 +45,7 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
                           lcol = "grey80", lwd = 1, lty = 1, hex.border = NA, legend = T,
                           axes = T, xlim = NULL, ylim = NULL) {
 
-  # geog = rasts2
+  # geog = rasts
   # layer = 1
   # pal = sf.colors(10)
   # links = T
@@ -54,6 +54,8 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
   # lty = 1
   # hex.border = NA
   # legend = T
+  # xlim = c(-91, -89.5)
+  # ylim = c(-1.5, 0)
 
   if(!exists("geog")) {
     stop("Supply geog as a geoglist with rast_to_geoglist()")
@@ -81,7 +83,7 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
     par(mar = newmar)
   }
 
-  # construct bounding polygon in lon lat and transform if needed
+  # construct bounding polygon in lon lat
   bbox <- geog$gdat[1:4]
   len1 <- diff(bbox[1:2]) / 0.01
   len2 <- diff(bbox[3:4]) / 0.01
@@ -90,16 +92,17 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
     c(rep(bbox[4], len1), seq(bbox[4], bbox[3], length.out = len2), rep(bbox[3], len1), seq(bbox[3], bbox[4], length.out = len2))
   )
   bounds <- st_sfc(st_polygon(list(bounds)), crs = "EPSG:4326")
-  bounds <- st_transform(bounds, crs(geog$layers[[1]]))
 
-  #plot(0, 0, type = "n", xlim = geog$gdat[1:2], ylim = geog$gdat[3:4],
-  #     asp = 1, xaxs = "i", yaxs = "i", xlab = "", ylab = "", cex.axis = 0.7, axes = F)
+  # transform to geoglist CRS and plot
+  bounds <- st_transform(bounds, crs(geog$layers[[1]]))
   plot(bounds, col = NA, border = NA, xlim = xlim, ylim = ylim)
+
+  # add geoglist layers
   if(inherits(geog$layers[[1]], "SpatRaster")) {
     rst <- mask(geog$layers[[layer]], vect(bounds))
-    plot(rst, col = pal, legend = F, add = T)
+    plot(rst, col = pal, legend = F, add = T, xlim = xlim, ylim = ylim)
   } else {
-    plot(geog$layers[[layer]][,1], add = T, pal = pal, border = hex.border)
+    plot(geog$layers[[layer]][,1], add = T, pal = pal, border = hex.border, xlim = xlim, ylim = ylim)
   }
   if(axes) {
     axis(1, pos = st_bbox(bounds)[2], cex.axis = 0.7, col = "grey80", padj = -1)
@@ -107,7 +110,11 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
     axis(2, pos = st_bbox(bounds)[1], at = a2[which(a2 >= geog$gdat[3] & a2 <= geog$gdat[4])],
          cex.axis = 0.7, col = "grey80", padj = 0.8)
   }
-  plot(bounds, add = T)
+  if(is.null(xlim)) {
+    rect(xlim[1], ylim[1], xlim[2], ylim[2])
+  } else {
+    plot(bounds, add = T)
+  }
 
   if(links) {
     if(!is.null(geog$links)) {
