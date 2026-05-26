@@ -73,19 +73,20 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
 
   #plot(0, 0, type = "n", xlim = geog$gdat[1:2], ylim = geog$gdat[3:4],
   #     asp = 1, xaxs = "i", yaxs = "i", xlab = "", ylab = "", cex.axis = 0.7, axes = F)
-  plot(bounds)
+  plot(bounds, col = NA, border = NA)
   if(inherits(geog$layers[[1]], "SpatRaster")) {
-    plot(geog$layers[[layer]], col = pal, legend = F, add = T)
+    rst <- mask(geog$layers[[layer]], vect(bounds))
+    plot(rst, col = pal, legend = F, add = T)
   } else {
     plot(geog$layers[[layer]][,1], add = T, pal = pal, border = hex.border)
   }
   if(axes) {
-    axis(1, pos = geog$gdat[3], cex.axis = 0.7, col = "grey80", padj = -1)
+    axis(1, pos = st_bbox(bounds)[2], cex.axis = 0.7, col = "grey80", padj = -1)
     a2 <- axTicks(2)
-    axis(2, pos = geog$gdat[1], at = a2[which(a2 >= geog$gdat[3] & a2 <= geog$gdat[4])],
+    axis(2, pos = st_bbox(bounds)[1], at = a2[which(a2 >= geog$gdat[3] & a2 <= geog$gdat[4])],
          cex.axis = 0.7, col = "grey80", padj = 0.8)
   }
-  rect(geog$gdat[1], geog$gdat[3], geog$gdat[2], geog$gdat[4])
+  plot(bounds, add = T)
 
   if(links) {
     if(!is.null(geog$links)) {
