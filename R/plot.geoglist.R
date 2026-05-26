@@ -21,17 +21,18 @@
 #' @export
 
 plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
-                          lcol = 1, lwd = 1, lty = 1, hex.border = NA, legend = T) {
+                          lcol = 1, lwd = 1, lty = 1, hex.border = NA, legend = T,
+                          axes = T) {
 
-  # geog = rasts2
-  # layer = 1
-  # pal = sf.colors(10)
-  # links = T
-  # lcol = 1
-  # lwd = 1
-  # lty = 1
-  # hex.border = NA
-  # legend = T
+  geog = rasts2
+  layer = 1
+  pal = sf.colors(10)
+  links = T
+  lcol = 1
+  lwd = 1
+  lty = 1
+  hex.border = NA
+  legend = T
 
   if(!exists("geog")) {
     stop("Supply geog as a geoglist with rast_to_geoglist()")
@@ -58,17 +59,32 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
     newmar[4] <- 5.1
     par(mar = newmar)
   }
-  plot(0, 0, type = "n", xlim = geog$gdat[1:2], ylim = geog$gdat[3:4],
-       asp = 1, xaxs = "i", yaxs = "i", xlab = "", ylab = "", cex.axis = 0.7, axes = F)
+
+  # construct bounding polygon in lon lat and transform if needed
+  bbox <- geog$gdat[1:4]
+  len1 <- diff(bbox[1:2]) / 0.01
+  len2 <- diff(bbox[3:4]) / 0.01
+  bounds <- cbind(
+    c(seq(bbox[1], bbox[2], length.out = len1), rep(bbox[2], len2), seq(bbox[2], bbox[1], length.out = len1),  rep(bbox[1], len2)),
+    c(rep(bbox[4], len1), seq(bbox[4], bbox[3], length.out = len2), rep(bbox[3], len1), seq(bbox[3], bbox[4], length.out = len2))
+  )
+  bounds <- st_sfc(st_polygon(list(bounds)), crs = "EPSG:4326")
+  bounds <- st_transform(bounds, crs(geog$layers[[1]]))
+
+  #plot(0, 0, type = "n", xlim = geog$gdat[1:2], ylim = geog$gdat[3:4],
+  #     asp = 1, xaxs = "i", yaxs = "i", xlab = "", ylab = "", cex.axis = 0.7, axes = F)
+  plot(bounds)
   if(inherits(geog$layers[[1]], "SpatRaster")) {
     plot(geog$layers[[layer]], col = pal, legend = F, add = T)
   } else {
     plot(geog$layers[[layer]][,1], add = T, pal = pal, border = hex.border)
   }
-  axis(1, pos = geog$gdat[3], cex.axis = 0.7, col = "grey80", padj = -1)
-  a2 <- axTicks(2)
-  axis(2, pos = geog$gdat[1], at = a2[which(a2 >= geog$gdat[3] & a2 <= geog$gdat[4])],
-       cex.axis = 0.7, col = "grey80", padj = 0.8)
+  if(axes) {
+    axis(1, pos = geog$gdat[3], cex.axis = 0.7, col = "grey80", padj = -1)
+    a2 <- axTicks(2)
+    axis(2, pos = geog$gdat[1], at = a2[which(a2 >= geog$gdat[3] & a2 <= geog$gdat[4])],
+         cex.axis = 0.7, col = "grey80", padj = 0.8)
+  }
   rect(geog$gdat[1], geog$gdat[3], geog$gdat[2], geog$gdat[4])
 
   if(links) {

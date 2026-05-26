@@ -44,11 +44,8 @@ project_geoglist <- function(geog, crs) {
 
   if(inherits(geog$layers[[1]], "SpatRaster")) {
     geog$layers <- project(geog$layers, crs)
-    geog$gdat[1:4] <- as.vector(ext(geog$layers[[1]]))
   } else {
     geog$layers <- lapply(geog$layers, st_transform, crs = crs("+proj=eqearth"))
-    geog$gdat[1:2] <- st_bbox(geog$layers[[1]])[c(1,3)]
-    geog$gdat[3:4] <- st_bbox(geog$layers[[1]])[c(2,4)]
   }
   if(!is.null(geog$links)) {
     geog$links <- st_transform(geog$links, crs)
