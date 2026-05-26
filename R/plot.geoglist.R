@@ -22,9 +22,11 @@
 #' sensible for lon-lat geoglists, but may look odd for other projection systems.
 #' @return None.
 #' @param xlim `numeric`. If not NULL, then a vector of two numbers to set the
-#' minimum and maximum x extent of the plot
+#' minimum and maximum x extent of the plot. If xlim is specified, then ylim
+#' must also be specified.
 #' @param ylim `numeric`. If not NULL, then a vector of two numbers to set the
-#' minimum and maximum y extent of the plot
+#' minimum and maximum y extent of the plot. If ylim is specified, then xlim
+#' must also be specified.
 #' @import sf terra
 #' @importFrom graphics par
 #' @importFrom graphics axis
@@ -45,17 +47,20 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
                           lcol = "grey80", lwd = 1, lty = 1, hex.border = NA, legend = T,
                           axes = T, xlim = NULL, ylim = NULL) {
 
-  # geog = rasts
-  # layer = 1
-  # pal = sf.colors(10)
-  # links = T
-  # lcol = 1
-  # lwd = 1
-  # lty = 1
-  # hex.border = NA
-  # legend = T
-  # xlim = c(-91, -89.5)
-  # ylim = c(-1.5, 0)
+   #geog = rasts
+   #layer = 1
+   #pal = sf.colors(10)
+   #links = T
+   #lcol = 1
+   #lwd = 1
+   #lty = 1
+   #hex.border = NA
+   #legend = T
+   #axes = T
+   #xlim = NULL
+   #ylim = NULL
+   #xlim = c(-91, -89.5)
+   #ylim = c(-1.5, 0)
 
   if(!exists("geog")) {
     stop("Supply geog as a geoglist with rast_to_geoglist()")
@@ -76,6 +81,24 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
   if(layer > length(geog$layers)) {
     stop("The value of layer exceeds of the number of layers in geog")
   }
+  if(!sum(c(is.null(xlim), is.null(ylim))) %in% c(0, 2)) {
+    stop("If xlim or ylim is supplied, then the other must also be given")
+  }
+
+  if(!is.null(xlim)) {
+    if(!is.atomic(xlim) | length(xlim) != 2) {
+      stop("xlim should be a vector of length 2")
+    }
+    if(!is.numeric(xlim)) {
+      stop("xlim should be numeric")
+    }
+    if(!is.atomic(ylim) | length(ylim) != 2) {
+      stop("ylim should be a vector of length 2")
+    }
+    if(!is.numeric(ylim)) {
+      stop("ylim should be numeric")
+    }
+  }
 
   if(legend) {
     pr <- newmar <- par("mar")
@@ -83,7 +106,7 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
     par(mar = newmar)
   }
 
-  # construct bounding polygon in lon lat
+  # construct bounding polygon
   bbox <- geog$gdat[1:4]
   len1 <- diff(bbox[1:2]) / 0.01
   len2 <- diff(bbox[3:4]) / 0.01
@@ -92,10 +115,21 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
     c(rep(bbox[4], len1), seq(bbox[4], bbox[3], length.out = len2), rep(bbox[3], len1), seq(bbox[3], bbox[4], length.out = len2))
   )
   bounds <- st_sfc(st_polygon(list(bounds)), crs = "EPSG:4326")
+  bounds <- st_transform(bounds, crs(geog$layers[[1]]))
+
+  # crop to plot limits
+  if(is.null(xlim)) {
+    xlim <- st_bbox(bounds)[c(1, 3)]
+    ylim <- st_bbox(bounds)[c(2, 4)]
+  }
+
+  pol <- st_sfc(st_polygon(list(cbind(xlim[c(1, 1, 2, 2, 1)],
+                                      ylim[c(1, 2, 2, 1, 1)]))), crs = "EPSG:4326")
+  pol <- st_transform(pol, crs(geog$layers[[1]]))
+  bounds <- st_crop(st_make_valid(bounds), pol)
 
   # transform to geoglist CRS and plot
-  bounds <- st_transform(bounds, crs(geog$layers[[1]]))
-  plot(bounds, col = NA, border = NA, xlim = xlim, ylim = ylim)
+  plot(bounds, col = NA, border = NA, xlim = xlim, ylim = ylim, xaxs = "i", yaxs = "i")
 
   # add geoglist layers
   if(inherits(geog$layers[[1]], "SpatRaster")) {
@@ -105,21 +139,24 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
     plot(geog$layers[[layer]][,1], add = T, pal = pal, border = hex.border, xlim = xlim, ylim = ylim)
   }
   if(axes) {
-    axis(1, pos = st_bbox(bounds)[2], cex.axis = 0.7, col = "grey80", padj = -1)
-    a2 <- axTicks(2)
-    axis(2, pos = st_bbox(bounds)[1], at = a2[which(a2 >= geog$gdat[3] & a2 <= geog$gdat[4])],
-         cex.axis = 0.7, col = "grey80", padj = 0.8)
+    if(!is.null(xlim)) {
+      axis(1, pos = ylim[1], cex.axis = 0.7, col = "grey80", padj = -1)
+      a2 <- axTicks(2)
+      axis(2, pos = xlim[1], at = a2[which(a2 >= geog$gdat[3] & a2 <= geog$gdat[4])],
+           cex.axis = 0.7, col = "grey80", padj = 0.8)
+    } else {
+      axis(1, pos = st_bbox(bounds)[3], cex.axis = 0.7, col = "grey80", padj = -1)
+      a2 <- axTicks(2)
+      axis(2, pos = st_bbox(bounds)[1], at = a2[which(a2 >= geog$gdat[3] & a2 <= geog$gdat[4])],
+           cex.axis = 0.7, col = "grey80", padj = 0.8)
+    }
   }
-  if(is.null(xlim)) {
-    rect(xlim[1], ylim[1], xlim[2], ylim[2])
-  } else {
-    plot(bounds, add = T)
-  }
+  plot(bounds, add = T)
 
   if(links) {
     if(!is.null(geog$links)) {
-      plot(geog$links[which(geog$links$layer == layer),"geometry"], add = T,
-           col = lcol, lwd = lwd, lty = lty)
+      lnk <- st_crop(geog$links[which(geog$links$layer == layer),"geometry"], st_make_valid(bounds))
+      plot(lnk, add = T, col = lcol, lwd = lwd, lty = lty)
     }
   }
   if(legend) {
