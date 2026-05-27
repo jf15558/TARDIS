@@ -121,7 +121,10 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
     xlim <- st_bbox(frame)[c(1, 3)]
     ylim <- st_bbox(frame)[c(2, 4)]
   }
-  bounds <- st_crop(frame, xmin = xlim[1], ymin = ylim[1], xmax = xlim[2], ymax = ylim[2])
+  names(xlim) <- c("xmin", "xmax")
+  names(ylim) <- c("ymin", "ymax")
+
+  bounds <- st_crop(frame, y = c(xlim, ylim))
   plot(bounds, col = NA, border = NA)
 
   # add geoglist layers
