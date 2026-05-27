@@ -21,11 +21,14 @@
 #' @param axes `logical`. Should axes be added to the plot? These will look
 #' sensible for lon-lat geoglists, but may look odd for other projection systems.
 #' @return None.
-#' @param xlim `numeric`. If not NULL, then a vector of two numbers to set the
+#' @param xlim `numeric`. If not `NULL`, then a vector of two numbers to set the
 #' minimum and maximum x extent of the plot in terms of the projection system of
-#' xlim. If xlim is specified, then ylim must also be specified.
-#' @param ylim `numeric`. As for xlim, but to set the y axis extent. If xlim is
-#' specified, then ylim must also be specified.
+#' `xlim`. If `xlim` is specified, then `ylim` must also be specified.
+#' @param ylim `numeric`. As for `xlim`, but to set the y axis extent. If `xlim`
+#' is specified, then `ylim` must also be specified.
+#' @param zlim `numeric`. If not `NULL`, then a vector of two numbers to set the
+#' range on the plotting legend.
+#' the range of values
 #' @import sf terra
 #' @importFrom graphics par
 #' @importFrom graphics axis
@@ -44,9 +47,9 @@
 
 plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
                           lcol = "grey", lwd = 1, lty = 1, hex.border = NA, legend = T,
-                          axes = T, xlim = NULL, ylim = NULL) {
+                          axes = T, xlim = NULL, ylim = NULL, zlim = NULL) {
 
-   # geog = rasts
+   # geog = rasts2
    # layer = 1
    # pal = sf.colors(10)
    # links = T
@@ -58,8 +61,13 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
    # axes = T
    # xlim = NULL
    # ylim = NULL
-   # xlim = c(-91, -89.5)
-   # ylim = c(-1.5, 0)
+   # #xlim = c(-91, -89.5)
+   # #ylim = c(-1.5, 0)
+   # #xlim = c(-91, 50)
+   # #ylim = c(-50, 80)
+   # zlim = NULL
+   # xlim = c(-1.5e7, 0)
+   # ylim = c(-5e6, 1e7)
 
   if(!exists("geog")) {
     stop("Supply geog as a geoglist with rast_to_geoglist()")
@@ -98,6 +106,14 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
       stop("ylim should be numeric")
     }
   }
+  if(!is.null(zlim)) {
+    if(!is.atomic(zlim) | length(zlim) != 2) {
+      stop("zlim should be a vector of length 2")
+    }
+    if(!is.numeric(zlim)) {
+      stop("zlim should be numeric")
+    }
+   }
 
   if(legend) {
     pr <- newmar <- par("mar")
@@ -105,16 +121,21 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
     par(mar = newmar)
   }
 
-  # construct bounding polygon
+  # construct bounding polygon (adjust for global extent to avoid errors)
   bbox <- geog$gdat[1:4]
-  len1 <- diff(bbox[1:2]) / 0.01
-  len2 <- diff(bbox[3:4]) / 0.01
+  if(bbox[1] < -179.99) {bbox[1] <- -179.99}
+  if(bbox[2] > 179.99) {bbox[2] <- 179.99}
+  if(bbox[3] < -89.99) {bbox[3] <- -89.99}
+  if(bbox[4] > 89.99) {bbox[4] <- 89.99}
+  len1 <- diff(bbox[1:2]) / 0.1
+  len2 <- diff(bbox[3:4]) / 0.1
   frame <- cbind(
     c(seq(bbox[1], bbox[2], length.out = len1), rep(bbox[2], len2), seq(bbox[2], bbox[1], length.out = len1),  rep(bbox[1], len2)),
     c(rep(bbox[4], len1), seq(bbox[4], bbox[3], length.out = len2), rep(bbox[3], len1), seq(bbox[3], bbox[4], length.out = len2))
   )
   frame <- st_make_valid(st_sfc(st_polygon(list(frame)), crs = "EPSG:4326"))
   frame <- st_transform(frame, crs(geog$layers[[1]]))
+  st_crs(frame) <- NA
 
   # crop bounding box to plot limits and plot
   if(is.null(xlim)) {
@@ -124,14 +145,16 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
   names(xlim) <- c("xmin", "xmax")
   names(ylim) <- c("ymin", "ymax")
 
-  bounds <- st_crop(frame, y = c(xlim, ylim))
+  # set plot canvas
+  pol <- st_sfc(st_polygon(list(cbind(xlim[c(1, 1, 2, 2, 1)], ylim[c(1, 2, 2, 1, 1)]))))
+  bounds <- st_intersection(frame, pol)
   plot(bounds, col = NA, border = NA)
 
   # add geoglist layers
   if(inherits(geog$layers[[1]], "SpatRaster")) {
 
     # mask and crop to plotting bounds
-    rst <- mask(crop(geog$layers[[layer]], vect(bounds)), vect(bounds))
+    rst <- suppressWarnings(mask(crop(geog$layers[[layer]], vect(bounds)), vect(bounds)))
     # adjust the boundary polygon so that it conforms to the raster grid resolution
     frame <- st_crop(frame, y = as.vector(ext(rst)))
     # plot
@@ -139,7 +162,9 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
 
   } else {
     # crop to plotting bounds
-    lyr <- suppressWarnings(st_crop(geog$layers[[layer]], st_bbox(bounds)))
+    lyr <- geog$layers[[layer]]
+    st_crs(lyr) <- NA
+    lyr <- suppressWarnings(st_intersection(lyr, bounds))
     # adjust the boundary polygon frame to plot bounds
     frame <- st_crop(frame, st_bbox(bounds))
     # plot
@@ -150,10 +175,10 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
   if(axes) {
     a1 <- axTicks(1)
     axis(1, pos = st_bbox(frame)[2], at = a1[which(a1 >= st_bbox(frame)[1] & a1 <= st_bbox(frame)[3])],
-         cex.axis = 0.7, col = "grey80", padj = -1)
+         cex.axis = 0.7, col = "grey", padj = -1)
     a2 <- axTicks(2)
     axis(2, pos = st_bbox(frame)[1], at = a2[which(a2 >= st_bbox(frame)[2] & a2 <= st_bbox(frame)[4])],
-         cex.axis = 0.7, col = "grey80", padj = 0.8)
+         cex.axis = 0.7, col = "grey", padj = 0.8)
   }
 
   # add links
@@ -166,12 +191,14 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
 
   # add legend
   if(legend) {
-    if(inherits(geog$layers[[1]], "SpatRaster")) {
-      rng <- c(minmax(geog$layers[[layer]]))
-    } else {
-      rng <- range(st_drop_geometry(geog$layers[[1]][,1]), na.rm = T)
+    if(is.null(zlim)) {
+      if(inherits(geog$layers[[1]], "SpatRaster")) {
+        zlim <- c(minmax(geog$layers[[layer]]))
+      } else {
+        zlim <- range(st_drop_geometry(geog$layers[[1]][,1]), na.rm = T)
+      }
     }
-    legend_cont("right", legend = rng, col = pal)
+    legend_cont("right", legend = zlim, col = pal)
     suppressWarnings(par(mar = pr))
   }
 
