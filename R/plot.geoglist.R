@@ -20,6 +20,8 @@
 #' `TRUE`.
 #' @param axes `logical`. Should axes be added to the plot? These will look
 #' sensible for lon-lat geoglists, but may look odd for other projection systems.
+#' @param bg `character` or `integer`. The colour to use for the map background.
+#' White by default.
 #' @return None.
 #' @param xlim `numeric`. If not `NULL`, then a vector of two numbers to set the
 #' minimum and maximum x extent of the plot in terms of the projection system in
@@ -47,8 +49,9 @@
 #' }
 
 plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
-                          lcol = "grey", lwd = 1, lty = 1, hex.border = NA, legend = T,
-                          axes = T, xlim = NULL, ylim = NULL, zlim = NULL) {
+                          lcol = "grey", lwd = 1, lty = 1, hex.border = NA,
+                          legend = T, axes = T, bg = "white",
+                          xlim = NULL, ylim = NULL, zlim = NULL) {
 
    # geog = rasts2
    # layer = 1
@@ -145,7 +148,7 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
   # set plot canvas
   pol <- st_sfc(st_polygon(list(cbind(xlim[c(1, 1, 2, 2, 1)], ylim[c(1, 2, 2, 1, 1)]))))
   bounds <- st_intersection(frame, pol)
-  plot(bounds, col = NA, border = NA)
+  plot(bounds, col = bg, border = NA)
 
   # add geoglist layers
   if(inherits(geog$layers[[1]], "SpatRaster")) {
