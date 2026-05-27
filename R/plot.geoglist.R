@@ -22,6 +22,8 @@
 #' sensible for lon-lat geoglists, but may look odd for other projection systems.
 #' @param bg `character` or `integer`. The colour to use for the map background.
 #' White by default.
+#' @param add `logical`. Should the geoglist plot be added to an existing plot?
+#' `FALSE` by default.
 #' @return None.
 #' @param xlim `numeric`. If not `NULL`, then a vector of two numbers to set the
 #' minimum and maximum x extent of the plot in terms of the projection system in
@@ -50,28 +52,28 @@
 
 plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
                           lcol = "grey", lwd = 1, lty = 1, hex.border = NA,
-                          legend = T, axes = T, bg = "white",
+                          legend = T, axes = T, bg = "white", add = F,
                           xlim = NULL, ylim = NULL, zlim = NULL) {
 
-   # geog = rasts2
-   # layer = 1
-   # pal = sf.colors(10)
-   # links = T
-   # lcol = 1
-   # lwd = 1
-   # lty = 1
-   # hex.border = NA
-   # legend = T
-   # axes = T
-   # xlim = NULL
-   # ylim = NULL
-   # #xlim = c(-91, -89.5)
-   # #ylim = c(-1.5, 0)
-   # #xlim = c(-91, 50)
-   # #ylim = c(-50, 80)
-   # zlim = NULL
-   # xlim = c(-1.5e7, 0)
-   # ylim = c(-5e6, 1e7)
+   geog = rasts2
+   layer = 1
+   pal = sf.colors(10)
+   links = T
+   lcol = 1
+   lwd = 1
+   lty = 1
+   hex.border = NA
+   legend = T
+   axes = T
+   xlim = NULL
+   ylim = NULL
+   #xlim = c(-91, -89.5)
+   #ylim = c(-1.5, 0)
+   #xlim = c(-91, 50)
+   #ylim = c(-50, 80)
+   zlim = NULL
+   xlim = c(-1.5e7, 0)
+   ylim = c(-5e6, 1e7)
 
   if(!exists("geog")) {
     stop("Supply geog as a geoglist with rast_to_geoglist()")
@@ -148,7 +150,7 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
   # set plot canvas
   pol <- st_sfc(st_polygon(list(cbind(xlim[c(1, 1, 2, 2, 1)], ylim[c(1, 2, 2, 1, 1)]))))
   bounds <- st_intersection(frame, pol)
-  plot(bounds, col = bg, border = NA)
+  plot(bounds, col = bg, border = NA, add = add)
 
   # add geoglist layers
   if(inherits(geog$layers[[1]], "SpatRaster")) {

@@ -17,6 +17,7 @@
   legend = T,
   axes = T,
   bg = "white",
+  add = F,
   xlim = NULL,
   ylim = NULL,
   zlim = NULL
@@ -50,6 +51,9 @@ sensible for lon-lat geoglists, but may look odd for other projection systems.}
 
 \item{bg}{\code{character} or \code{integer}. The colour to use for the map background.
 White by default.}
+
+\item{add}{\code{logical}. Should the geoglist plot be added to an existing plot?
+\code{FALSE} by default.}
 
 \item{xlim}{\code{numeric}. If not \code{NULL}, then a vector of two numbers to set the
 minimum and maximum x extent of the plot in terms of the projection system in
