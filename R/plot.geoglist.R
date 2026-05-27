@@ -21,7 +21,7 @@
 #' @param axes `logical`. Should axes be added to the plot? These will look
 #' sensible for lon-lat geoglists, but may look odd for other projection systems.
 #' @param bg `character` or `integer`. The colour to use for the map background.
-#' White by default.
+#' `NA` (no colour) by default.
 #' @param add `logical`. Should the geoglist plot be added to an existing plot?
 #' `FALSE` by default.
 #' @return None.
@@ -52,28 +52,28 @@
 
 plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
                           lcol = "grey", lwd = 1, lty = 1, hex.border = NA,
-                          legend = T, axes = T, bg = "white", add = F,
+                          legend = T, axes = T, bg = NA, add = F,
                           xlim = NULL, ylim = NULL, zlim = NULL) {
 
-   geog = rasts2
-   layer = 1
-   pal = sf.colors(10)
-   links = T
-   lcol = 1
-   lwd = 1
-   lty = 1
-   hex.border = NA
-   legend = T
-   axes = T
-   xlim = NULL
-   ylim = NULL
-   #xlim = c(-91, -89.5)
-   #ylim = c(-1.5, 0)
-   #xlim = c(-91, 50)
-   #ylim = c(-50, 80)
-   zlim = NULL
-   xlim = c(-1.5e7, 0)
-   ylim = c(-5e6, 1e7)
+   # geog = rasts2
+   # layer = 1
+   # pal = sf.colors(10)
+   # links = T
+   # lcol = 1
+   # lwd = 1
+   # lty = 1
+   # hex.border = NA
+   # legend = T
+   # axes = T
+   # xlim = NULL
+   # ylim = NULL
+   # #xlim = c(-91, -89.5)
+   # #ylim = c(-1.5, 0)
+   # #xlim = c(-91, 50)
+   # #ylim = c(-50, 80)
+   # zlim = NULL
+   # xlim = c(-1.5e7, 0)
+   # ylim = c(-5e6, 1e7)
 
   if(!exists("geog")) {
     stop("Supply geog as a geoglist with rast_to_geoglist()")
