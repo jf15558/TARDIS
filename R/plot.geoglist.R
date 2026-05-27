@@ -43,7 +43,7 @@
 #' }
 
 plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
-                          lcol = "grey80", lwd = 1, lty = 1, hex.border = NA, legend = T,
+                          lcol = "grey", lwd = 1, lty = 1, hex.border = NA, legend = T,
                           axes = T, xlim = NULL, ylim = NULL) {
 
    # geog = rasts
@@ -139,7 +139,9 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
 
   } else {
     # crop to plotting bounds
-    lyr <- st_crop(geog$layers[[layer]], st_bbox(bounds))
+    lyr <- suppressWarnings(st_crop(geog$layers[[layer]], st_bbox(bounds)))
+    # adjust the boundary polygon frame to plot bounds
+    frame <- st_crop(frame, st_bbox(bounds))
     # plot
     plot(lyr[,1], add = T, pal = pal, border = hex.border)
   }
