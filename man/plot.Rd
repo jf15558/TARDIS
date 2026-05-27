@@ -16,7 +16,7 @@
   hex.border = NA,
   legend = T,
   axes = T,
-  bg = "white",
+  bg = NA,
   add = F,
   xlim = NULL,
   ylim = NULL,
@@ -50,7 +50,7 @@ hexagonal grids. By default none.}
 sensible for lon-lat geoglists, but may look odd for other projection systems.}
 
 \item{bg}{\code{character} or \code{integer}. The colour to use for the map background.
-White by default.}
+\code{NA} (no colour) by default.}
 
 \item{add}{\code{logical}. Should the geoglist plot be added to an existing plot?
 \code{FALSE} by default.}
