@@ -16,6 +16,7 @@
   hex.border = NA,
   legend = T,
   axes = T,
+  bg = "white",
   xlim = NULL,
   ylim = NULL,
   zlim = NULL
@@ -47,12 +48,16 @@ hexagonal grids. By default none.}
 \item{axes}{\code{logical}. Should axes be added to the plot? These will look
 sensible for lon-lat geoglists, but may look odd for other projection systems.}
 
-\item{xlim}{\code{numeric}. If not \code{NULL}, then a vector of two numbers to set the
-minimum and maximum x extent of the plot in terms of the projection system of
-\code{xlim}. If \code{xlim} is specified, then \code{ylim} must also be specified.}
+\item{bg}{\code{character} or \code{integer}. The colour to use for the map background.
+White by default.}
 
-\item{ylim}{\code{numeric}. As for \code{xlim}, but to set the y axis extent. If \code{xlim}
-is specified, then \code{ylim} must also be specified.}
+\item{xlim}{\code{numeric}. If not \code{NULL}, then a vector of two numbers to set the
+minimum and maximum x extent of the plot in terms of the projection system in
+\code{geoglist}.}
+
+\item{ylim}{\code{numeric}. If not \code{NULL}, then a vector of two numbers to set the
+minimum and maximum y extent of the plot in terms of the projection system in
+\code{geoglist}.}
 
 \item{zlim}{\code{numeric}. If not \code{NULL}, then a vector of two numbers to set the
 range on the plotting legend.
