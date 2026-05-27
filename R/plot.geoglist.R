@@ -22,10 +22,11 @@
 #' sensible for lon-lat geoglists, but may look odd for other projection systems.
 #' @return None.
 #' @param xlim `numeric`. If not `NULL`, then a vector of two numbers to set the
-#' minimum and maximum x extent of the plot in terms of the projection system of
-#' `xlim`. If `xlim` is specified, then `ylim` must also be specified.
-#' @param ylim `numeric`. As for `xlim`, but to set the y axis extent. If `xlim`
-#' is specified, then `ylim` must also be specified.
+#' minimum and maximum x extent of the plot in terms of the projection system in
+#' `geoglist`.
+#' @param ylim `numeric`. If not `NULL`, then a vector of two numbers to set the
+#' minimum and maximum y extent of the plot in terms of the projection system in
+#' `geoglist`.
 #' @param zlim `numeric`. If not `NULL`, then a vector of two numbers to set the
 #' range on the plotting legend.
 #' the range of values
@@ -49,7 +50,7 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
                           lcol = "grey", lwd = 1, lty = 1, hex.border = NA, legend = T,
                           axes = T, xlim = NULL, ylim = NULL, zlim = NULL) {
 
-   # geog = rasts2
+   # geog = rasts
    # layer = 1
    # pal = sf.colors(10)
    # links = T
@@ -88,10 +89,6 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
   if(layer > length(geog$layers)) {
     stop("The value of layer exceeds of the number of layers in geog")
   }
-  if(!sum(c(is.null(xlim), is.null(ylim))) %in% c(0, 2)) {
-    stop("If xlim or ylim is supplied, then the other must also be given")
-  }
-
   if(!is.null(xlim)) {
     if(!is.atomic(xlim) | length(xlim) != 2) {
       stop("xlim should be a vector of length 2")
@@ -99,6 +96,8 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
     if(!is.numeric(xlim)) {
       stop("xlim should be numeric")
     }
+  }
+  if(!is.null(ylim)) {
     if(!is.atomic(ylim) | length(ylim) != 2) {
       stop("ylim should be a vector of length 2")
     }
@@ -113,7 +112,7 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
     if(!is.numeric(zlim)) {
       stop("zlim should be numeric")
     }
-   }
+  }
 
   if(legend) {
     pr <- newmar <- par("mar")
@@ -138,10 +137,8 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
   st_crs(frame) <- NA
 
   # crop bounding box to plot limits and plot
-  if(is.null(xlim)) {
-    xlim <- st_bbox(frame)[c(1, 3)]
-    ylim <- st_bbox(frame)[c(2, 4)]
-  }
+  if(is.null(xlim)) {xlim <- st_bbox(frame)[c(1, 3)]}
+  if(is.null(ylim)) {ylim <- st_bbox(frame)[c(2, 4)]}
   names(xlim) <- c("xmin", "xmax")
   names(ylim) <- c("ymin", "ymax")
 
@@ -198,10 +195,12 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
         zlim <- range(st_drop_geometry(geog$layers[[1]][,1]), na.rm = T)
       }
     }
-    legend_cont("right", legend = zlim, col = pal)
+    legend_cont(x = seq(par("xaxp")[2], par("usr")[2], length.out = 4)[2:3],
+                y = st_bbox(bounds)[c(2, 4)], legend = zlim, col = pal)
     suppressWarnings(par(mar = pr))
   }
 
   # add plot boundary
   plot(frame, add = T)
 }
+
