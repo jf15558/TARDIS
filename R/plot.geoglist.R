@@ -55,8 +55,8 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
                           legend = T, axes = T, bg = NA, add = F,
                           xlim = NULL, ylim = NULL, zlim = NULL) {
 
-   # geog = rasts2
-   # layer = 1
+   # geog = rasts
+   # layer = 2
    # pal = sf.colors(10)
    # links = T
    # lcol = 1
@@ -65,6 +65,8 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
    # hex.border = NA
    # legend = T
    # axes = T
+   # add = F
+   # bg = NA
    # xlim = NULL
    # ylim = NULL
    # #xlim = c(-91, -89.5)
@@ -91,7 +93,8 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
   if(layer %% 1 != 0) {
     stop("layer should be a single integer")
   }
-  if(layer > length(geog$layers)) {
+  nlyr <- ifelse(inherits(geog$layers, "SpatRaster"), nlyr(geog$layers), length(geog$layers))
+  if(layer > nlyr) {
     stop("The value of layer exceeds of the number of layers in geog")
   }
   if(!is.null(xlim)) {
