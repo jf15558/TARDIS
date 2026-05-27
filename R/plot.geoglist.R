@@ -50,7 +50,7 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
                           lcol = "grey", lwd = 1, lty = 1, hex.border = NA, legend = T,
                           axes = T, xlim = NULL, ylim = NULL, zlim = NULL) {
 
-   # geog = rasts
+   # geog = rasts2
    # layer = 1
    # pal = sf.colors(10)
    # links = T
@@ -181,7 +181,7 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
   # add links
   if(links) {
     if(!is.null(geog$links)) {
-      lnk <- st_crop(geog$links[which(geog$links$layer == layer),"geometry"], st_bbox(bounds))
+      lnk <- st_crop(geog$links[which(geog$links$layer == layer),"geometry"], st_bbox(frame))
       plot(lnk, add = T, col = lcol, lwd = lwd, lty = lty)
     }
   }
@@ -195,7 +195,7 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
         zlim <- range(st_drop_geometry(geog$layers[[1]][,1]), na.rm = T)
       }
     }
-    legend_cont(x = seq(par("xaxp")[2], par("usr")[2], length.out = 4)[2:3],
+    legend_cont(x = seq(st_bbox(frame)[3], par("usr")[2], length.out = 4)[2:3],
                 y = st_bbox(bounds)[c(2, 4)], legend = zlim, col = pal)
     suppressWarnings(par(mar = pr))
   }
