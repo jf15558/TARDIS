@@ -97,6 +97,9 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
     if(!is.numeric(ylim)) {
       stop("ylim should be numeric")
     }
+  } else {
+    xlim <- st_bbox(bounds)[c(1, 3)]
+    ylim <- st_bbox(bounds)[c(2, 4)]
   }
 
   if(legend) {
@@ -116,27 +119,28 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
   bounds <- st_make_valid(st_sfc(st_polygon(list(bounds)), crs = "EPSG:4326"))
   bounds <- st_transform(bounds, crs(geog$layers[[1]]))
 
-  # crop to plot limits
-  if(is.null(xlim)) {
-    xlim <- st_bbox(bounds)[c(1, 3)]
-    ylim <- st_bbox(bounds)[c(2, 4)]
-  }
-
-  pol <- st_sfc(st_polygon(list(cbind(xlim[c(1, 1, 2, 2, 1)],
-                                      ylim[c(1, 2, 2, 1, 1)]))),
-                crs = crs(geog$layers[[1]]))
-  bounds <- st_crop(bounds, pol)
-
-  plot(bounds, col = NA, border = NA)
+  # crop bounding box to plot limits and plot
+  bounds2 <- st_crop(bounds, xmin = xlim[1], ymin = ylim[1], xmax = xlim[2], ymax = ylim[2])
+  plot(bounds2, col = NA, border = NA)
 
   # add geoglist layers
   if(inherits(geog$layers[[1]], "SpatRaster")) {
-    rst <- crop(geog$layers[[layer]], vect(bounds))
+
+    # mask and crop to plotting bounds
+    rst <- mask(crop(geog$layers[[layer]], vect(bounds2)), vect(bounds2))
+    # adjust the boundary polygon so that it conforms to the raster grid resolution
+    bounds <- st_crop(bounds, y = as.vector(ext(rst)))
+    # plot
     plot(rst, col = pal, legend = F, add = T)
+
   } else {
-    lyr <- suppressWarnings(st_crop(geog$layers[[layer]], st_make_valid(bounds)))
+    # crop to plotting bounds
+    lyr <- st_crop(geog$layers[[layer]], st_bbox(bounds2))
+    # plot
     plot(lyr[,1], add = T, pal = pal, border = hex.border)
   }
+
+  # add axes
   if(axes) {
     a1 <- axTicks(1)
     axis(1, pos = st_bbox(bounds)[2], at = a1[which(a1 >= st_bbox(bounds)[1] & a1 <= st_bbox(bounds)[3])],
@@ -145,14 +149,16 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
     axis(2, pos = st_bbox(bounds)[1], at = a2[which(a2 >= st_bbox(bounds)[2] & a2 <= st_bbox(bounds)[4])],
          cex.axis = 0.7, col = "grey80", padj = 0.8)
   }
-  plot(bounds, add = T)
 
+  # add links
   if(links) {
     if(!is.null(geog$links)) {
       lnk <- st_crop(geog$links[which(geog$links$layer == layer),"geometry"], st_make_valid(bounds))
       plot(lnk, add = T, col = lcol, lwd = lwd, lty = lty)
     }
   }
+
+  # add legend
   if(legend) {
     if(inherits(geog$layers[[1]], "SpatRaster")) {
       rng <- c(minmax(geog$layers[[layer]]))
@@ -162,4 +168,7 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
     legend_cont("right", legend = rng, col = pal)
     suppressWarnings(par(mar = pr))
   }
+
+  # add plot boundary
+  plot(bounds, add = T)
 }
