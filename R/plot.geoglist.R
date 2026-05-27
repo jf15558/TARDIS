@@ -22,11 +22,10 @@
 #' sensible for lon-lat geoglists, but may look odd for other projection systems.
 #' @return None.
 #' @param xlim `numeric`. If not NULL, then a vector of two numbers to set the
-#' minimum and maximum x extent of the plot. If xlim is specified, then ylim
-#' must also be specified.
-#' @param ylim `numeric`. If not NULL, then a vector of two numbers to set the
-#' minimum and maximum y extent of the plot. If ylim is specified, then xlim
-#' must also be specified.
+#' minimum and maximum x extent of the plot in terms of the projection system of
+#' xlim. If xlim is specified, then ylim must also be specified.
+#' @param ylim `numeric`. As for xlim, but to set the y axis extent. If xlim is
+#' specified, then ylim must also be specified.
 #' @import sf terra
 #' @importFrom graphics par
 #' @importFrom graphics axis
@@ -47,20 +46,20 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
                           lcol = "grey80", lwd = 1, lty = 1, hex.border = NA, legend = T,
                           axes = T, xlim = NULL, ylim = NULL) {
 
-   #geog = rasts
-   #layer = 1
-   #pal = sf.colors(10)
-   #links = T
-   #lcol = 1
-   #lwd = 1
-   #lty = 1
-   #hex.border = NA
-   #legend = T
-   #axes = T
-   #xlim = NULL
-   #ylim = NULL
-   #xlim = c(-91, -89.5)
-   #ylim = c(-1.5, 0)
+   # geog = rasts
+   # layer = 1
+   # pal = sf.colors(10)
+   # links = T
+   # lcol = 1
+   # lwd = 1
+   # lty = 1
+   # hex.border = NA
+   # legend = T
+   # axes = T
+   # xlim = NULL
+   # ylim = NULL
+   # xlim = c(-91, -89.5)
+   # ylim = c(-1.5, 0)
 
   if(!exists("geog")) {
     stop("Supply geog as a geoglist with rast_to_geoglist()")
@@ -114,7 +113,7 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
     c(seq(bbox[1], bbox[2], length.out = len1), rep(bbox[2], len2), seq(bbox[2], bbox[1], length.out = len1),  rep(bbox[1], len2)),
     c(rep(bbox[4], len1), seq(bbox[4], bbox[3], length.out = len2), rep(bbox[3], len1), seq(bbox[3], bbox[4], length.out = len2))
   )
-  bounds <- st_sfc(st_polygon(list(bounds)), crs = "EPSG:4326")
+  bounds <- st_make_valid(st_sfc(st_polygon(list(bounds)), crs = "EPSG:4326"))
   bounds <- st_transform(bounds, crs(geog$layers[[1]]))
 
   # crop to plot limits
@@ -124,33 +123,27 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
   }
 
   pol <- st_sfc(st_polygon(list(cbind(xlim[c(1, 1, 2, 2, 1)],
-                                      ylim[c(1, 2, 2, 1, 1)]))), crs = "EPSG:4326")
-  pol <- st_transform(pol, crs(geog$layers[[1]]))
-  bounds <- st_crop(st_make_valid(bounds), pol)
+                                      ylim[c(1, 2, 2, 1, 1)]))),
+                crs = crs(geog$layers[[1]]))
+  bounds <- st_crop(bounds, pol)
 
-  # transform to geoglist CRS and plot
-  #plot(bounds, col = NA, border = NA, xlim = xlim, ylim = ylim, xaxs = "i", yaxs = "i")
   plot(bounds, col = NA, border = NA)
 
   # add geoglist layers
   if(inherits(geog$layers[[1]], "SpatRaster")) {
-    rst <- mask(geog$layers[[layer]], vect(bounds))
+    rst <- crop(geog$layers[[layer]], vect(bounds))
     plot(rst, col = pal, legend = F, add = T)
   } else {
-    plot(geog$layers[[layer]][,1], add = T, pal = pal, border = hex.border)
+    lyr <- suppressWarnings(st_crop(geog$layers[[layer]], st_make_valid(bounds)))
+    plot(lyr[,1], add = T, pal = pal, border = hex.border)
   }
   if(axes) {
-    if(!is.null(xlim)) {
-      axis(1, pos = ylim[1], cex.axis = 0.7, col = "grey80", padj = -1)
-      a2 <- axTicks(2)
-      axis(2, pos = xlim[1], at = a2[which(a2 >= geog$gdat[3] & a2 <= geog$gdat[4])],
-           cex.axis = 0.7, col = "grey80", padj = 0.8)
-    } else {
-      axis(1, pos = st_bbox(bounds)[3], cex.axis = 0.7, col = "grey80", padj = -1)
-      a2 <- axTicks(2)
-      axis(2, pos = st_bbox(bounds)[1], at = a2[which(a2 >= geog$gdat[3] & a2 <= geog$gdat[4])],
-           cex.axis = 0.7, col = "grey80", padj = 0.8)
-    }
+    a1 <- axTicks(1)
+    axis(1, pos = st_bbox(bounds)[2], at = a1[which(a1 >= st_bbox(bounds)[1] & a1 <= st_bbox(bounds)[3])],
+         cex.axis = 0.7, col = "grey80", padj = -1)
+    a2 <- axTicks(2)
+    axis(2, pos = st_bbox(bounds)[1], at = a2[which(a2 >= st_bbox(bounds)[2] & a2 <= st_bbox(bounds)[4])],
+         cex.axis = 0.7, col = "grey80", padj = 0.8)
   }
   plot(bounds, add = T)
 
