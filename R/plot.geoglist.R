@@ -97,9 +97,6 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
     if(!is.numeric(ylim)) {
       stop("ylim should be numeric")
     }
-  } else {
-    xlim <- st_bbox(bounds)[c(1, 3)]
-    ylim <- st_bbox(bounds)[c(2, 4)]
   }
 
   if(legend) {
@@ -112,30 +109,34 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
   bbox <- geog$gdat[1:4]
   len1 <- diff(bbox[1:2]) / 0.01
   len2 <- diff(bbox[3:4]) / 0.01
-  bounds <- cbind(
+  frame <- cbind(
     c(seq(bbox[1], bbox[2], length.out = len1), rep(bbox[2], len2), seq(bbox[2], bbox[1], length.out = len1),  rep(bbox[1], len2)),
     c(rep(bbox[4], len1), seq(bbox[4], bbox[3], length.out = len2), rep(bbox[3], len1), seq(bbox[3], bbox[4], length.out = len2))
   )
-  bounds <- st_make_valid(st_sfc(st_polygon(list(bounds)), crs = "EPSG:4326"))
-  bounds <- st_transform(bounds, crs(geog$layers[[1]]))
+  frame <- st_make_valid(st_sfc(st_polygon(list(frame)), crs = "EPSG:4326"))
+  frame <- st_transform(frame, crs(geog$layers[[1]]))
 
   # crop bounding box to plot limits and plot
-  bounds2 <- st_crop(bounds, xmin = xlim[1], ymin = ylim[1], xmax = xlim[2], ymax = ylim[2])
-  plot(bounds2, col = NA, border = NA)
+  if(is.null(xlim)) {
+    xlim <- st_bbox(frame)[c(1, 3)]
+    ylim <- st_bbox(frame)[c(2, 4)]
+  }
+  bounds <- st_crop(frame, xmin = xlim[1], ymin = ylim[1], xmax = xlim[2], ymax = ylim[2])
+  plot(bounds, col = NA, border = NA)
 
   # add geoglist layers
   if(inherits(geog$layers[[1]], "SpatRaster")) {
 
     # mask and crop to plotting bounds
-    rst <- mask(crop(geog$layers[[layer]], vect(bounds2)), vect(bounds2))
+    rst <- mask(crop(geog$layers[[layer]], vect(bounds)), vect(bounds))
     # adjust the boundary polygon so that it conforms to the raster grid resolution
-    bounds <- st_crop(bounds, y = as.vector(ext(rst)))
+    frame <- st_crop(frame, y = as.vector(ext(rst)))
     # plot
     plot(rst, col = pal, legend = F, add = T)
 
   } else {
     # crop to plotting bounds
-    lyr <- st_crop(geog$layers[[layer]], st_bbox(bounds2))
+    lyr <- st_crop(geog$layers[[layer]], st_bbox(bounds))
     # plot
     plot(lyr[,1], add = T, pal = pal, border = hex.border)
   }
@@ -143,17 +144,17 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
   # add axes
   if(axes) {
     a1 <- axTicks(1)
-    axis(1, pos = st_bbox(bounds)[2], at = a1[which(a1 >= st_bbox(bounds)[1] & a1 <= st_bbox(bounds)[3])],
+    axis(1, pos = st_bbox(frame)[2], at = a1[which(a1 >= st_bbox(frame)[1] & a1 <= st_bbox(frame)[3])],
          cex.axis = 0.7, col = "grey80", padj = -1)
     a2 <- axTicks(2)
-    axis(2, pos = st_bbox(bounds)[1], at = a2[which(a2 >= st_bbox(bounds)[2] & a2 <= st_bbox(bounds)[4])],
+    axis(2, pos = st_bbox(frame)[1], at = a2[which(a2 >= st_bbox(frame)[2] & a2 <= st_bbox(frame)[4])],
          cex.axis = 0.7, col = "grey80", padj = 0.8)
   }
 
   # add links
   if(links) {
     if(!is.null(geog$links)) {
-      lnk <- st_crop(geog$links[which(geog$links$layer == layer),"geometry"], st_make_valid(bounds))
+      lnk <- st_crop(geog$links[which(geog$links$layer == layer),"geometry"], st_bbox(bounds))
       plot(lnk, add = T, col = lcol, lwd = lwd, lty = lty)
     }
   }
@@ -170,5 +171,5 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
   }
 
   # add plot boundary
-  plot(bounds, add = T)
+  plot(frame, add = T)
 }
