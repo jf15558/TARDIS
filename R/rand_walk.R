@@ -1,4 +1,4 @@
-#' random_walk
+#' rand_walk
 #'
 #' Conduct random walks within a tardis graph. Full traverses in time and space
 #' are possible, but as walks in both these dimensions not are not necessarily
@@ -56,10 +56,10 @@
 #' dst <- rbind(c(-91.2, -1, 0), c(-91.6, -0.4, 0))
 #' pts <- stp(test2, rbind(org, dst))
 #'
-#' foo <- random_walk(tardis = gt, weights = gtw, pts[3:4,], rwlen = 1e6)
+#' foo <- rand_walk(tardis = gt, weights = gtw, pts[3:4,], rwlen = 1e6)
 #' }
 
-random_walk <- function(tardis, weights = "gdist", origin, mode = "steps", rwlen = 1000, restrict = TRUE, verbose = TRUE) {
+rand_walk <- function(tardis, weights = "gdist", origin, mode = "steps", rwlen = 1000, restrict = TRUE, verbose = TRUE) {
 
   # tardis = rtd
   # weights = "gdist"
