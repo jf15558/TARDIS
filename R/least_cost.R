@@ -115,9 +115,6 @@ least_cost <- function(tardis, weights = "gdist", origin, dest, verbose = TRUE) 
   if (verbose) {
     cat("Initialising graph\n")
   }
-  if(is.null(tardis$tgraph)) {
-    tardis <- instantiate_tardis(tardis = tardis, weights = weights)
-  }
 
   if (verbose) {
     cat("Running paths\r")
