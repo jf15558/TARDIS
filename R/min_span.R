@@ -114,11 +114,11 @@ min_span <- function(tardis, weights = "gdist", points, verbose = TRUE) {
 
   dists <- get_distance_matrix(tardis$tgraph, points$cell, points$cell)
   # set impossible paths to infinite
-  dists[is.na(dists)] <- Inf
+  #dists[is.na(dists)] <- Inf
 
   gr <- graph_from_adjacency_matrix(dists, weighted = T)
   # drop inaccessible cells
-  gr <- delete_edges(gr, which(E(gr)$weight == Inf))
+  #gr <- delete_edges(gr, which(E(gr)$weight == Inf))
   el <- as_edgelist(gr)
   el <- matrix(match(el, as.character(points$cell)), ncol = 2)
   ws <- E(gr)$weight

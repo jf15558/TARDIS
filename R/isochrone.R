@@ -109,6 +109,7 @@ isochrone <- function(tardis, weights = "gdist", origin, cost = 1e5, verbose = T
   if (verbose) {
     cat("Initialising graph\n")
   }
+  tardis <- instantiate_tardis(tardis, weights)
 
   ob_list <- t_list <- list()
   for(i in 1:nrow(origin)) {
