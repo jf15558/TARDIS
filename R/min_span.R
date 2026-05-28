@@ -222,16 +222,18 @@ min_span <- function(tardis, weights = "gdist", points, verbose = TRUE) {
     tvec[[i]] <- dcst[pord]
   }
   path_ids <- unlist(path_ids)
-  ob <- cbind.data.frame(path = as.numeric(unlist(lapply(strsplit(path_ids,
-                                                                  "_"), function(y) {
-                                                                    y[[1]]
-                                                                  }))), srt_bin = as.numeric(unlist(lapply(strsplit(path_ids,
-                                                                                                                    "_|-"), function(y) {
-                                                                                                                      y[[2]]
-                                                                                                                    }))), end_bin = as.numeric(unlist(lapply(strsplit(path_ids,
-                                                                                                                                                                      "_|-"), function(y) {
-                                                                                                                                                                        y[[3]]
-                                                                                                                                                                      }))), distance = unlist(tvec), cost = unlist(wvec))
+  ob <- cbind.data.frame(feature = as.numeric(unlist(lapply(strsplit(path_ids,
+                                                                     "_"), function(y) {
+                                                                       y[[1]]
+                                                                     }))), srt_bin = as.numeric(unlist(lapply(strsplit(path_ids,
+                                                                                                                       "_|-"), function(y) {
+                                                                                                                         y[[2]]
+                                                                                                                       }))), end_bin = as.numeric(unlist(lapply(strsplit(path_ids,
+                                                                                                                                                                         "_|-"), function(y) {
+                                                                                                                                                                           y[[3]]
+                                                                                                                                                                         }))), distance = unlist(tvec), cost = unlist(wvec))
+  ob$layer <- (ob$srt_bin + ob$end_bin) / 2
+  ob <- ob[,c("feature", "layer")]
   st_geometry(ob) <- st_sfc(unlist(path_groups, recursive = F),
                             crs = "+proj=longlat")
   return(ob)

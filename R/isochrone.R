@@ -109,7 +109,9 @@ isochrone <- function(tardis, weights = "gdist", origin, cost = 1e5, verbose = T
   if (verbose) {
     cat("Initialising graph\n")
   }
-  tardis <- instantiate_tardis(tardis = tardis, weights = weights)
+  if(is.null(tardis$tgraph)) {
+    tardis <- instantiate_tardis(tardis = tardis, weights = weights)
+  }
 
   ob_list <- t_list <- list()
   for(i in 1:nrow(origin)) {
@@ -142,7 +144,7 @@ isochrone <- function(tardis, weights = "gdist", origin, cost = 1e5, verbose = T
   }
 
   ids <- paste0(rep(1:nrow(origin), sapply(ob_list, length)), "_", unlist(t_list), "-", unlist(t_list))
-  out <- data.frame(path = rep(1:nrow(origin), unlist(lapply(ob_list, length))), bin = unlist(t_list))
+  out <- data.frame(feature = rep(1:nrow(origin), unlist(lapply(ob_list, length))), layer = unlist(t_list))
   st_geometry(out) <- Reduce(c, ob_list)
   rownames(out) <- ids
 

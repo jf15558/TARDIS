@@ -54,10 +54,10 @@
 
 least_cost <- function(tardis, weights = "gdist", origin, dest, verbose = TRUE) {
 
-  # tardis = rtdw
+  # tardis = rtd
   # weights = "gdist"
-  # origin = hpts[1,]
-  # dest = hpts[2,]
+  # origin = pt[1,]
+  # dest = pt[2,]
   # verbose = TRUE
 
   if (!exists("tardis")) {
@@ -115,7 +115,9 @@ least_cost <- function(tardis, weights = "gdist", origin, dest, verbose = TRUE) 
   if (verbose) {
     cat("Initialising graph\n")
   }
-  tardis <- instantiate_tardis(tardis = tardis, weights = weights)
+  if(is.null(tardis$tgraph)) {
+    tardis <- instantiate_tardis(tardis = tardis, weights = weights)
+  }
 
   if (verbose) {
     cat("Running paths\r")
@@ -165,7 +167,7 @@ least_cost <- function(tardis, weights = "gdist", origin, dest, verbose = TRUE) 
       path_xy <- xyFromCell(samprast, paths[[i]] %% tardis$gdat[5])
     }
 
-    pbin <- ceiling(paths[[i]] / tardis$gdat[5])
+    pbin <- (paths[[i]] %/% tardis$gdat[5]) + 1
     pseq <- rep(1:length(rle(pbin)$length), rle(pbin)$length)
     wcst <- rev(rev(c(rbind(tapply(wpaths[[i]], INDEX = pseq,
                                    sum), 0)))[-1])
@@ -208,7 +210,7 @@ least_cost <- function(tardis, weights = "gdist", origin, dest, verbose = TRUE) 
     tvec[[i]] <- dcst[pord]
   }
   path_ids <- unlist(path_ids)
-  ob <- cbind.data.frame(path = as.numeric(unlist(lapply(strsplit(path_ids,
+  ob <- cbind.data.frame(feature = as.numeric(unlist(lapply(strsplit(path_ids,
                                                                   "_"), function(y) {
                                                                     y[[1]]
                                                                   }))), srt_bin = as.numeric(unlist(lapply(strsplit(path_ids,
@@ -218,6 +220,8 @@ least_cost <- function(tardis, weights = "gdist", origin, dest, verbose = TRUE) 
                                                                                                                                                                       "_|-"), function(y) {
                                                                                                                                                                         y[[3]]
                                                                                                                                                                       }))), distance = unlist(tvec), cost = unlist(wvec))
+  ob$layer <- (ob$srt_bin + ob$end_bin) / 2
+  ob <- ob[,c("feature", "layer")]
   st_geometry(ob) <- st_sfc(unlist(path_groups, recursive = F),
                             crs = "+proj=longlat")
   return(ob)
