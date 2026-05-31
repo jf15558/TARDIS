@@ -74,8 +74,8 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
    # #xlim = c(-91, 50)
    # #ylim = c(-50, 80)
    # zlim = NULL
-   # xlim = c(-1.5e7, 0)
-   # ylim = c(-5e6, 1e7)
+   # #xlim = c(-1.5e7, 0)
+   # #ylim = c(-5e6, 1e7)
 
   if(!exists("geog")) {
     stop("Supply geog as a geoglist with rast_to_geoglist()")
@@ -173,7 +173,11 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
     # adjust the boundary polygon frame to plot bounds
     frame <- st_crop(frame, st_bbox(bounds))
     # plot
-    plot(lyr[,1], add = T, pal = pal, border = hex.border)
+    if(length(pal) == 1) {
+      plot(lyr[,1], add = T, col = pal, border = hex.border)
+    } else {
+      plot(lyr[,1], add = T, pal = pal, border = hex.border)
+    }
   }
 
   # add axes

@@ -1,10 +1,10 @@
 #' extract_geoglist
-#' 
+#'
 #' Extract values from the layers in a geoglist object, using an sf geometry
-#' collection. This geometry is expected to be the return from another TARDIS
-#' function (e.g, `least_cost()`, `isochrone()`, ect), but could be a
-#' user-designed geometry.
-#' 
+#' collection. This geometry is expected to be from another TARDIS function
+#' (e.g, `least_cost()`, `isochrone()`, ect), but could also be a user-designed
+#' geometry.
+#'
 #' @param geog `geoglist`. The output of `rast_to_geoglist()`.
 #' @param geom `sf simple features collection`. A set of sf geometries which
 #' will be used to extract values from geog.
@@ -18,7 +18,7 @@
 #' value present at that point (`$value`).
 #' @import sf terra h3jsr
 #' @export
-#' 
+#'
 #' @examples
 #' \dontrun{
 #' library(terra)
@@ -27,7 +27,7 @@
 #' gal <- TARDIS::galapagos()
 #' gal <- crop(gal, ext(-92, -88, -2, 1))
 #' gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
-#' 
+#'
 #' rasts <- rast_to_geoglist(gal, gal_m, as.hex = T, hex = 6)
 #' rlink <- link_islands(rasts)
 #' rtd <- build_tardis(rasts, times = c(seq(2.25, 0, -0.5), 0))
@@ -39,14 +39,14 @@
 #' rpts <- point_check(rtd, rbind(org, dst))
 #' rlcp <- least_cost(rtd, origin = rpts[1,], dest = rpts[3,])
 #' vals <- extract_geoglist(rasts, rlcp)
-#' } 
+#' }
 
 extract_geoglist <- function(geog, geom, layer = NULL) {
-  
+
   # geog = rasts
   # geom = ln
   # layer = NULL
-  
+
   if(!exists("geog")) {
     stop("Supply geog as a geoglist with rast_to_geoglist()")
   }
@@ -71,11 +71,11 @@ extract_geoglist <- function(geog, geom, layer = NULL) {
   if(is.null(geom$feature)) {
     geom$feature <- 1:nrow(geom$feature)
   }
-  
+
   if(!inherits(geog$layers[[1]], "SpatRaster")) {
     grid <- get_grid(geog$gdat[1:4], geog$gdat[7])
   }
-  
+
   vals <- lapply(1:max(geom$feature), function(x) {
     pth <- ln[which(geom$feature == x),]
     vals2 <- lapply(min(pth$layer):max(pth$layer), function(y) {
@@ -86,7 +86,7 @@ extract_geoglist <- function(geog, geom, layer = NULL) {
         cls <- cbind.data.frame(x, y, vl[,2])
         colnames(cls) <- c("feature", "layer", "value")
         cls$geometry <- st_as_sf(vect(xyFromCell(lyr, vl$cell)))$geometry
-        
+
       } else {
         vl <- unlist(st_intersects(prt, lyr))
         cls <- st_drop_geometry(lyr[vl,1])
