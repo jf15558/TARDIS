@@ -1,12 +1,12 @@
-#' plot.geoglist
+#' plot.xlist
 #'
-#' Plotting method for a geoglist layer. If the geoglist contains multiple
+#' Plotting method for a xlist layer. If the xlist contains multiple
 #' layers, then default behaviour is to plot the first one.
 #'
 #' @name plot
-#' @method plot geoglist
-#' @param geog `geoglist`. The output of `rast_to_geoglist()`.
-#' @param layer `numeric`. The layer in the geoglist to be plotted, along with
+#' @method plot xlist
+#' @param x `xlist`. The output of `rast_to_xlist()`.
+#' @param y `numeric`. The layer in the xlist to be plotted, along with
 #' its links. Defaults to 1 (the first layer).
 #' @param pal `vector`. A vector of colours to be used for plotting layer values,
 #' such as those returned by an R colour palette.
@@ -19,18 +19,18 @@
 #' @param legend `logical`. Should a legend be added to the plot? Defaults to
 #' `TRUE`.
 #' @param axes `logical`. Should axes be added to the plot? These will look
-#' sensible for lon-lat geoglists, but may look odd for other projection systems.
+#' sensible for lon-lat xlists, but may look odd for other projection systems.
 #' @param bg `character` or `integer`. The colour to use for the map background.
 #' `NA` (no colour) by default.
-#' @param add `logical`. Should the geoglist plot be added to an existing plot?
+#' @param add `logical`. Should the xlist plot be added to an existing plot?
 #' `FALSE` by default.
 #' @return None.
 #' @param xlim `numeric`. If not `NULL`, then a vector of two numbers to set the
 #' minimum and maximum x extent of the plot in terms of the projection system in
-#' `geoglist`.
+#' `xlist`.
 #' @param ylim `numeric`. If not `NULL`, then a vector of two numbers to set the
 #' minimum and maximum y extent of the plot in terms of the projection system in
-#' `geoglist`.
+#' `xlist`.
 #' @param zlim `numeric`. If not `NULL`, then a vector of two numbers to set the
 #' range on the plotting legend.
 #' the range of values
@@ -44,19 +44,19 @@
 #' \dontrun{
 #' gal <- cretaceous()
 #' gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
-#' rasts <- rast_to_geoglist(gal, gal_m)
+#' rasts <- rast_to_xlist(gal, gal_m)
 #' rasts <- link_islands(rasts, klink = 1)
 #'
 #' plot(regs)
 #' }
 
-plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
+plot.xlist <- function(x, y = 1, pal = sf.colors(10), links = T,
                           lcol = "grey", lwd = 1, lty = 1, hex.border = NA,
                           legend = T, axes = T, bg = NA, add = F,
                           xlim = NULL, ylim = NULL, zlim = NULL) {
 
-   # geog = rasts
-   # layer = 2
+   # x = rasts
+   # y = 1
    # pal = sf.colors(10)
    # links = T
    # lcol = 1
@@ -77,25 +77,25 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
    # #xlim = c(-1.5e7, 0)
    # #ylim = c(-5e6, 1e7)
 
-  if(!exists("geog")) {
-    stop("Supply geog as a geoglist with rast_to_geoglist()")
+  if(!exists("x")) {
+    stop("Supply x as a xlist with rast_to_geoglist()")
   }
-  if(!inherits(geog, "geoglist")) {
-    stop("Supply geog as a geoglist from rast_to_geoglist()")
+  if(!inherits(x, "geoglist")) {
+    stop("Supply x as a xlist from rast_to_geoglist()")
   }
 
-  if(!is.atomic(layer) | length(layer) != 1) {
-    stop("layer should be a single integer")
+  if(!is.atomic(y) | length(y) != 1) {
+    stop("y should be a single integer")
   }
-  if(!is.numeric(layer)) {
-    stop("layer should be a single integer")
+  if(!is.numeric(y)) {
+    stop("y should be a single integer")
   }
-  if(layer %% 1 != 0) {
-    stop("layer should be a single integer")
+  if(y %% 1 != 0) {
+    stop("y should be a single integer")
   }
-  nlyr <- ifelse(inherits(geog$layers, "SpatRaster"), nlyr(geog$layers), length(geog$layers))
-  if(layer > nlyr) {
-    stop("The value of layer exceeds of the number of layers in geog")
+  nlyr <- ifelse(inherits(x$layers, "SpatRaster"), nlyr(x$layers), length(x$layers))
+  if(y > nlyr) {
+    stop("The value of y exceeds of the number of layers in x")
   }
   if(!is.null(xlim)) {
     if(!is.atomic(xlim) | length(xlim) != 2) {
@@ -129,7 +129,7 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
   }
 
   # construct bounding polygon (adjust for global extent to avoid errors)
-  bbox <- geog$gdat[1:4]
+  bbox <- x$gdat[1:4]
   if(bbox[1] < -179.99) {bbox[1] <- -179.99}
   if(bbox[2] > 179.99) {bbox[2] <- 179.99}
   if(bbox[3] < -89.99) {bbox[3] <- -89.99}
@@ -141,7 +141,7 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
     c(rep(bbox[4], len1), seq(bbox[4], bbox[3], length.out = len2), rep(bbox[3], len1), seq(bbox[3], bbox[4], length.out = len2))
   )
   frame <- st_make_valid(st_sfc(st_polygon(list(frame)), crs = "EPSG:4326"))
-  frame <- st_transform(frame, crs(geog$layers[[1]]))
+  frame <- st_transform(frame, crs(x$layers[[1]]))
   st_crs(frame) <- NA
 
   # crop bounding box to plot limits and plot
@@ -155,11 +155,11 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
   bounds <- st_intersection(frame, pol)
   plot(bounds, col = bg, border = NA, add = add)
 
-  # add geoglist layers
-  if(inherits(geog$layers[[1]], "SpatRaster")) {
+  # add xlist layers
+  if(inherits(x$layers[[1]], "SpatRaster")) {
 
     # mask and crop to plotting bounds
-    rst <- suppressWarnings(mask(crop(geog$layers[[layer]], vect(bounds)), vect(bounds)))
+    rst <- suppressWarnings(mask(crop(x$layers[[y]], vect(bounds)), vect(bounds)))
     # adjust the boundary polygon so that it conforms to the raster grid resolution
     frame <- st_crop(frame, y = as.vector(ext(rst)))
     # plot
@@ -167,7 +167,7 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
 
   } else {
     # crop to plotting bounds
-    lyr <- geog$layers[[layer]]
+    lyr <- x$layers[[y]]
     st_crs(lyr) <- NA
     lyr <- suppressWarnings(st_intersection(lyr, bounds))
     # adjust the boundary polygon frame to plot bounds
@@ -192,8 +192,8 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
 
   # add links
   if(links) {
-    if(!is.null(geog$links)) {
-      lnk <- st_crop(geog$links[which(geog$links$layer == layer),"geometry"], st_bbox(frame))
+    if(!is.null(x$links)) {
+      lnk <- st_crop(x$links[which(x$links$layer == y),"geometry"], st_bbox(frame))
       plot(lnk, add = T, col = lcol, lwd = lwd, lty = lty)
     }
   }
@@ -201,10 +201,10 @@ plot.geoglist <- function(geog, layer = 1, pal = sf.colors(10), links = T,
   # add legend
   if(legend) {
     if(is.null(zlim)) {
-      if(inherits(geog$layers[[1]], "SpatRaster")) {
-        zlim <- c(minmax(geog$layers[[layer]]))
+      if(inherits(x$layers[[1]], "SpatRaster")) {
+        zlim <- c(minmax(x$layers[[y]]))
       } else {
-        zlim <- range(st_drop_geometry(geog$layers[[1]][,1]), na.rm = T)
+        zlim <- range(st_drop_geometry(x$layers[[1]][,1]), na.rm = T)
       }
     }
     legend_cont(x = seq(st_bbox(frame)[3], par("usr")[2], length.out = 4)[2:3],
