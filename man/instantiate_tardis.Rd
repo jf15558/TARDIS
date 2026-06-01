@@ -21,7 +21,8 @@ object with \code{weight_tardis()}.}
 Take a tardis object and generate a graph compatible with functions from the
 \code{rcppRouting} package. This function is primarily called internally by other
 TARDIS package functions, but it may be useful for the user to be able to
-directly interact with this graph themselves.
+directly interact with this graph themselves, or to supply a pre-instantiated
+\code{tardis} object within a loop to avoid repeated calls to this function.
 }
 \examples{
 \dontrun{

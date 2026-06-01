@@ -77,7 +77,7 @@ extract_geoglist <- function(geog, geom, layer = NULL) {
   }
 
   vals <- lapply(1:max(geom$feature), function(x) {
-    pth <- ln[which(geom$feature == x),]
+    pth <- geom[which(geom$feature == x),]
     vals2 <- lapply(min(pth$layer):max(pth$layer), function(y) {
       prt <- pth[which(pth$layer == y),]
       lyr <- geog$layers[[y]]
