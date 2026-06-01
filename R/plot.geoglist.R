@@ -1,12 +1,12 @@
-#' plot.xlist
+#' plot.geoglist
 #'
-#' Plotting method for a xlist layer. If the xlist contains multiple
+#' Plotting method for a geoglist layer. If the geoglist contains multiple
 #' layers, then default behaviour is to plot the first one.
 #'
 #' @name plot
-#' @method plot xlist
-#' @param x `xlist`. The output of `rast_to_xlist()`.
-#' @param y `numeric`. The layer in the xlist to be plotted, along with
+#' @method plot geoglist
+#' @param x `geoglist`. The output of `rast_to_geoglist()`.
+#' @param y `numeric`. The layer in the geoglist to be plotted, along with
 #' its links. Defaults to 1 (the first layer).
 #' @param pal `vector`. A vector of colours to be used for plotting layer values,
 #' such as those returned by an R colour palette.
@@ -19,21 +19,23 @@
 #' @param legend `logical`. Should a legend be added to the plot? Defaults to
 #' `TRUE`.
 #' @param axes `logical`. Should axes be added to the plot? These will look
-#' sensible for lon-lat xlists, but may look odd for other projection systems.
+#' sensible for lon-lat geoglists, but may look odd for other projection systems.
 #' @param bg `character` or `integer`. The colour to use for the map background.
 #' `NA` (no colour) by default.
-#' @param add `logical`. Should the xlist plot be added to an existing plot?
+#' @param add `logical`. Should the geoglist layer be added to an existing plot?
 #' `FALSE` by default.
 #' @return None.
 #' @param xlim `numeric`. If not `NULL`, then a vector of two numbers to set the
 #' minimum and maximum x extent of the plot in terms of the projection system in
-#' `xlist`.
+#' `geoglist`.
 #' @param ylim `numeric`. If not `NULL`, then a vector of two numbers to set the
 #' minimum and maximum y extent of the plot in terms of the projection system in
-#' `xlist`.
+#' `geoglist`.
 #' @param zlim `numeric`. If not `NULL`, then a vector of two numbers to set the
 #' range on the plotting legend.
 #' the range of values
+#' @param ... Other arguments passed to `plot_sf()`. Use will probably cause
+#' errors.
 #' @import sf terra
 #' @importFrom graphics par
 #' @importFrom graphics axis
@@ -44,16 +46,16 @@
 #' \dontrun{
 #' gal <- cretaceous()
 #' gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
-#' rasts <- rast_to_xlist(gal, gal_m)
+#' rasts <- rast_to_geoglist(gal, gal_m)
 #' rasts <- link_islands(rasts, klink = 1)
 #'
 #' plot(regs)
 #' }
 
-plot.xlist <- function(x, y = 1, pal = sf.colors(10), links = T,
+plot.geoglist <- function(x, y = 1, pal = sf.colors(10), links = T,
                           lcol = "grey", lwd = 1, lty = 1, hex.border = NA,
                           legend = T, axes = T, bg = NA, add = F,
-                          xlim = NULL, ylim = NULL, zlim = NULL) {
+                          xlim = NULL, ylim = NULL, zlim = NULL, ...) {
 
    # x = rasts
    # y = 1
@@ -78,10 +80,10 @@ plot.xlist <- function(x, y = 1, pal = sf.colors(10), links = T,
    # #ylim = c(-5e6, 1e7)
 
   if(!exists("x")) {
-    stop("Supply x as a xlist with rast_to_geoglist()")
+    stop("Supply x as a geoglist with rast_to_geoglist()")
   }
   if(!inherits(x, "geoglist")) {
-    stop("Supply x as a xlist from rast_to_geoglist()")
+    stop("Supply x as a geoglist from rast_to_geoglist()")
   }
 
   if(!is.atomic(y) | length(y) != 1) {
@@ -153,9 +155,9 @@ plot.xlist <- function(x, y = 1, pal = sf.colors(10), links = T,
   # set plot canvas
   pol <- st_sfc(st_polygon(list(cbind(xlim[c(1, 1, 2, 2, 1)], ylim[c(1, 2, 2, 1, 1)]))))
   bounds <- st_intersection(frame, pol)
-  plot(bounds, col = bg, border = NA, add = add)
+  plot(bounds, col = bg, border = NA, add = add, ...)
 
-  # add xlist layers
+  # add geoglist layers
   if(inherits(x$layers[[1]], "SpatRaster")) {
 
     # mask and crop to plotting bounds

@@ -6,8 +6,8 @@
 \title{plot.geoglist}
 \usage{
 \method{plot}{geoglist}(
-  geog,
-  layer = 1,
+  x,
+  y = 1,
   pal = sf.colors(10),
   links = T,
   lcol = "grey",
@@ -20,13 +20,14 @@
   add = F,
   xlim = NULL,
   ylim = NULL,
-  zlim = NULL
+  zlim = NULL,
+  ...
 )
 }
 \arguments{
-\item{geog}{\code{geoglist}. The output of \code{rast_to_geoglist()}.}
+\item{x}{\code{geoglist}. The output of \code{rast_to_geoglist()}.}
 
-\item{layer}{\code{numeric}. The layer in the geoglist to be plotted, along with
+\item{y}{\code{numeric}. The layer in the geoglist to be plotted, along with
 its links. Defaults to 1 (the first layer).}
 
 \item{pal}{\code{vector}. A vector of colours to be used for plotting layer values,
@@ -52,7 +53,7 @@ sensible for lon-lat geoglists, but may look odd for other projection systems.}
 \item{bg}{\code{character} or \code{integer}. The colour to use for the map background.
 \code{NA} (no colour) by default.}
 
-\item{add}{\code{logical}. Should the geoglist plot be added to an existing plot?
+\item{add}{\code{logical}. Should the geoglist layer be added to an existing plot?
 \code{FALSE} by default.}
 
 \item{xlim}{\code{numeric}. If not \code{NULL}, then a vector of two numbers to set the
@@ -66,6 +67,9 @@ minimum and maximum y extent of the plot in terms of the projection system in
 \item{zlim}{\code{numeric}. If not \code{NULL}, then a vector of two numbers to set the
 range on the plotting legend.
 the range of values}
+
+\item{...}{Other arguments passed to \code{plot_sf()}. Use will probably cause
+errors.}
 }
 \value{
 None.
