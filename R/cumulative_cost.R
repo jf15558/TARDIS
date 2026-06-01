@@ -114,7 +114,7 @@ cumulative_cost <- function(tardis, weights = "gdist", origin, verbose = TRUE) {
     tmp[][as.numeric(names(paths)) %% tardis$gdat[5], 1] <- paths
   }
 
-  out <- list(gdat = tardis$gdat, layers = tmp)
+  out <- list(gdat = tardis$gdat, layers = list(tmp))
   class(out) <- "geoglist"
   return(out)
 }

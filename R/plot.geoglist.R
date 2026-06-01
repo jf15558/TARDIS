@@ -195,7 +195,9 @@ plot.geoglist <- function(x, y = 1, pal = sf.colors(10), links = T,
   # add links
   if(links) {
     if(!is.null(x$links)) {
-      lnk <- st_crop(x$links[which(x$links$layer == y),"geometry"], st_bbox(frame))
+      lnk <- x$links[which(x$links$layer == y),"geometry"]
+      st_crs(lnk) <- NA
+      lnk <- st_intersection(lnk, frame)
       plot(lnk, add = T, col = lcol, lwd = lwd, lty = lty)
     }
   }
