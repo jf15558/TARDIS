@@ -24,6 +24,9 @@
 #' may also be expressed in relation to a user-supplied weighting scheme.
 #' @param restrict A logical indicating whether the random walk should be
 #' constrained to the same time layer as its origin. TRUE by default.
+#' @param trials An integer indicating the number of random walk trials to
+#' conduct before quitting, if mode = "cost" and the random walk length proves
+#' insufficient to reach to cost value.
 #' @param verbose A logical indicating whether function progress should be
 #' reported to the user.
 #' @return If restrict = TRUE (default), then a SpatRaster with each stack
@@ -59,15 +62,15 @@
 #' foo <- rand_walk(tardis = gt, weights = gtw, pts[3:4,], rwlen = 1e6)
 #' }
 
-rand_walk <- function(tardis, weights = "gdist", origin, mode = "steps", rwlen = 1000, restrict = TRUE, verbose = TRUE) {
+rand_walk <- function(tardis, weights = "gdist", origin, mode = "steps", rwlen = 1000, restrict = TRUE, trials = 100, verbose = TRUE) {
 
-  # tardis = rtd
-  # weights = "gdist"
-  # origin = rpt[3:4,]
-  # rwlen = 100000
-  # mode = "cost"
-  # restrict = T
-  # verbose = T
+   #tardis = rtd
+   #weights = "gdist"
+   #origin = pt[1,]
+   #rwlen = 10000
+   #mode = "steps"
+   #restrict = T
+   #verbose = T
 
   if (!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
@@ -123,6 +126,13 @@ rand_walk <- function(tardis, weights = "gdist", origin, mode = "steps", rwlen =
     stop("If not NULL, rwlen should be a single positive, finite numeric, or a vector of the same with as many rows as origin")
   }
 
+  if(!is.atomic(trials) | !is.numeric(trials)) {
+    stop("trials should be a single positive integer")
+  }
+  if(length(trials) != 1) {
+    stop("trials should be a single positive integer")
+  }
+
   # get igraph version of graph (edge weights are conductive, rather than resistive as in cppRouting)
   if(verbose) {cat("Building graph\n")}
 
@@ -153,14 +163,19 @@ rand_walk <- function(tardis, weights = "gdist", origin, mode = "steps", rwlen =
     }
 
     fail <- T
+    iter <- 1
     while(fail) {
       rw <- as.vector(igraph::random_walk(grp, start = as.character(origin$cell[i]), steps = steps))
+      iter <- iter + 1
       if(mode == "cost") {
         dst <- cumsum(tw[get.edge.ids(grp, c(rw[1], rep(rw[2:(length(rw) - 1)], each = 2), rw[length(rw)]))]) - rwlen[i]
         if(any(dst >= 0)) {fail <- F}
         rw <- rw[1:which(dst > 0)[1]]
       } else {
         fail <- F
+      }
+      if(iter > trials) {
+        stop(paste0("Random walk failed to reach the requested cost after ", trials, " trials"))
       }
     }
 
@@ -173,29 +188,26 @@ rand_walk <- function(tardis, weights = "gdist", origin, mode = "steps", rwlen =
 
       freq <- rw[which(rwt == x)]
       if(!is.na(tardis$gdat[7])) {
-        cls <- st_wrap_dateline(cell_to_polygon(grid[rwp[which(rwt == x)]]), options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
-        freqs <- cbind.data.frame(point = i, bin = x, freq = as.vector(rw[which(rwt == x)]))
-        st_geometry(freqs) <- cls
-        colnames(freqs) <- c("point", "bin", "freq", "geometry")
+        freqs <- vect(st_wrap_dateline(cell_to_polygon(grid[rwp[which(rwt == x)]]), options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180")))
+        freqs$point <- i
+        freqs$bin <- x
+        freqs$freq <- as.vector(rw[which(rwt == x)])
 
       } else {
         freqs <- samprast
         freqs[] <- NA
         freqs[][rwp[which(rwt == x)],] <- rw[which(rwt == x)]
         names(freqs) <- "freq"
-        freqs <- st_as_sf(as.polygons(freqs, aggregate = F))
-        freqs <- st_sf(cbind.data.frame(point = i, freqs))
+        freqs <- as.polygons(freqs, aggregate = F)
+        freqs$point <- i
+        freqs$bin <- x
+        freqs[,c(2, 3, 1)]
       }
       freqs
     })
     det_list[[i]] <- out
   }
   # summarise and return
-  lyr <- do.call(rbind, unlist(det_list, recursive = F))
-  if(!inherits(lyr, "SpatRaster")) {
-    lyr <- list(lyr)
-  }
-  out <- list(gdat = tardis$gdat, layers = lyr)
-
-  return(do.call(rbind, unlist(det_list, recursive = F)))
+  lyr <- svc(unlist(det_list, recursive = F))
+  return(list(gdat = tardis$gdat, layers = lyr))
 }
