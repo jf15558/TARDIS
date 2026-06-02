@@ -11,6 +11,7 @@ rand_walk(
   mode = "steps",
   rwlen = 1000,
   restrict = TRUE,
+  trials = 100,
   verbose = TRUE
 )
 }
@@ -36,6 +37,10 @@ may also be expressed in relation to a user-supplied weighting scheme.}
 
 \item{restrict}{A logical indicating whether the random walk should be
 constrained to the same time layer as its origin. TRUE by default.}
+
+\item{trials}{An integer indicating the number of random walk trials to
+conduct before quitting, if mode = "cost" and the random walk length proves
+insufficient to reach to cost value.}
 
 \item{verbose}{A logical indicating whether function progress should be
 reported to the user.}

@@ -35,9 +35,9 @@
 
 click_to_snip <- function(geog, layer = 1, nsnips = 1, ...) {
 
-   geog = rasts
-   layer = 1
-   nsnips = 1
+   #geog = rasts
+   #layer = 1
+   #nsnips = 1
 
   if(!exists("geog")) {
     stop("Supply geog as a geoglist with rast_to_geoglist()")
