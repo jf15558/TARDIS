@@ -77,10 +77,10 @@ click_to_snip <- function(geog, layer = 1, nsnips = 1, ...) {
 
     snips <- list()
     for(i in 1:nsnips) {
-      ln <- st_sfc(st_linestring(click(n = 2)), crs = "+proj=lonlat")
+      ln <- as.lines(vect(click(n = 2)))
       plot(ln, add = T, col = 2, lwd = 2)
       lnks <- which(geog$links$layer == layer)
-      snips[[i]] <- lnks[unlist(st_intersects(ln, geog$links[lnks,]))]
+      snips[[i]] <- lnks[relate(ln, geog$links[lnks], "intersects"))[,2]]
     }
     snips <- unlist(snips)
     if(length(snips) == 0) {

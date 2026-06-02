@@ -33,9 +33,9 @@
 
 click_to_link <- function(geog, layer = 1, nlinks = 1, ...) {
   #
-  # geog = rasts
-  # layer = 1
-  # nlinks = 2
+   #geog = rasts
+   #layer = 1
+   #nlinks = 1
   #
   if(!exists("geog")) {
     stop("Supply geog as a geoglist from rast_to_geoglist()")
@@ -75,8 +75,8 @@ click_to_link <- function(geog, layer = 1, nlinks = 1, ...) {
 
     grid <- get_grid(geog$gdat[1:4], geog$gdat[7])
     bounds <- geog$layers[[layer]]
-    bar <- st_touches(bounds)
-    bounds <- centroids(vect(bounds[sapply(bar, length) != 6,]))
+    bar <- relate(bounds, bounds, "intersects", pairs = T)
+    bounds <- centroids(bounds[which(table(bar[,1]) != 7)])
   }
 
   plot.geoglist(geog, layer, ...)
@@ -91,7 +91,7 @@ click_to_link <- function(geog, layer = 1, nlinks = 1, ...) {
       vals <- extract(geog$layers[[layer]], ln)
       isvalid <- na.omit(vals[,2])
     } else {
-      isvalid <- unlist(st_intersects(st_as_sf(ln), geog$layers[[layer]]))
+      isvalid <- relate(ln, geog$layers[[layer]], "intersects", pairs = T)[,1]
     }
 
     if(length(isvalid) == 2) {
@@ -109,11 +109,10 @@ click_to_link <- function(geog, layer = 1, nlinks = 1, ...) {
 
   } else {
     lnk <- do.call(rbind, lnk[!sapply(lnk, is.null)])
-    lnk <- st_as_sf(lnk, crs = "+proj=lonlat")
 
     if(inherits(geog$layers, "SpatRaster")) {
 
-      cl <- cellFromXY(geog$layers[[1]], as.matrix(st_coordinates(lnk)[,1:2]))
+      cl <- cellFromXY(geog$layers[[1]], crds(lnk))
       cls <- as.data.frame(matrix(cl, ncol = 2, byrow = T))
 
     } else {
@@ -125,10 +124,12 @@ click_to_link <- function(geog, layer = 1, nlinks = 1, ...) {
 
     colnames(cls) <- c("srt", "end")
     cls$layer <- layer
-    cls$distance <- perim(vect(lnk))
-    st_geometry(cls) <- lnk$geometry
-
-    geog$links <- unique(rbind(geog$links, cls))
+    cls$distance <- perim(lnk)
+    if(!is.null(geog$links)) {
+      geog$links <- unique(rbind(geog$links, cls))
+    } else {
+      geog$links <- cls
+    }
   }
   return(geog)
 }
