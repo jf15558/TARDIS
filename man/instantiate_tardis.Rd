@@ -30,8 +30,7 @@ directly interact with this graph themselves, or to supply a pre-instantiated
 #library(TARDIS)
 
 # load a dataset of the Galapagos archipelago through geological time
-gal <- TARDIS::galapagos()
-gal <- crop(gal, ext(-92, -88, -2, 1))
+gal <- galapagos()
 
 # create a land-sea mask from the archipelago raster set
 gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)

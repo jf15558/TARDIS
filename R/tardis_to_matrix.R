@@ -21,6 +21,7 @@
 #' your landscapes before creating a distance matrix.
 #'
 #' @examples
+#' \dontrun{
 #' library(terra)
 #' library(TARDIS)
 #'
@@ -33,7 +34,7 @@
 #' htd <- build_tardis(hexes)
 #' dm <- tardis_to_matrix(htd, mode = "distance")
 #' aj <- tardis_to_matrix(htd, mode = "adjacency")
-#'
+#'}
 
 tardis_to_matrix <- function(tardis, weights = "gdist", mode = "adjacency") {
 

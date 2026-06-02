@@ -136,17 +136,6 @@ build_tardis <- function(geog, times = NULL, tlink = 1, rotations = NULL, verbos
       }
     }
   }
-  if(!is.null(klink)) {
-    if (length(klink) != 1 | !inherits(klink, "numeric")) {
-      stop("If not NULL, klink should be an integer")
-    }
-    if (!klink%%1 == 0) {
-      stop("If not NULL, klink should be an integer")
-    }
-  }
-  if(!is.logical(island.check) | length(island.check) != 1) {
-    stop("island.check should be a single logical")
-  }
 
   if(!is.null(geog$links)) {
 

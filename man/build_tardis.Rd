@@ -4,15 +4,7 @@
 \alias{build_tardis}
 \title{build_tardis}
 \usage{
-build_tardis(
-  geog,
-  times = NULL,
-  tlink = 1,
-  island.check = TRUE,
-  klink = NULL,
-  rotations = NULL,
-  verbose = TRUE
-)
+build_tardis(geog, times = NULL, tlink = 1, rotations = NULL, verbose = TRUE)
 }
 \arguments{
 \item{geog}{\code{geoglist}. The output of \code{rast_to_geoglist()}.}
@@ -26,13 +18,6 @@ oldest to youngest.}
 \item{tlink}{\code{integer}. The linking mode between layers, either \code{1} (forwards-in-time),
 \code{2} (backwards-in-time) or \code{3} (bidirectional). The forwards-in-time case is
 the default.}
-
-\item{island.check}{\code{logical}. If \code{geog} already contains links, then this argument
-will be ignored. Otherwise should the layers of \code{geog} be checked for
-islands and connected using \code{link_islands()}?}
-
-\item{klink}{\code{integer}. The number of island connections to generate, as
-called by \code{link_islands()}.}
 
 \item{rotations}{\code{list} or \code{NULL}. By default \code{NULL}, indictating that temporal
 links are spatially constant. Otherwise, a list with \code{nlayers(geog) - 1} elements
@@ -86,8 +71,7 @@ Examples of the rotations object are available via its documentation
 #library(TARDIS)
 
 # load a dataset of the Galapagos archipelago through geological time
-gal <- TARDIS::galapagos()
-gal <- crop(gal, ext(-92, -88, -2, 1))
+gal <- galapagos()
 
 # create a land-sea mask from the archipelago raster set
 gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)

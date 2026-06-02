@@ -33,7 +33,7 @@
 #' htd <- build_tardis(hexes, times = c(seq(2.25, 0, -0.5), 0))
 #'
 #' # resolve a destination point to that graph
-#' org <- rbind(c(-89.78873, -1.420627, 2))'
+#' org <- rbind(c(-89.78873, -1.420627, 2))
 #' hpts <- point_check(htd, org)
 #'
 #' # get the cumulative cost around that point

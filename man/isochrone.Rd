@@ -38,23 +38,19 @@ time layer which fall within a certain cost of access of that point.
 library(terra)
 library(TARDIS)
 
-gal <- TARDIS::galapagos()
-gal <- crop(gal, ext(-92, -88, -2, 1))
+gal <- galapagos()
 gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
-hexes <- rast_to_geoglist(gal, gal_m, as.hex = T, hex = 7)
-rasts <- rast_to_geoglist(gal, gal_m)
-hlink <- link_islands(hexes)
-rlink <- link_islands(rasts)
+
+# create a geoglist and link islands
+hexes <- rast_to_geoglist(gal, gal_m, as.hex = T, hex = 6)
+hexes <- link_islands(hexes)
+
 htd <- build_tardis(hexes, times = c(seq(2.25, 0, -0.5), 0))
-rtd <- build_tardis(rasts, times = c(seq(2.25, 0, -0.5), 0))
-org <- rbind(c(-89.78873, -1.420627, 2),
-             c(-89.58525, -1.473917, 2))
-dst <- rbind(c(-88.70836, -0.2627832, 2),
+
+org <- rbind(c(-88.70836, -0.2627832, 2),
              c(-90.44276,  0.2943382, 2))
 
-hpts <- point_check(htd, rbind(org, dst))
-rpts <- point_check(rtd, rbind(org, dst))
-
-foo <- isochrone(rtd, origin = rpts[3:4,], cost = 100000)
+hpts <- point_check(htd, org)
+foo <- isochrone(htd, origin = hpts, cost = 100000)
 }
 }

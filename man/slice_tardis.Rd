@@ -30,16 +30,15 @@ and so forth.
 }
 \examples{
 \dontrun{
-#library(terra)
-#library(TARDIS)
+library(terra)
+library(TARDIS)
 
-gal <- TARDIS::galapagos()
-gal <- crop(gal, ext(-92, -88, -2, 1))
+gal <- galapagos()
 gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
 rasts <- rast_to_geoglist(gal, gal_m)
-hlink <- link_islands(hexes)
-rlink <- link_islands(rasts)
-rtd <- build_tardis(rasts, times = c(seq(2.25, 0, -0.5), 0), mlink = rlink)
+rasts <- link_islands(rasts)
+rtd <- build_tardis(rasts, times = c(seq(2.25, 0, -0.5), 0))
+
 gts <- slice_tardis(rtd, times = c(1.2, 0))
 gts <- slice_tardis(rtd, layers = c(1, 2))
 }

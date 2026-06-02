@@ -29,13 +29,14 @@ tardis object.
 #library(terra)
 #library(TARDIS)
 
-gal <- TARDIS::galapagos()
-gal <- crop(gal, ext(-92, -88, -2, 1))
+# load data
+gal <- galapagos()
 gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
 
+# make geoglist and add links
 rasts <- rast_to_geoglist(gal, gal_m)
-
 rlink <- link_islands(rasts)
+
 rtd <- build_tardis(rasts, times = c(seq(2.25, 0, -0.5), 0))
 cost_surface(rtd)
 }

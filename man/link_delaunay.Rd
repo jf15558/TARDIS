@@ -54,8 +54,7 @@ library(terra)
 library(TARDIS)
 
 # load a dataset of the Galapagos archipelago through geological time
-gal <- TARDIS::galapagos()
-gal <- crop(gal, ext(-92, -88, -2, 1))
+gal <- galapagos()
 
 # create a land-sea mask from the archipelago raster set
 gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
@@ -64,16 +63,7 @@ gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), r
 hexes <- rast_to_geoglist(gal, gal_m, as.hex = T, hex = 6)
 hexes <- link_delaunay(hexes)
 
-# create a geoglist in raster format and mask the sea
-rasts <- rast_to_geoglist(gal, gal_m)
-rasts <- link_delaunay(rasts)
-
-# plot the first layer of the geoglist and add the island links
-layer_ind = 1
-plot(rasts$layers[[layer_ind]])
-plot(rasts$links[[layer_ind]]]$geometry[which(rasts$links$bin == layer_ind)], add = T)
-
-plot(hexes$layers[[layer_ind]]$geometry)
-plot(hexes$links[[layer_ind]]]$geometry[which(hexes$links$bin == layer_ind)], add = T)
+# plot the first layer of the geoglist with island links
+plot(hexes)
 }
 }
