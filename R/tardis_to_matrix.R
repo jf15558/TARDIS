@@ -20,6 +20,20 @@
 #' a gigabyte in size. You may wish to optimise the resolution and masking of
 #' your landscapes before creating a distance matrix.
 #'
+#' @examples
+#' library(terra)
+#' library(TARDIS)
+#'
+#' gal <- galapagos()
+#' gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
+#'
+#' hexes <- rast_to_geoglist(gal[[1]], gal_m[[1]], as.hex = T, hex = 6)
+#' hexes <- link_islands(hexes)
+#'
+#' htd <- build_tardis(hexes)
+#' dm <- tardis_to_matrix(htd, mode = "distance")
+#' aj <- tardis_to_matrix(htd, mode = "adjacency")
+#'
 
 tardis_to_matrix <- function(tardis, weights = "gdist", mode = "adjacency") {
 

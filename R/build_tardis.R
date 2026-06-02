@@ -15,11 +15,6 @@
 #' @param tlink `integer`. The linking mode between layers, either `1` (forwards-in-time),
 #' `2` (backwards-in-time) or `3` (bidirectional). The forwards-in-time case is
 #' the default.
-#' @param island.check `logical`. If `geog` already contains links, then this argument
-#' will be ignored. Otherwise should the layers of `geog` be checked for
-#' islands and connected using `link_islands()`?
-#' @param klink `integer`. The number of island connections to generate, as
-#' called by `link_islands()`.
 #' @param rotations `list` or `NULL`. By default `NULL`, indictating that temporal
 #' links are spatially constant. Otherwise, a list with `nlayers(geog) - 1` elements
 #' recording the shift in cell locations between layers (see @details).
@@ -66,8 +61,7 @@
 #' #library(TARDIS)
 #'
 #' # load a dataset of the Galapagos archipelago through geological time
-#' gal <- TARDIS::galapagos()
-#' gal <- crop(gal, ext(-92, -88, -2, 1))
+#' gal <- galapagos()
 #'
 #' # create a land-sea mask from the archipelago raster set
 #' gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
@@ -87,7 +81,7 @@
 #' rtd <- build_tardis(rasts, times = c(seq(2.25, 0, -0.5), 0))
 #' }
 
-build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, klink = NULL, rotations = NULL, verbose = TRUE) {
+build_tardis <- function(geog, times = NULL, tlink = 1, rotations = NULL, verbose = TRUE) {
 
    #geog = rasts
    #times = c(seq(2.25, 0, -0.5), 0)
@@ -154,27 +148,7 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
     stop("island.check should be a single logical")
   }
 
-  if(is.null(geog$links)) {
-
-    if(island.check) {
-      geog <- link_islands(geog, klink = klink)
-      add_links <- lapply(1:nlayers, function(x) {
-        if(x %in% geog$links$layer) {
-          lnk <- geog$links[which(geog$links$layer == x),]
-          lnk
-        } else {
-          NULL
-        }
-      })
-
-    } else {
-      warning("layers were not checked for islands. TARDIS paths fail unexpectedly. Consider running with island.check = TRUE or adding links to the geoglist with link_islands()")
-      add_links <- lapply(1:nlayers, function(x) {
-        NULL
-      })
-    }
-
-  } else {
+  if(!is.null(geog$links)) {
 
     if (!inherits(geog$links, "SpatVector")) {
       stop("geog$links should be an SpatVector of lines")

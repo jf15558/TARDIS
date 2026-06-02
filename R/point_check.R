@@ -17,26 +17,23 @@
 #'
 #' @examples
 #' \dontrun{
-#' gal <- TARDIS::galapagos()
-#' gal <- crop(gal, ext(-92, -88, -2, 1))
+#' library(terra)
+#' library(TARDIS)
+#'
+#' gal <- galapagos()
 #' gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
-
+#'
 #' hexes <- rast_to_geoglist(gal, gal_m, as.hex = T, hex = 7)
-#' rasts <- rast_to_geoglist(gal, gal_m)
-
-#' hlink <- link_islands(hexes)
-#' rlink <- link_islands(rasts)
-
+#' hexes <- link_islands(hexes)
+#'
 #' htd <- build_tardis(hexes, times = c(seq(2.25, 0, -0.5), 0), mlink = hlink)
-#' rtd <- build_tardis(rasts, times = c(seq(2.25, 0, -0.5), 0), mlink = rlink)
-
+#'
 #' org <- rbind(c(-89.78873, -1.420627, 2),
-#'              c(-89.58525, -1.473917, 2))
-#' dst <- rbind(c(-88.70836, -0.2627832, 2),
+#'              c(-89.58525, -1.473917, 2),
+#'              c(-88.70836, -0.2627832, 2),
 #'              c(-90.44276,  0.2943382, 2))
 #'
-#' hpts <- stp(htd, rbind(org, dst))
-#' rpts <- stp(rtd, rbind(org, dst))
+#' hpts <- point_check(htd, org)
 #' }
 
 point_check <- function(tardis, points, verbose = TRUE) {

@@ -29,29 +29,24 @@
 #' library(terra)
 #' library(TARDIS)
 #'
-#' gal <- TARDIS::galapagos()
-#' gal <- crop(gal, ext(-92, -88, -2, 1))
+#' gal <- galapagos()
 #' gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
-
+#'
 #' hexes <- rast_to_geoglist(gal, gal_m, as.hex = T, hex = 7)
-#' rasts <- rast_to_geoglist(gal, gal_m)
-
-#' hlink <- link_islands(hexes)
-#' rlink <- link_islands(rasts)
-
-#' htd <- build_tardis(hexes, times = c(seq(2.25, 0, -0.5), 0), mlink = hlink)
-#' rtd <- build_tardis(rasts, times = c(seq(2.25, 0, -0.5), 0), mlink = rlink)
-
+#' hexes <- link_islands(hexes)
+#'
+#' htd <- build_tardis(hexes, times = c(seq(2.25, 0, -0.5), 0))
+#'
 #' org <- rbind(c(-89.78873, -1.420627, 2),
-#'              c(-89.58525, -1.473917, 2))
-#' dst <- rbind(c(-88.70836, -0.2627832, 2),
+#'              c(-89.58525, -1.473917, 2),
+#'              c(-88.70836, -0.2627832, 2),
 #'              c(-90.44276,  0.2943382, 2))
 #'
-#' hpts <- stp(htd, rbind(org, dst))
-#' rpts <- stp(rtd, rbind(org, dst))
+#' hpts <- point_check(htd, org)
+#' hopt <- optim_route(htd, points = hpts)
 #'
-#' hlcp <- lcp(htd, origin = hpts[1:2,], dest = hpts[3:4,])
-#' rlcp <- lcp(rtd, origin = rpts[1:2,], dest = rpts[3:4,])
+#' plot(hexes)
+#' plot(hopt, add = T)
 #' }
 
 optim_route <- function(tardis, weights = "gdist", points, loop = FALSE, verbose = TRUE) {

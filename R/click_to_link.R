@@ -20,8 +20,7 @@
 #' library(TARDIS)
 #'
 #' # load data
-#' gal <- TARDIS::galapagos()
-#' gal <- crop(gal, ext(-92, -88, -2, 1))
+#' gal <- galapagos()
 #' gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
 #'
 #' # make geoglist
@@ -117,9 +116,9 @@ click_to_link <- function(geog, layer = 1, nlinks = 1, ...) {
 
     } else {
 
-      cl <- suppressMessages(point_to_cell(st_coordinates(lnk)[,1:2], res = geog$gdat[7]))
+      cl <- suppressMessages(point_to_cell(crds(lnk), res = geog$gdat[7]))
       cl <- match(cl, grid)
-      cls <- as.data.frame(matrix(cl, ncol = 2, byrow = T))
+      cls <- matrix(cl, ncol = 2, byrow = T)
     }
 
     lnk$srt <- cls[,1]

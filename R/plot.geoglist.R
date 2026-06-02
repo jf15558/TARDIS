@@ -57,7 +57,7 @@ plot.geoglist <- function(x, y = 1, pal = sf.colors(10), links = T,
                           legend = T, axes = T, bg = NA, add = F,
                           xlim = NULL, ylim = NULL, zlim = NULL, ...) {
 
-   #x = rasts2
+   #x = rw
    #y = 1
    #pal = sf.colors(10)
    #links = T
@@ -159,7 +159,11 @@ plot.geoglist <- function(x, y = 1, pal = sf.colors(10), links = T,
   # mask and crop to plotting bounds
   rst <- mask(crop(x$layers[[y]], bounds), bounds)
   # adjust the boundary polygon so that it conforms to the raster grid resolution
-  if(inherits(rst, "SpatRaster")) {frame <- crop(frame, rst)}
+  #if(inherits(rst, "SpatRaster")) {
+  #  frame <- crop(frame, bounds, ext = T)
+  #} else {
+  #  frame <- crop(frame, rst, ext = T)
+  #}
 
   # plot
   plot(bounds, col = bg, border = NA, add = add, axes = F)

@@ -11,8 +11,8 @@
 #' @param origin `sf data.frame` A simple features collection produced by `point_check()`,
 #' denoting a single point from which to calculate cumulative costs
 #' @param verbose `logical` Should function progress be reported to the user?
-#' @return A `SpatVector` recording the costs required to reach
-#' each cell in the same time slice as the origin point from that point.
+#' @return A `geoglist` recording the costs required to reach, from the origin
+#' point, each cell in the same time slice as that point.
 #' @import terra sf cppRouting h3jsr
 #' @export
 #'
@@ -21,29 +21,23 @@
 #' #library(terra)
 #' #library(TARDIS)
 #'
-#' gal <- TARDIS::galapagos()
-#' gal <- crop(gal, ext(-92, -88, -2, 1))
+#' # load data
+#' gal <- galapagos()
 #' gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
-
+#'
+#' # build a geoglist and add links
 #' hexes <- rast_to_geoglist(gal, gal_m, as.hex = T, hex = 7)
-#' rasts <- rast_to_geoglist(gal, gal_m)
-
-#' hlink <- link_islands(hexes)
-#' rlink <- link_islands(rasts)
-
+#' hexes <- link_islands(hexes)
+#'
+#' # build a tardis graph
 #' htd <- build_tardis(hexes, times = c(seq(2.25, 0, -0.5), 0))
-#' rtd <- build_tardis(rasts, times = c(seq(2.25, 0, -0.5), 0))
-
-#' org <- rbind(c(-89.78873, -1.420627, 2),
-#'              c(-89.58525, -1.473917, 2))
-#' dst <- rbind(c(-88.70836, -0.2627832, 2),
-#'              c(-90.44276,  0.2943382, 2))
 #'
-#' hpts <- point_check(htd, rbind(org, dst))
-#' rpts <- point_check(rtd, rbind(org, dst))
+#' # resolve a destination point to that graph
+#' org <- rbind(c(-89.78873, -1.420627, 2))'
+#' hpts <- point_check(htd, org)
 #'
-#' hlcp <- lcp(htd, origin = hpts[1:2,], dest = hpts[3:4,])
-#' rlcp <- lcp(rtd, origin = rpts[1:2,], dest = rpts[3:4,])
+#' # get the cumulative cost around that point
+#' cumulative_cost(htd, origin = hpts)
 #' }
 
 cumulative_cost <- function(tardis, weights = "gdist", origin, verbose = TRUE) {
@@ -112,5 +106,6 @@ cumulative_cost <- function(tardis, weights = "gdist", origin, verbose = TRUE) {
     tmp[][as.numeric(names(paths)) %% tardis$gdat[5], 1] <- paths
   }
   out <- list(gdat = tardis$gdat, layers = tmp)
+  class(out) <- "geoglist"
   return(tmp)
 }
