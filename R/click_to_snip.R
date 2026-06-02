@@ -35,9 +35,9 @@
 
 click_to_snip <- function(geog, layer = 1, nsnips = 1, ...) {
 
-  # geog = rasts
-  # layer = 1
-  # nsnips = 1
+   geog = rasts
+   layer = 1
+   nsnips = 1
 
   if(!exists("geog")) {
     stop("Supply geog as a geoglist with rast_to_geoglist()")
@@ -80,7 +80,7 @@ click_to_snip <- function(geog, layer = 1, nsnips = 1, ...) {
       ln <- as.lines(vect(click(n = 2)))
       plot(ln, add = T, col = 2, lwd = 2)
       lnks <- which(geog$links$layer == layer)
-      snips[[i]] <- lnks[relate(ln, geog$links[lnks], "intersects")[,2]]
+      snips[[i]] <- lnks[relate(ln, geog$links[lnks], "intersects", pairs = T)[,2]]
     }
     snips <- unlist(snips)
     if(length(snips) == 0) {

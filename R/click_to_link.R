@@ -122,11 +122,12 @@ click_to_link <- function(geog, layer = 1, nlinks = 1, ...) {
       cls <- as.data.frame(matrix(cl, ncol = 2, byrow = T))
     }
 
-    colnames(cls) <- c("srt", "end")
-    cls$layer <- layer
-    cls$distance <- perim(lnk)
+    lnk$srt <- cls[,1]
+    lnk$end <- cls[,2]
+    lnk$layer <- layer
+    lnk$distance <- perim(lnk)
     if(!is.null(geog$links)) {
-      geog$links <- unique(rbind(geog$links, cls))
+      geog$links <- unique(rbind(geog$links, lnk))
     } else {
       geog$links <- cls
     }
