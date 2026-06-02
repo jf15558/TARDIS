@@ -195,7 +195,7 @@ rand_walk <- function(tardis, weights = "gdist", origin, mode = "steps", rwlen =
   if(!inherits(lyr, "SpatRaster")) {
     lyr <- list(lyr)
   }
-  out <- list(gdat = rtd$gdat, layers = lyr)
+  out <- list(gdat = tardis$gdat, layers = lyr)
 
   return(do.call(rbind, unlist(det_list, recursive = F)))
 }

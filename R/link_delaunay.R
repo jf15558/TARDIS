@@ -95,18 +95,18 @@ link_delaunay <- function(geog, max.dist = NULL, verbose = T) {
 
     islands <- rast(lapply(geog$layers, patches, directions = 8, allowGaps = F))
     bounds <- lapply(1:nlyr(islands), function(x) {
-      as.points(mask(islands[[x]], classify(boundaries(islands[[x]]), cbind(0, NA))))
+      pt <- as.points(mask(islands[[x]], classify(boundaries(islands[[x]]), cbind(0, NA))))
+      aggregate(pt, by = "patches")
     })
 
   } else {
 
     grid <- get_grid(geog$gdat[1:4], geog$gdat[7])
     dat <- lapply(geog$layers, function(z) {
-      bar <- st_touches(z)
-      bar2 <- do.call(rbind, sapply(1:length(bar), function(x) {rbind(c(x, x), cbind(rep(x, length(bar[[x]])), bar[[x]]))}))
-      z$patches <- components(graph_from_edgelist(bar2))$membership
-      z <- vect(z[,"patches"])
-      list(z, centroids(z[sapply(bar, length) != 6,]))
+      bar <- relate(z, z, "intersects", pairs = T)
+      z$patches <- components(graph_from_edgelist(bar))$membership
+      z2 <- centroids(z[which(table(bar[,1]) != 7)])
+      list(z, aggregate(z2, by = "patches"))
     })
     islands <- lapply(dat, `[[`, 1)
     bounds <- lapply(dat, `[[`, 2)
@@ -165,8 +165,12 @@ link_delaunay <- function(geog, max.dist = NULL, verbose = T) {
     message("No islands found in any layers, no links will be returned")
     return(NULL)
   } else {
-    lnks <- unique(rbind(geog$links, do.call(rbind, res_list)))
-    geog$links <- st_wrap_dateline(lnks, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
+    lnks <- st_wrap_dateline(do.call(rbind, res_list), options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
+    if(!is.null(geog$links)) {
+      geog$links <- unique(rbind(geog$links, vect(lnks)))
+    } else {
+      geog$links <- vect(lnks)
+    }
     return(geog)
   }
 }

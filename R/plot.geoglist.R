@@ -57,27 +57,27 @@ plot.geoglist <- function(x, y = 1, pal = sf.colors(10), links = T,
                           legend = T, axes = T, bg = NA, add = F,
                           xlim = NULL, ylim = NULL, zlim = NULL, ...) {
 
-   # x = rasts
-   # y = 1
-   # pal = sf.colors(10)
-   # links = T
-   # lcol = 1
-   # lwd = 1
-   # lty = 1
-   # hex.border = NA
-   # legend = T
-   # axes = T
-   # add = F
-   # bg = NA
-   # xlim = NULL
-   # ylim = NULL
-   # #xlim = c(-91, -89.5)
-   # #ylim = c(-1.5, 0)
-   # #xlim = c(-91, 50)
-   # #ylim = c(-50, 80)
-   # zlim = NULL
-   # #xlim = c(-1.5e7, 0)
-   # #ylim = c(-5e6, 1e7)
+   #x = rasts2
+   #y = 1
+   #pal = sf.colors(10)
+   #links = T
+   #lcol = 1
+   #lwd = 1
+   #lty = 1
+   #hex.border = NA
+   #legend = T
+   #axes = T
+   #add = F
+   #bg = NA
+   #xlim = NULL
+   #ylim = NULL
+   #xlim = c(-91, -89.5)
+   #ylim = c(-1.5, 0)
+   #xlim = c(-91, 50)
+   #ylim = c(-50, 80)
+   #zlim = NULL
+   #xlim = c(-1.5e7, 0)
+   #ylim = c(-5e6, 1e7)
 
   if(!exists("x")) {
     stop("Supply x as a geoglist with rast_to_geoglist()")
@@ -95,8 +95,7 @@ plot.geoglist <- function(x, y = 1, pal = sf.colors(10), links = T,
   if(y %% 1 != 0) {
     stop("y should be a single integer")
   }
-  nlyr <- ifelse(inherits(x$layers, "SpatRaster"), nlyr(x$layers), length(x$layers))
-  if(y > nlyr) {
+  if(y > length(x$layers)) {
     stop("The value of y exceeds of the number of layers in x")
   }
   if(!is.null(xlim)) {
@@ -142,62 +141,46 @@ plot.geoglist <- function(x, y = 1, pal = sf.colors(10), links = T,
     c(seq(bbox[1], bbox[2], length.out = len1), rep(bbox[2], len2), seq(bbox[2], bbox[1], length.out = len1),  rep(bbox[1], len2)),
     c(rep(bbox[4], len1), seq(bbox[4], bbox[3], length.out = len2), rep(bbox[3], len1), seq(bbox[3], bbox[4], length.out = len2))
   )
-  frame <- st_make_valid(st_sfc(st_polygon(list(frame)), crs = "EPSG:4326"))
-  frame <- st_transform(frame, crs(x$layers[[1]]))
-  st_crs(frame) <- NA
+  frame <- as.polygons(vect(frame, crs = "EPSG:4326"))
+  frame <- project(frame, crs(x$layers))
+  crs(frame) <- NA
 
   # crop bounding box to plot limits and plot
-  if(is.null(xlim)) {xlim <- st_bbox(frame)[c(1, 3)]}
-  if(is.null(ylim)) {ylim <- st_bbox(frame)[c(2, 4)]}
+  if(is.null(xlim)) {xlim <- ext(frame)[1:2]}
+  if(is.null(ylim)) {ylim <- ext(frame)[3:4]}
   names(xlim) <- c("xmin", "xmax")
   names(ylim) <- c("ymin", "ymax")
 
   # set plot canvas
-  pol <- st_sfc(st_polygon(list(cbind(xlim[c(1, 1, 2, 2, 1)], ylim[c(1, 2, 2, 1, 1)]))))
-  bounds <- st_intersection(frame, pol)
-  plot(bounds, col = bg, border = NA, add = add, ...)
+  pol <- as.polygons(vect(cbind(xlim[c(1, 1, 2, 2, 1)], ylim[c(1, 2, 2, 1, 1)])))
+  bounds <- intersect(frame, pol)
+  crs(bounds) <- crs(x$layers)
 
-  # add geoglist layers
-  if(inherits(x$layers[[1]], "SpatRaster")) {
+  # mask and crop to plotting bounds
+  rst <- mask(crop(x$layers[[y]], bounds), bounds)
+  # adjust the boundary polygon so that it conforms to the raster grid resolution
+  if(inherits(rst, "SpatRaster")) {frame <- crop(frame, rst)}
 
-    # mask and crop to plotting bounds
-    rst <- suppressWarnings(mask(crop(x$layers[[y]], vect(bounds)), vect(bounds)))
-    # adjust the boundary polygon so that it conforms to the raster grid resolution
-    frame <- st_crop(frame, y = as.vector(ext(rst)))
-    # plot
-    plot(rst, col = pal, legend = F, add = T)
-
-  } else {
-    # crop to plotting bounds
-    lyr <- x$layers[[y]]
-    st_crs(lyr) <- NA
-    lyr <- suppressWarnings(st_intersection(lyr, bounds))
-    # adjust the boundary polygon frame to plot bounds
-    frame <- st_crop(frame, st_bbox(bounds))
-    # plot
-    if(length(pal) == 1) {
-      plot(lyr[,1], add = T, col = pal, border = hex.border)
-    } else {
-      plot(lyr[,1], add = T, pal = pal, border = hex.border)
-    }
-  }
+  # plot
+  plot(bounds, col = bg, border = NA, add = add, axes = F)
+  plot(rst, values = rst[[1]][,1], col = pal, legend = F, add = T, border = hex.border)
 
   # add axes
   if(axes) {
     a1 <- axTicks(1)
-    axis(1, pos = st_bbox(frame)[2], at = a1[which(a1 >= st_bbox(frame)[1] & a1 <= st_bbox(frame)[3])],
+    axis(1, pos = ext(frame)[3], at = a1[which(a1 >= ext(frame)[1] & a1 <= ext(frame)[2])],
          cex.axis = 0.7, col = "grey", padj = -1)
     a2 <- axTicks(2)
-    axis(2, pos = st_bbox(frame)[1], at = a2[which(a2 >= st_bbox(frame)[2] & a2 <= st_bbox(frame)[4])],
+    axis(2, pos = ext(frame)[1], at = a2[which(a2 >= ext(frame)[3] & a2 <= ext(frame)[4])],
          cex.axis = 0.7, col = "grey", padj = 0.8)
   }
 
   # add links
   if(links) {
     if(!is.null(x$links)) {
-      lnk <- x$links[which(x$links$layer == y),"geometry"]
-      st_crs(lnk) <- NA
-      lnk <- st_intersection(lnk, frame)
+      lnk <- x$links[which(x$links$layer == y)]
+      crs(lnk) <- NA
+      lnk <- intersect(lnk, frame)
       plot(lnk, add = T, col = lcol, lwd = lwd, lty = lty)
     }
   }
@@ -208,11 +191,11 @@ plot.geoglist <- function(x, y = 1, pal = sf.colors(10), links = T,
       if(inherits(x$layers[[1]], "SpatRaster")) {
         zlim <- c(minmax(x$layers[[y]]))
       } else {
-        zlim <- range(st_drop_geometry(x$layers[[1]][,1]), na.rm = T)
+        zlim <- range(rst, na.rm = T)
       }
     }
-    legend_cont(x = seq(st_bbox(frame)[3], par("usr")[2], length.out = 4)[2:3],
-                y = st_bbox(bounds)[c(2, 4)], legend = zlim, col = pal)
+    legend_cont(x = seq(ext(frame)[2], par("usr")[2], length.out = 4)[2:3],
+                y = ext(bounds)[3:4], legend = zlim, col = pal)
     suppressWarnings(par(mar = pr))
   }
 

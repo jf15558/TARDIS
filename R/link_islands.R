@@ -81,6 +81,11 @@
 link_islands <- function(geog, klink = NULL, verbose = T) {
   #
   #
+  # geog <- rasts
+  # klink = 1
+  # verbose = T
+
+
   if(!exists("geog")) {
     stop("Supply geog as a geoglist from rast_to_geoglist()")
   }
@@ -111,11 +116,9 @@ link_islands <- function(geog, klink = NULL, verbose = T) {
 
     grid <- get_grid(geog$gdat[1:4], geog$gdat[7])
     dat <- lapply(geog$layers, function(z) {
-      bar <- st_touches(z)
-      bar2 <- do.call(rbind, sapply(1:length(bar), function(x) {rbind(c(x, x), cbind(rep(x, length(bar[[x]])), bar[[x]]))}))
-      z$patches <- components(graph_from_edgelist(bar2))$membership
-      z <- vect(z[,"patches"])
-      z2 <- centroids(z[sapply(bar, length) != 6,])
+      bar <- relate(z, z, "intersects", pairs = T)
+      z$patches <- components(graph_from_edgelist(bar))$membership
+      z2 <- centroids(z[which(table(bar[,1]) != 7)])
       list(z, aggregate(z2, by = "patches"))
     })
     islands <- lapply(dat, `[[`, 1)
@@ -261,8 +264,12 @@ link_islands <- function(geog, klink = NULL, verbose = T) {
     message("No islands found in any layers, no links will be returned")
     return(NULL)
   } else {
-    lnks <- unique(rbind(geog$links, do.call(rbind, res_list)))
-    geog$links <- st_wrap_dateline(lnks, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
+    lnks <- st_wrap_dateline(do.call(rbind, res_list), options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
+    if(!is.null(geog$links)) {
+      geog$links <- unique(rbind(geog$links, vect(lnks)))
+    } else {
+      geog$links <- vect(lnks)
+    }
     return(geog)
   }
 }

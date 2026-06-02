@@ -26,8 +26,8 @@
 
 project_geoglist <- function(geog, crs, ...) {
 
-  # geog <- rasts
-  # crs ="+proj=eqearth"
+  #geog <- rasts
+  #crs ="+proj=eqearth"
 
   if(!exists("geog")) {
     stop("Supply geog as a geoglist with rast_to_geoglist()")
@@ -45,15 +45,13 @@ project_geoglist <- function(geog, crs, ...) {
   if(!is.character(crs)) {
     stop("Please supply crs as a valid crs string")
   }
-
-  if(inherits(geog$layers[[1]], "SpatRaster")) {
+  if(inherits(geog$layers, "SpatRaster")) {
     geog$layers <- project(geog$layers, crs, ...)
   } else {
-    geog$layers <- lapply(geog$layers, st_transform, crs = crs("+proj=eqearth"))
+    geog$layers <- svc(lapply(geog$layers, project, crs, ...))
   }
   if(!is.null(geog$links)) {
-    geog$links <- st_transform(geog$links, crs)
+    geog$links <- project(geog$links, crs, ...)
   }
-
   return(geog)
 }

@@ -89,23 +89,21 @@
 
 build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, klink = NULL, rotations = NULL, verbose = TRUE) {
 
-  # geog = rasts
-  # #times = c(seq(2.25, 0, -0.5), 0)
-  # times = c(117, 114, 112)
-  # tlink = 1
-  # island.check = F
-  # klink = 2
-  # rotations = NULL
-  # verbose = TRUE
+   #geog = rasts
+   #times = c(seq(2.25, 0, -0.5), 0)
+   #times = c(117, 114, 112)
+   #tlink = 1
+   #island.check = F
+   #klink = 2
+   #rotations = NULL
+   #verbose = TRUE
 
-  nlayers <- length(geog$layers)
-  if(is.na(geog$gdat[7])) {nlayers <- nlyr(geog$layers)}
 
-  if(nlayers > 1) {
+  if(length(geog$layers) > 1) {
     if (!exists("times")) {
       stop("If there are multiple layers in geog, then times must be specified")
     }
-    if (!is.numeric(times) | length(times) != nlayers + 1) {
+    if (!is.numeric(times) | length(times) != length(geog$layers) + 1) {
       stop("Please supply times as a vector of time bin boundaries with n elements in geog$layers + 1")
     }
     if (any(diff(times) > 0)) {
@@ -174,20 +172,17 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
 
   } else {
 
-    if (!inherits(geog$links, "sf")) {
-      stop("geog$links should be an sf data.frame of linestrings")
+    if (!inherits(geog$links, "SpatVector")) {
+      stop("geog$links should be an SpatVector of lines")
     }
-    if (!inherits(geog$links, "data.frame")) {
-      stop("geog$links should be an sf data.frame of linestrings")
+    if (dim(geog$links)[2] != 4) {
+      stop("geog$links should contain four value fields: srt, end, layer, distance")
     }
-    if (ncol(geog$links) != 5) {
-      stop("geog$links should match the format of the output of link_islands()")
-    }
-    if (!all(colnames(geog$links) == c("srt", "end", "layer", "distance","geometry"))) {
-      stop("geog$links should match the format of the output of link_islands()")
+    if (!all(names(geog$links) == c("srt", "end", "layer", "distance"))) {
+      stop("geog$links should contain four value fields: srt, end, layer, distance")
     }
     if (any(is.na(geog$links))) {
-      stop("One or more columns in geog$links contains NA values")
+      stop("One or more values in geog$links is NA")
     }
     if (any(geog$links$layer < 1) | any(geog$links$layer%%1 != 0)) {
       stop("Only positive integers are permitted in geog$links$layer")
@@ -201,7 +196,7 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
         stop("geog$links contains values exceeding the number of layers present in geog")
       }
     }
-    if (!all(as.vector(st_geometry_type(geog$links)) %in% c("LINESTRING", "MULTILINESTRING"))) {
+    if (!geomtype(geog$links) == "lines") {
       stop("All geometries in geog$links should be lines")
     }
     #if (!all(table(st_coordinates(geog$links)[, 3]) == 2)) {
@@ -209,7 +204,7 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
     #}
     tests <- sapply(1:nlayers, function(x) {
       ext1 <- geog$gdat[1:4]
-      ext2 <- st_bbox(geog$links[which(geog$links$layer == x),])[c(1, 3, 2, 4)]
+      ext2 <- ext(geog$links[which(geog$links$layer == x),])
       if(all(is.na(as.vector(ext2)))) {ext2 <- ext1}
       all(c(ext1[1] <= ext2[1], ext1[2] >= ext2[2], ext1[3] <= ext2[3], ext1[4] >= ext2[4]))
     })
@@ -220,7 +215,7 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
 
       ## ideally want some checks here for invalid links, but these were always faulty
       if(x %in% geog$links$layer) {
-        geog$links[which(geog$links$layer == x),]
+        geog$links[which(geog$links$layer == x)]
       } else {
         NULL
       }
@@ -228,6 +223,7 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
   }
 
   if(inherits(geog$layers, "SpatRaster")) {
+
     ed <- adjacent(geog$layers[[1]], cells = 1:ncell(geog$layers), directions = 8, pairs = T)
     ed <- ed[ed[, 1] < ed[, 2], ]
     ed <- matrix(c(t(cbind(ed, ed[, 2:1]))), ncol = 2, byrow = T)
@@ -237,12 +233,11 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
   } else {
 
     grid <- get_grid(geog$gdat[1:4], geog$gdat[7])
-    pts <- cell_to_point(grid)
-    ed <- st_touches(cell_to_polygon(grid))
-    ed <- cbind(rep(grid, sapply(ed, length)), grid[unlist(ed)])
-    ed <- matrix(match(ed, grid), ncol = 2)
-    h_dists <- distGeo(st_coordinates(pts[ed[,1]]), st_coordinates(pts[ed[,2]]))
-    h_ang <- bearing(st_coordinates(pts[ed[,1]]), st_coordinates(pts[ed[,2]]))
+    pts <- vect(cell_to_point(grid))
+    cls <- vect(cell_to_polygon(grid))
+    ed <- relate(cls, cls, "intersects", pairs = T)
+    h_dists <- distGeo(crds(pts[ed[,1]]), crds(pts[ed[,2]]))
+    h_ang <- bearing(crds(pts[ed[,1]]), crds(pts[ed[,2]]))
   }
 
   glinked <- list()
@@ -256,7 +251,7 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
     if(inherits(geog$layers, "SpatRaster")) {
       matched <- which(ed[,1] %in% which(!is.na(geog$layers[[i]][])) & ed[,2] %in% which(!is.na(geog$layers[[i]][])))
     } else {
-      matched <- which(ed[,1] %in% as.numeric(rownames(geog$layers[[i]])) & ed[,2] %in% as.numeric(rownames(geog$layers[[i]])))
+      matched <- which(ed[,1] %in% geog$layers[[i]]$id & ed[,2] %in% geog$layers[[i]]$id)
     }
 
     ed2 <- ed[matched,]
@@ -264,7 +259,7 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
     h_ang2 <- h_ang[matched]
     type <- rep(0, length(h_dists2))
     if(!is.null(add_links[[i]])) {
-      lnk <- as.matrix(st_drop_geometry(add_links[[i]][,1:2]))
+      lnk <- as.matrix(values(add_links[[i]])[,1:2])
       ed2 <- rbind(ed2, lnk)
       h_dists2 <- c(h_dists2, add_links[[i]]$distance)
       if(inherits(geog$layers, "SpatRaster")) {
@@ -283,7 +278,7 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
     if(inherits(geog$layers, "SpatRaster")) {
       v_dists <- geog$layers[[i]][][ed2[, 2]] - geog$layers[[i]][][ed2[, 1]]
     } else {
-      v_dists <- geog$layers[[i]][[1]][match(ed2[,1], as.numeric(rownames(geog$layers[[i]])))] - geog$layers[[i]][[1]][match(ed2[,2], as.numeric(rownames(geog$layers[[i]])))]
+      v_dists <- geog$layers[[i]][[1]][match(ed2[,1], geog$layers[[i]]$id),] - geog$layers[[i]][[1]][match(ed2[,2], geog$layers[[i]]$id),]
     }
 
     t_dists <- sqrt(h_dists2^2 + (abs(v_dists)^2))

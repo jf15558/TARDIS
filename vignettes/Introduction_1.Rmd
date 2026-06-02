@@ -16,6 +16,7 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(sf)
+library(h3jsr)
 library(terra)
 library(TARDIS)
 ```
@@ -34,11 +35,37 @@ Any `TARDIS` workflow will begin with a raster, or set of rasters, in longitude-
 
 `TARDIS` solves the spherical domain problem by resampling rectangular rasters to the hexagonal grid system defined by Uber's H3 library, using the `h3jsr` R package, along with the `sf` R package to support vector representation of polygonal grid cells in longitude-latitude projection. Hexagonal cells minimise distortion of area and extent, providing much more faithful representation of geographic space at the poles compared to the equator, although they can also be used at smaller spatial scales if desired. Hexagonal sampling can even improve memory efficiency at global scales by reducing the number of cells required to represent polar regions.
 
-`TARDIS` uses an S3 class called a `geoglist` to store time-ordered sets of raster or hexagonally gridded geographic data. It is also possible to build a `geoglist` from a single raster layer. Structurally, this is a list with two main slots. `$gdat` is a named numeric vector which describes the key properties of the geographic data in a manner common to both grid types. It describes the extent (`xmin`, `xmax`, `ymin`, `ymax`), the total possible cells in a single grid layer (`ncell`), the number of columns in the grid (`ncol`), and the H3 grid resolution (`hex`). The other slot, `$layer` is either a stack of rasters, or a list of `sfc data.frame` objects, each recording the unmasked polygons in a given layer and their attribute, as resampled from the original rectangular rasters. Rectangular and hexagonal grid have a number of commonalities and differences which affect how TARDIS uses them to represent locations in geographic space:\
+```{r, echo=FALSE, fig.width=9.5, fig.height=4.5, dev="svg"}
+foo <- as.polygons(rast(ncol = 46, nrow = 23))
+foo$area <- expanse(foo) / max(expanse(foo))
+foo2 <- st_sf(cell_to_polygon(get_children(get_res0(), res = 1)))
+foo2 <- suppressWarnings(st_wrap_dateline(foo2, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180")))
+foo2 <- vect(foo2)
+foo2$area <- expanse(foo2) / max(expanse(foo2))
+plot(foo, values = foo$area, range = c(0,1), breaks = 20, legend = F, cex = 0.7)
+legend_cont("topleft", legend = c(0, 1))
+plot(foo2, values = foo2$area, range = c(0,1), breaks = 20, legend = F, xlim = c(-180, 180), ylim = c(-90, 90))
+legend_cont("topleft", legend = c(0, 1))
+```
+
+`TARDIS` uses an S3 class called a `geoglist` to store time-ordered sets of raster or hexagonally gridded geographic data. It is also possible to build a `geoglist` from a single raster layer. Structurally, this is a list with two main slots. `$gdat` is a named numeric vector which describes the key properties of the geographic data in a manner common to both grid types. It describes the extent (`xmin`, `xmax`, `ymin`, `ymax`), the total possible cells in a single grid layer (`ncell`), the number of columns in the grid (`ncol`), and the H3 grid resolution (`hex`). 
+
+```{r}
+rast_to_geoglist(galapagos())
+```
+
+The other slot, `$layer` is either a stack of rasters, or a list of `sfc data.frame` objects, each recording the unmasked polygons in a given layer and their attribute, as resampled from the original rectangular rasters. Rectangular and hexagonal grid have a number of commonalities and differences which affect how TARDIS uses them to represent locations in geographic space:\
 
 ### Adjacency
 
 In a rectangular raster, TARDIS assumes connections between between orthogonally and diagonally adjacent cells (variously named king's, 8-degree or Moore adjacency, in contrast to orthogonal-only adjacency or rook's, 4-degree or von Neumann adjacency). By geometric necessity, orthogonal neighbours will fall slightly closer to the focal cell than diagonal neighbours. In a hexagonal grid, each cell has six neighbours instead, all equally distant from the focal cell.
+
+```{r, echo=F, fig.width=9.5, dev="svg", include=F}
+par(mfrow = c(1, 2))
+plot(st_as_sf(as.polygons(rast(ncol = 3, nrow = 3))), col = c(2, 4, 2, 4, 5, 4, 2, 4, 2))
+plot(cell_to_polygon(get_ring(suppressMessages(point_to_cell(c(10, -40), 2)))), col = 2)
+plot(cell_to_polygon(suppressMessages(point_to_cell(c(10, -40), 2))), add = T, col =5)
+```
 
 ### Resolution
 
@@ -48,13 +75,44 @@ Rectangular rasters can take any resolution. Hexagonal grids (not just those fro
 
 A rectangular raster as defined by `terra` consists of contiguous grid cells in row-major order (i.e., the top left cell is cell 1, the one immediately to its right is cell 2, and so forth). Unlike for raster grids, there is no clear basis for ordering cells from H3 based on their spatial position. At local scales the cells will form a staggered row and column structure, but this breaks down at global scales. As such, cell order is not spatially intuitive, although in practice this does not matter to how `TARDIS` works. In a rectangular raster `geoglist`, the `ncol` slot in `$gdat` will record the number of columns in the grid. For one storing hexagonal grids, it is `NA`.
 
+```{r, echo=F, fig.width=9.5, fig.height=4.5, dev="svg"}
+foo <- st_sf(cell_to_polygon(polygon_to_cells(
+  st_sfc(
+    st_polygon(list(cbind(c(-10, -10, -9, -9, -10),
+                          c(-10, -9, -9, -10, -10)))), 
+    crs = "EPSG:4326"), res = 6)))
+foo$id <- 1:nrow(foo)
+foo2 <- rast(xmin = -10, xmax = -9, ymin = -10, ymax = -9, ncol = 20, nrow = 20)
+foo2$id <- 1:ncell(foo2)
+par(mfrow = c(1, 2))
+plot(as.polygons(foo2), value = foo2$id, breaks = 20, legend = F)
+legend_cont("topleft", legend = foo2)
+plot(vect(foo), value = foo$id, breaks = 20, legend = F)
+```
+
 ## Masking and linking
 
-In some cases, we might assume that all locations in a raster should be accessible and will become nodes in the graph. In reality, many locations should actually be made inaccessible, for example if we are considering the movement of a terrestrial species across the Earth, then ocean cells should be designated inaccessible. In this instance, an input raster can be masked, using standard `terra` functions` so that those cells will not be converted to graph nodes. Masking is beneficial not just to ensure geographic realism, but also to reduce the memory size of the resultant graph.
+In some cases, we might assume that all locations in a raster should be accessible and will become nodes in the graph. In reality, many locations should actually be made inaccessible. For example if we are considering the movement of a terrestrial species across the Earth, then ocean cells should be designated inaccessible. In this instance, an input raster can be masked using standard `terra` functions so that those cells will not be converted to graph nodes. Masking is beneficial not just to ensure geographic realism, but also to reduce the memory size of the resultant graph.
+
+```{r, echo=F, fig.width=9.5, fig.height=5, dev="svg"}
+# load and plot galapagos dataset
+gal <- galapagos()
+gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
+par(mfrow = c(1, 2))
+plot(gal[[1]])
+plot(gal_m[[1]], legend = F)
+```
 
 `gdistance` can also work with masked rasters. A consequence of masking, however, is that it can easily produce 'islands' of cells which cannot be reached from other islands when using `gdistance`. In some cases, we may wish for movement to be restricted in this way. In other cases, however, evidence may tell us that movement across masked regions genuinely occurred. The initial colonisation of the Pacific islands, for example, is incontrovertible evidence that humans traversed the oceans even though we are a terrestrial species.
 
 `TARDIS` addresses the problem of island disconnection with several functions which link isolated patches of grid cells using different geometric principles. These links are represented as vectors using the `sf` R package and added to a `geoglist` in the slot `$links`. These links are then included as edges in resulting geospatial graph, in addition to the edges between adjacent cells in the raster grid.\
+
+```{r, echo=F, fig.width=9.5, fig.height=10, dev="svg"}
+# load and plot galapagos dataset
+rasts <- rast_to_geoglist(gal[[1]], gal_m[[1]])
+rasts <- link_islands(rasts, klink = 1)
+plot(rasts, legend = F)
+```
 
 ## Graph weighting
 
@@ -66,6 +124,12 @@ Besides rasters representing elevation above/below sea level, one could also sup
 
 In some cases, we can assume that the structure of geographic space does not change throughout the processes taking place across it. In other cases, however, that structure may change through a variety of different processes. Over smaller extents, this could be something as simple as deforestation altering the distribution of habitat space over several decades. Over geological timescales, however, we could instead experience massive modification of geographic space due to changes in sea level, continental position, or climatically favourable areas.
 
+```{r, echo=F, fig.width=9.5, fig.height=5, dev="svg"}
+par(mfrow = c(1, 2))
+plot(gal_m[[1]], legend = F)
+plot(gal_m[[2]], legend = F)
+```
+
 `TARDIS` accommodates these cases by taking a set of rasters that record the same geographic space at different points in time, converting each raster to its own geospatial graph, then layering graphs and linking their geographically homologous locations through time. Often, homologous locations will also remain constant with the geographic frame of reference. Palaeobiologists, however, have to contend with a major process which breaks this assumption - continental drift. As such, `TARDIS` can calculate how raster locations shift between graph layers according to various plate rotation models, supported by the `palaeoverse` R package.\
 
 ## Cell indexing
@@ -76,5 +140,5 @@ You may wonder why `TARDIS` does not simply use the H3 IDs directly for cell ind
 
 This constancy of cell index is vital to how TARDIS locates cells in space and time. Just as each graph node represents a discrete portion of continuous geographic space, each graph layer represents a discrete interval of continuous time. There can only ever maximally be `1:ncell` non-NA-valued cells indexes in a given spatial layer. Retrieving spatial location from these values is trivial, as detailed above. `TARDIS`, however, modifies cell indexes to embed temporal position as well. Cells `1:ncell` come from the first grid in `$layers`, but cells in the second layer are then indexed as `(1:ncell) + (ncell * 1)`. In this way, the first possible grid cell in the subsequent time layer has an index of `ncell + 1`. As this value falls outside of the range `1:ncell`, we know that it cannot come from the first time layer. This pattern repeats itself for the third time layer `(1:ncell) + (ncell * 2)` and so on. In this way, the temporal index (layer number) can be retrieved using integer division (`(cellid %/% ncell) + 1`) while the spatial index (grid cell number) can be retrieved using the modulo (`cellid %% ncell`).
 
-Ultimately this system means that node numbers in the resulting geospatial graph, which must be a continuous integer series (e.g., 1, 2, 3), will directly correspond to a discontinuous integer series of spatiotemporal cell IDs (e.g., 2, 315, 6554). Routes and distances in the graph can be analysed using efficient functions from a number of other R packages (e.g., `igraph`, `cppRouting`, `rlemon`), spatiotemporal ID retrieved from graph node number, then resolved back to geographic space and temporal context.
+Ultimately this system means that nodes in the resulting geospatial graph, which are numbered as sequential integers (e.g., 1, 2, 3), will directly correspond to a discontinuous integer series of spatiotemporal cell IDs (e.g., 2, 315, 6554). Routes and distances in the graph can be analysed using efficient functions from a number of other R packages (e.g., `igraph`, `cppRouting`, `rlemon`), cell IDs retrieved from node number, then resolved back to geographic space and temporal context.
 

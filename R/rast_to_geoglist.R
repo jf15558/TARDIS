@@ -167,12 +167,12 @@ rast_to_geoglist <- function(geog, mask = NULL, as.hex = FALSE, hex = "auto", me
       id <- match(cls, clist)
       vrs <- exact_extract(geog[[i]], clsp, fun = method, weights = "area", ...)
       dat <- data.frame(vrs)
-      rownames(dat) <- id
       colnames(dat)[1] <- names(geog[[i]])
+      dat$id <- id
       st_geometry(dat) <- clsp
-      hex_list[[i]] <- dat[st_is_valid(dat),]
+      hex_list[[i]] <- vect(dat[st_is_valid(dat),])
     }
-    out <- list(gdat = c(as.vector(ext(geog)), ncell = length(clist), ncol = NA, hex = hex), layers = hex_list)
+    out <- list(gdat = c(as.vector(ext(geog)), ncell = length(clist), ncol = NA, hex = hex), layers = svc(hex_list))
 
   } else {
     out <- list(gdat = c(as.vector(ext(geog)), ncell = ncell(geog), ncol = ncol(geog), hex = NA), layers = geog)

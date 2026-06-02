@@ -27,9 +27,9 @@
 
 regions <- function(geog, bounds.only = T, use.links = F) {
   #
-  # geog = rasts
-  # bounds.only = F
-  # use.links = F
+   #geog = rasts
+   #bounds.only = F
+   #use.links = F
 
   if(!exists("geog")) {
     stop("Supply geog as a geoglist from rast_to_geoglist()")
@@ -50,10 +50,10 @@ regions <- function(geog, bounds.only = T, use.links = F) {
     }
 
     if(use.links) {
-      ils <- rast(lapply(1:nlyr(ils), function(x) {
-        lnk <- geog$links$geometry[which(geog$links$layer == x)]
+      ils <- rast(lapply(1:length(ils), function(x) {
+        lnk <- geog$links[which(geog$links$layer == x)]
         if(length(lnk) != 0) {
-          ig <- extract(ils[[x]], vect(lnk))
+          ig <- extract(ils[[x]], lnk)
           ig <- ig[complete.cases(ig),]
           ig2 <- graph_from_edgelist(as.matrix(ig), directed = F)
           ils[[x]] <- classify(ils[[x]], cbind(ig[,1], components(ig2)$membership))
@@ -65,21 +65,20 @@ regions <- function(geog, bounds.only = T, use.links = F) {
   } else {
 
     ils <- lapply(geog$layers, function(z) {
-      bar <- st_touches(z)
-      bar2 <- do.call(rbind, sapply(1:length(bar), function(x) {rbind(c(x, x), cbind(rep(x, length(bar[[x]])), bar[[x]]))}))
-      z[,1] <- components(graph_from_edgelist(bar2))$membership
-      colnames(z)[1] <- "region"
+      bar <- relate(z, z, "intersects", pairs = T)
+      z[,1] <- components(graph_from_edgelist(bar))$membership
       if(bounds.only) {
-        z <- z[sapply(bar, length) != 6,]
+        z <- z[which(table(bar[,1]) != 7)]
       }
+      names(z)[1] <- "region"
       z
     })
 
     if(use.links) {
       ils <- lapply(1:length(ils), function(x) {
-        lnk <- geog$links$geometry[which(geog$links$layer == x)]
+        lnk <- geog$links[which(geog$links$layer == x)]
         if(length(lnk) != 0) {
-          ig <- t(sapply(st_intersects(lnk, ils[[x]]), function(y) {ils[[x]]$region[y]}))
+          ig <- t(apply(relate(lnk, ils[[x]], "intersects", pairs = T), 1, function(y) {ils[[x]]$region[y]}))
           ig2 <- graph_from_edgelist(ig, directed = F)
           ils[[x]]$region <- components(ig2)$membership[ils[[x]]$region]
         }
