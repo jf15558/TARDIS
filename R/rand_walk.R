@@ -208,6 +208,5 @@ rand_walk <- function(tardis, weights = "gdist", origin, mode = "steps", rwlen =
     det_list[[i]] <- out
   }
   # summarise and return
-  lyr <- svc(unlist(det_list, recursive = F))
-  return(list(gdat = tardis$gdat, layers = lyr))
+  return(unlist(det_list, recursive = F))
 }

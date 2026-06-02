@@ -1,9 +1,9 @@
 #' rast_to_geoglist
 #'
-#' Convert a set of rasters to a `geoglist` compatible with downstream TARDIS
-#' functions. Typically, these rasters will record topography and/or bathymetry
+#' Convert a set of rasters to the S3 `geoglist` object compatible with downstream
+#' TARDIS functions. Typically, these rasters will record topography and/or bathymetry
 #' measured in metres, but could record other geographic properties instead.
-#' Some downstream functions will also assume that the set represents the same
+#' Some downstream functions will also assume that the raster set records the
 #' geographic area ordered forwards in time (i.e., the first raster in the set
 #' is the oldest).
 #'
@@ -13,7 +13,7 @@
 #' @param mask `SpatRaster` or `NULL`. If not `NULL`, this will be used to
 #' designate non-accessible areas in `geog`. It must be fully contiguous with
 #' `geog` (i.e., share the same resolution, extent and number of layers) and
-#' contain only `1` (unmasked, accessible) or `NA` (masked, non-accessible) values.
+#' contain only `1` (non-masked, accessible) or `NA` (masked, non-accessible) values.
 #' @param as.hex `logical`. Should `geog` be resampled to the hexagonal grid
 #' system defined by Uber's H3 library? Defaults to `FALSE`.
 #' @param hex `"auto"` or `integer`. The desired H3 resolution to be used for
@@ -28,8 +28,8 @@
 #' for resampling of raster grids.
 #' @return A `geoglist` with list elements `gdat` and `layers`. The former records
 #' spatial properties of the input rasters used throughout downstream TARDIS functions.
-#' The latter is a set of geographic layers, either as a `SpatRaster`, or an `sf data.frame` of
-#' polygons if resampling was implemented.
+#' The latter is a set of geographic layers, either as a standard `SpatRaster`,
+#' or a `SpatVectorCollection` of hexagonal polygons if resampling was implemented.
 #' @import terra exactextractr h3jsr
 #' @export
 #'
@@ -47,9 +47,9 @@
 #' polar latitudes, again helping to improve computational efficiency. The trade
 #' off is that landscape features may be altered or lost depending on the grid
 #' resolution used, although this an inevitable risk of any resampling procedure.
-#' In addition, a large `SpatRaster` may be noticeably faster to plot than an
-#' `sf data.frame` of similar extent and resolution, which can affect downstream
-#' functions.
+#' In addition, a large `SpatRaster` layer may be noticeably faster to plot than
+#' a `SpatVector` layer of similar extent and resolution, which will affect
+#' performance in some downstream functions.
 #'
 #' Resampling is weighted by the fraction of each raster cell covered by
 #' a given hexagonal cell. This is implemented using `exactextractr::exact_extract()`
@@ -62,8 +62,7 @@
 #' #library(TARDIS)
 #'
 #' # load a dataset of the Galapagos archipelago through geological time
-#' gal <- TARDIS::galapagos()
-#' gal <- crop(gal, ext(-92, -88, -2, 1))
+#' gal <- galapagos()
 #'
 #' # create a land-sea mask from the archipelago raster set
 #' gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)

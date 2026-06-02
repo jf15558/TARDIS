@@ -11,10 +11,8 @@
 #' @param origin `sf data.frame` A simple features collection produced by `point_check()`,
 #' denoting a single point from which to calculate cumulative costs
 #' @param verbose `logical` Should function progress be reported to the user?
-#' @return A `geoglist` with a single layer recording the costs required to reach
-#' each cell in the same time slice as the origin point.
-#' them from the origin point.
-#' in each landscape layer through time
+#' @return A `SpatVector` recording the costs required to reach
+#' each cell in the same time slice as the origin point from that point.
 #' @import terra sf cppRouting h3jsr
 #' @export
 #'
@@ -49,11 +47,11 @@
 #' }
 
 cumulative_cost <- function(tardis, weights = "gdist", origin, verbose = TRUE) {
-  #
-  # tardis = rtd
-  # weights = "tdist"
-  # origin = org
-  # verbose = TRUE
+
+   #tardis = rtd
+   #weights = "gdist"
+   #origin = pt[1,]
+   #verbose = TRUE
 
   if (!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
@@ -91,8 +89,8 @@ cumulative_cost <- function(tardis, weights = "gdist", origin, verbose = TRUE) {
   }
   tardis <- instantiate_tardis(tardis = tardis, weights = weights)
 
-  edges <- tardis$edges[which(tardis$edges[,3] == 0),]
-  dests <- edges[which(edges[,2] %/% tardis$gdat[[5]] + 1 == origin$bin),2]
+  edges <- tardis$edges[which(tardis$edges[,3] != 2),]
+  dests <- edges[which((edges[,2] %/% tardis$gdat[[5]]) + 1 == origin$bin),2]
 
 
   if (verbose) {
@@ -101,11 +99,11 @@ cumulative_cost <- function(tardis, weights = "gdist", origin, verbose = TRUE) {
   paths <- get_distance_matrix(tardis$tgraph, from = origin$cell, to = dests)[1,]
 
   if(!is.na(tardis$gdat[7])) {
-    cls <- st_wrap_dateline(cell_to_polygon(grid[as.numeric(names(paths)) %% tardis$gdat[5]]),
-                            options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
-    tmp <- data.frame(paths)
-    colnames(tmp) <- weights
-    st_geometry(tmp) <- cls
+    tmp <- vect(st_wrap_dateline(cell_to_polygon(grid[as.numeric(names(paths)) %% tardis$gdat[5]]),
+                            options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180")))
+    tmp$distance <- paths
+    names(tmp)[1] <- weights
+    tmp <- svc(tmp)
 
   } else {
     tmp <- samprast
@@ -113,8 +111,6 @@ cumulative_cost <- function(tardis, weights = "gdist", origin, verbose = TRUE) {
     names(tmp) <- weights
     tmp[][as.numeric(names(paths)) %% tardis$gdat[5], 1] <- paths
   }
-
-  out <- list(gdat = tardis$gdat, layers = list(tmp))
-  class(out) <- "geoglist"
-  return(out)
+  out <- list(gdat = tardis$gdat, layers = tmp)
+  return(tmp)
 }
