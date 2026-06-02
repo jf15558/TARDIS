@@ -98,12 +98,16 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
    #rotations = NULL
    #verbose = TRUE
 
-
-  if(length(geog$layers) > 1) {
+  if(inherits(geog$layers, "SpatRaster")) {
+    nlayers <- nlyr(geog$layers)
+  } else {
+    nlayers <- length(geog$layers)
+  }
+  if(nlayers > 1) {
     if (!exists("times")) {
       stop("If there are multiple layers in geog, then times must be specified")
     }
-    if (!is.numeric(times) | length(times) != length(geog$layers) + 1) {
+    if (!is.numeric(times) | length(times) != nlayers + 1) {
       stop("Please supply times as a vector of time bin boundaries with n elements in geog$layers + 1")
     }
     if (any(diff(times) > 0)) {
@@ -116,7 +120,7 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
       stop("tlink should be one of 1 (forward-in-time), 2 (backward-in-time) or 3 (bidirectional")
     }
     if (is.null(rotations)) {
-      rotations <- lapply(1:(length(geog$layers) - 1), function(x) {matrix(rep(1:geog$gdat[5], 2), ncol = 2)})
+      rotations <- lapply(1:(nlayers - 1), function(x) {matrix(rep(1:geog$gdat[5], 2), ncol = 2)})
     } else {
       if (!is.list(rotations)) {
         stop("Rotations should be a list")
@@ -130,7 +134,7 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
       if (!all(unlist(lapply(rotations, ncol)) == 2)) {
         stop("All elements of rotations should be two-column matrices")
       }
-      if (length(rotations) != length(geog$layers) - 1) {
+      if (length(rotations) != nlayers - 1) {
         stop("Rotations should be one element shorter than the number of layers in geog")
       }
       if (any(unlist(lapply(rotations, max)) > geog$gdat[5])) {
@@ -154,7 +158,7 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
 
     if(island.check) {
       geog <- link_islands(geog, klink = klink)
-      add_links <- lapply(1:length(geog$layers), function(x) {
+      add_links <- lapply(1:nlayers, function(x) {
         if(x %in% geog$links$layer) {
           lnk <- geog$links[which(geog$links$layer == x),]
           lnk
@@ -165,7 +169,7 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
 
     } else {
       warning("layers were not checked for islands. TARDIS paths fail unexpectedly. Consider running with island.check = TRUE or adding links to the geoglist with link_islands()")
-      add_links <- lapply(1:length(geog$layers), function(x) {
+      add_links <- lapply(1:nlayers, function(x) {
         NULL
       })
     }
@@ -187,12 +191,12 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
     if (any(geog$links$layer < 1) | any(geog$links$layer%%1 != 0)) {
       stop("Only positive integers are permitted in geog$links$layer")
     }
-    if (length(geog$layers) == 1) {
-      if (length(unique(geog$links$layer)) > length(geog$layers)) {
+    if (nlayers == 1) {
+      if (length(unique(geog$links$layer)) > nlayers) {
         stop("geog$links contains links for more layers than those present in geog")
       }
     } else {
-      if (any(geog$links$layer > length(geog$layers))) {
+      if (any(geog$links$layer > nlayers)) {
         stop("geog$links contains values exceeding the number of layers present in geog")
       }
     }
@@ -202,7 +206,7 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
     #if (!all(table(st_coordinates(geog$links)[, 3]) == 2)) {
     #  stop("Each line in geog$links can only contain 2 coordinates (start and end)")
     #}
-    tests <- sapply(1:length(geog$layers), function(x) {
+    tests <- sapply(1:nlayers, function(x) {
       ext1 <- geog$gdat[1:4]
       ext2 <- ext(geog$links[which(geog$links$layer == x),])
       if(all(is.na(as.vector(ext2)))) {ext2 <- ext1}
@@ -211,7 +215,7 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
     if(!all(tests)) {
       stop("The extent of geog$links does not fall fully within the extent of geog")
     }
-    add_links <- lapply(1:length(geog$layers), function(x) {
+    add_links <- lapply(1:nlayers, function(x) {
 
       ## ideally want some checks here for invalid links, but these were always faulty
       if(x %in% geog$links$layer) {
@@ -241,11 +245,11 @@ build_tardis <- function(geog, times = NULL, tlink = 1, island.check = TRUE, kli
   }
 
   glinked <- list()
-  for (i in 1:length(geog$layers)) {
+  for (i in 1:nlayers) {
 
     if (verbose) {
-      cat(paste0("Linking geog [", i, "/", length(geog$layers), "]\r"))
-      if (i == length(geog$layers)) {cat("\n")}
+      cat(paste0("Linking geog [", i, "/", nlayers, "]\r"))
+      if (i == nlayers) {cat("\n")}
     }
 
     if(inherits(geog$layers, "SpatRaster")) {
