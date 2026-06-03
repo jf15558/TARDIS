@@ -71,9 +71,9 @@
 link_islands <- function(geog, klink = NULL, verbose = T) {
   #
   #
-  # geog <- rasts
-  # klink = 1
-  # verbose = T
+  geog <- rasts
+  klink = 1
+  verbose = T
 
 
   if(!exists("geog")) {
@@ -201,7 +201,6 @@ link_islands <- function(geog, klink = NULL, verbose = T) {
         ii <- ii[to_keep,,drop = F]
       }
 
-      # duplicate links so that traversals are symmetric
       dl <- dl[,"distance"]
       dl$from <- ii[,1]
       dl$to <- ii[,2]
@@ -246,7 +245,12 @@ link_islands <- function(geog, klink = NULL, verbose = T) {
       cls$layer <- i
       cls$distance <- dl$distance
       st_geometry(cls) <- st_as_sf(dl)$geometry
-      res_list[[i]] <- cls
+
+      # duplicate links for symmetry
+      cls2 <- cls[,c(2, 1, 3, 4)]
+      colnames(cls2) <- colnames(cls)
+
+      res_list[[i]] <- rbind(cls, cls2)
     }
   }
 

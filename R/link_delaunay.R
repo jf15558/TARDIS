@@ -148,7 +148,12 @@ link_delaunay <- function(geog, max.dist = NULL, verbose = T) {
       if(!is.null(max.dist)) {
         cls <- cls[which(cls$distance <= max.dist),]
       }
-      res_list[[i]] <- cls
+
+      # duplicate links for symmetry
+      cls2 <- cls[,c(2, 1, 3, 4)]
+      colnames(cls2) <- colnames(cls)
+
+      res_list[[i]] <- rbind(cls, cls2)
     }
   }
   if(all(sapply(res_list, is.null))) {

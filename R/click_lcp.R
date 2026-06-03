@@ -36,11 +36,11 @@
 
 click_lcp <- function(tardis, weights = "gdist", geog, time = NULL, n = 1, col = "gold", ...) {
 
-  # tardis = rtdw
-  # geog = rasts
-  # time = 2
-  # col = "gold"
-  # n = 1
+   tardis = rtd
+   geog = rasts
+   time = 2
+   col = "gold"
+   n = 1
 
   if(is.null(time)) {
     if(!is.null(tardis$tdat)) {
