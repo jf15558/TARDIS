@@ -36,13 +36,11 @@
 #' rasts <- rast_to_geoglist(gal, gal_m, as.hex = T, hex = 6)
 #' rlink <- link_islands(rasts)
 #' rtd <- build_tardis(rasts, times = c(seq(2.25, 0, -0.5), 0))
-#' org <- rbind(c(-89.78873, -1.420627, 2),
-#'              c(-89.58525, -1.473917, 2))
-#' dst <- rbind(c(-88.70836, -0.2627832, 2),
-#'              c(-90.44276,  0.2943382, 2))
+#' pts <- rbind(c(-89.78873, -1.420627, 2),
+#'              c(-88.70836, -0.2627832, 2))
 #'
-#' rpts <- point_check(rtd, rbind(org, dst))
-#' rlcp <- least_cost(rtd, origin = rpts[1,], dest = rpts[3,])
+#' rpts <- point_check(rtd, pts)
+#' rlcp <- least_cost(rtd, origin = pts[1,], dest = pts[2,])
 #' }
 
 least_cost <- function(tardis, weights = "gdist", origin, dest, verbose = TRUE) {
@@ -144,7 +142,7 @@ least_cost <- function(tardis, weights = "gdist", origin, dest, verbose = TRUE) 
   tpaths <- lapply(costs, function(x) {
     x[[2]]
   })
-  pords <- ifelse(origin$bin - dest$bin <= 0, 1, 0)
+  pords <- ifelse(origin$layer - dest$layer <= 0, 1, 0)
   if (verbose) {
     cat("Summarising\n")
   }
