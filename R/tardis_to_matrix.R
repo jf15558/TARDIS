@@ -7,7 +7,7 @@
 #' @param weights `character`. A character string denoting the weighting scheme to use. By
 #' default these are true geographic distances (gdist). Alternatively, the name
 #' of a weighting scheme added to the tardis object with weight_tardis().
-#' @param mode `character`. One of "adjacency", "distance", "transition" or "hitting".
+#' @param mode `character`. One of "adjacency", "cost", "transition" or "hitting".
 #' @return `matrix` Either a `Matrix::sparseMatrix` adjacency matrix or a dense
 #' base R distance matrix.
 #' @import Matrix cppRouting
@@ -34,7 +34,7 @@
 #' hexes <- link_islands(hexes)
 #'
 #' htd <- build_tardis(hexes)
-#' dm <- tardis_to_matrix(htd, mode = "distance")
+#' dm <- tardis_to_matrix(htd, mode = "cost")
 #' aj <- tardis_to_matrix(htd, mode = "adjacency")
 #' tr <- tardis_to_matrix(htd, mode = "transition")
 #' ht <- tardis_to_matrix(htd, mode = "hitting")
@@ -64,8 +64,8 @@ tardis_to_matrix <- function(tardis, weights = "gdist", mode = "adjacency") {
   if(!is.atomic(mode) | length(mode) != 1) {
     stop("mode should only contain one element")
   }
-  if(!is.character(mode) | !mode %in% c("adjacency", "distance", "transition", "hitting")) {
-    stop("mode should be one of 'adjacency', 'distance', 'transition' or 'hitting'")
+  if(!is.character(mode) | !mode %in% c("adjacency", "cost", "transition", "hitting")) {
+    stop("mode should be one of 'adjacency', 'cost', 'transition' or 'hitting'")
   }
 
   tardis <- instantiate_tardis(tardis = tardis, weights = weights)
