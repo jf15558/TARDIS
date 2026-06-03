@@ -18,6 +18,7 @@ Imports:
     geosphere,
     h3jsr,
     igraph,
+    markovchain,
     Matrix,
     methods,
     palaeoverse,

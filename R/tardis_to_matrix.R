@@ -12,7 +12,8 @@
 #' base R distance matrix.
 #' @import Matrix cppRouting
 #' @importFrom markovchain meanFirstPassageTime
-#' @importClassesFrom markovchain
+#' @importFrom methods new
+#' @importClassesFrom markovchain markovchain
 #' @export
 #'
 #' @details

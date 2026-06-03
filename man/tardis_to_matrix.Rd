@@ -9,26 +9,25 @@ tardis_to_matrix(tardis, weights = "gdist", mode = "adjacency")
 \arguments{
 \item{tardis}{A tardis graph}
 
-\item{weights}{A character string denoting the weighting scheme to use. By
+\item{weights}{\code{character}. A character string denoting the weighting scheme to use. By
 default these are true geographic distances (gdist). Alternatively, the name
 of a weighting scheme added to the tardis object with weight_tardis().}
 
-\item{mode}{One of "adjacency" or "distance".}
+\item{mode}{\code{character}. One of "adjacency", "distance", "transition" or "hitting".}
 }
 \value{
 \code{matrix} Either a \code{Matrix::sparseMatrix} adjacency matrix or a dense
 base R distance matrix.
 }
 \description{
-Create either a weighted adjacency matrix (sparse) or a distance matrix (dense)
-from a TARDIS graph.
+Create either a weighted adjacency matrix (sparse), or a cost matrix,
+transition probability matrix, or a hitting time matrix (dense) from a TARDIS graph.
 }
 \details{
-For the distance matrix, this can very quickly create
-large objects. For example, a TARDIS graph with ~20,000 cells (actual, not
-the tardis$gdat$ncell value) will give a 20k x 20k distance matrix approaching
-a gigabyte in size. You may wish to optimise the resolution and masking of
-your landscapes before creating a distance matrix.
+For dense matrix methods, this can very quickly create large objects. For
+example, a TARDIS graph with ~20,000 accessible cells will give a 20k x 20k
+matrix approaching a gigabyte in size. You may wish to optimise the resolution
+and masking of your landscapes first.
 }
 \examples{
 \dontrun{
@@ -44,5 +43,7 @@ hexes <- link_islands(hexes)
 htd <- build_tardis(hexes)
 dm <- tardis_to_matrix(htd, mode = "distance")
 aj <- tardis_to_matrix(htd, mode = "adjacency")
+tr <- tardis_to_matrix(htd, mode = "transition")
+ht <- tardis_to_matrix(htd, mode = "hitting")
 }
 }

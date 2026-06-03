@@ -14,8 +14,8 @@ cumulative_cost(tardis, weights = "gdist", origin, verbose = TRUE)
 (\code{"gdist"}). Alternatively, the name of a weighting scheme added to the tardis
 object with \code{weight_tardis()}.}
 
-\item{origin}{\verb{sf data.frame} A simple features collection produced by \code{point_check()},
-denoting a single point from which to calculate cumulative costs}
+\item{origin}{\code{SpatVector}. The output of \code{point_check()}, denoting the point
+from which to calculate cumulative costs}
 
 \item{verbose}{\code{logical} Should function progress be reported to the user?}
 }
