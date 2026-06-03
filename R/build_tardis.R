@@ -203,6 +203,7 @@ build_tardis <- function(geog, times = NULL, tlink = 1, rotations = NULL, verbos
     pts <- vect(cell_to_point(grid))
     cls <- vect(cell_to_polygon(grid))
     ed <- relate(cls, cls, "intersects", pairs = T)
+    ed <- ed[which(ed[,1] != ed[,2]),]
     h_dists <- distGeo(crds(pts[ed[,1]]), crds(pts[ed[,2]]))
     h_ang <- bearing(crds(pts[ed[,1]]), crds(pts[ed[,2]]))
   }

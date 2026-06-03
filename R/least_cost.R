@@ -213,5 +213,6 @@ least_cost <- function(tardis, weights = "gdist", origin, dest, verbose = TRUE) 
   ob <- ob[,c("feature", "layer", "cost", "distance")]
   st_geometry(ob) <- st_sfc(unlist(path_groups, recursive = F),
                             crs = "+proj=longlat")
+  ob <- st_wrap_dateline(ob, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
   return(vect(ob))
 }
