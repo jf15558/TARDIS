@@ -37,13 +37,13 @@
 
 click_iso <- function(tardis, weights = "gdist", geog, time = NULL, cost = 1e6, col = "gold", ...) {
 
-  # tardis = rtd
-  # geog = rasts
-  # weights = "gdist"
-  # time = NULL
-  # n = 1
-  # col = "gold"
-  # cost = 1e7
+   #tardis = rtd
+   #geog = rasts
+   #weights = "gdist"
+   #time = NULL
+   #n = 1
+   #col = "gold"
+   #cost = 1e5
 
   if(is.null(time)) {
     if(!is.null(tardis$tdat)) {

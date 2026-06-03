@@ -45,9 +45,10 @@ point_check <- function(tardis, points, max.dist = NULL, verbose = TRUE) {
 
   # org <- hpts[1,]
   # dst <- hpts[2,]
-  # tardis = rtd
-  # points = org
-  # verbose = T
+   #tardis = rtd
+   #points = org
+   #verbose = T
+   #max.dist = NULL
 
   if (!exists("tardis")) {
     stop("Supply tardis as the output of build_tardis")
@@ -166,12 +167,11 @@ point_check <- function(tardis, points, max.dist = NULL, verbose = TRUE) {
   geom$layer <- out$bin
   geom$adj <- out$mod
 
-  if(!is.null(geom$adj)) {
+  if(!is.null(max.dist)) {
     if(any(geom$adj > max.dist)) {
       warning("Some point adjustments exceeded max.dist and were discarded")
     }
-    geom <- geom[which(geom$adj) <= max.dist]
+    geom <- geom[which(geom$adj <= max.dist)]
   }
-
   return(geom)
 }

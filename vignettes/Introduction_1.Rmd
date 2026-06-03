@@ -54,7 +54,10 @@ legend_cont("topleft", legend = c(0, 1))
 rast_to_geoglist(galapagos())
 ```
 
-The other slot, `$layer` is either a `SpatRaster`, or `SpatVectorCollection` if re-sampling is used. Rectangular and hexagonal grid have a number of commonalities and differences which affect how TARDIS uses them to represent locations in geographic space:\
+The other slot, `$layers` is either a multi-layer `SpatRaster`, or multi-element
+`SpatVectorCollection` if re-sampling is used. Rectangular and hexagonal grids have
+a number of commonalities and differences which affect how TARDIS uses them to
+represent locations in geographic space:\
 
 ### Adjacency
 
@@ -105,12 +108,13 @@ plot(gal_m[[1]], legend = F)
 
 `gdistance` can also work with masked rasters. A consequence of masking, however, is that it can easily produce 'islands' of cells which cannot be reached from other islands when using `gdistance`. In some cases, we may wish for movement to be restricted in this way. In other cases, however, evidence may tell us that movement across masked regions genuinely occurred. The initial colonisation of the Pacific islands, for example, is incontrovertible evidence that humans traversed the oceans even though we are a terrestrial species.
 
-`TARDIS` addresses the problem of island disconnection with several functions which link isolated patches of grid cells using different geometric principles. These links are represented as vectors using the `sf` R package and added to a `geoglist` in the slot `$links`. These links are then included as edges in resulting geospatial graph, in addition to the edges between adjacent cells in the raster grid.\
+`TARDIS` addresses the problem of island disconnection with several functions which link isolated patches of grid cells using different geometric principles. These links are represented as vectors using terra's `SpatVector` class and added to a `geoglist` in the slot `$links`. These links are then included as edges in resulting geospatial graph, in addition to the edges between adjacent cells in the raster grid.\
 
 ```{r, echo=F, fig.width=9.5, fig.height=10, dev="svg"}
 # load and plot galapagos dataset
 rasts <- rast_to_geoglist(gal[[1]], gal_m[[1]])
 rasts <- link_islands(rasts, klink = 1)
+rasts
 plot(rasts, legend = F)
 ```
 
@@ -134,9 +138,9 @@ plot(gal_m[[2]], legend = F)
 
 ## Cell indexing
 
-For raster grids, `ncell` and `ncol` can be used to calculate the number of rows in the grid. In this way, a complete raster grid can be generated based on its extent and resolution, and any longitude-latitude coordinate resolved to a numeric cell index with the terra function `cellFromXY`. For hexagonal grids, all H3 cell IDs falling in its extent at the specified H3 resolution can be consistently retrieved as a character vector. Any longitude-latitude coordinate can be resolved to an H3 cell at that same resolution with the `h3jsr` function `point_to_cell`
+For raster grids, `ncell` and `ncol` can be used to calculate the number of rows in the grid. In this way, a complete raster grid can be generated based on its extent and resolution, and any longitude-latitude coordinate resolved to a numeric cell index with the terra function `cellFromXY`. For hexagonal grids, all H3 cell IDs falling in its extent at a specified H3 resolution can be consistently retrieved as a character vector with `ncell` elements. Any longitude-latitude coordinate can be resolved to an H3 cell at resolution `hex` with the `h3jsr` function `point_to_cell`, then converted to a numeric cell index by matching against this character vector.
 
-For a raster cell, we know exactly where it falls in the row-major cell order (e.g., 234 / 64800). Things are more complicated for hexagonal grids. We do not know from the H3 cell ID itself (e.g., "83dc8cfffffffff") where that cell falls in the range of all cells in the grid extent. This is because only unmasked cells are recorded in a geoglist and so cell numbers may change between layers, unlike for rasters where the formal S4 `SpatRaster` class permits memory-efficient storage of the complete grid, including masked NA-valued cells. Instead, the cell ID is converted to a numeric cell index by matching against the ID vector. Even though the cells do not follow a particular order as in a raster, the numeric cell index will still be consistent between layers (e.g., 112 / 3602).
+For a raster cell, we know exactly where it falls in the row-major cell order (e.g., 234 out of `ncell`). Things are more complicated for hexagonal grids. We do not know from the H3 cell ID itself (e.g., "83dc8cfffffffff") where that cell falls in the range of all cells in the grid extent. This is because only unmasked hexagonal cells are stored in a geoglist and so cell numbers may change between layers, unlike for rasters where the formal S4 `SpatRaster` class permits memory-efficient storage of the complete grid, including masked NA-valued cells. Instead, matching a cell ID against the character vector yields a numeric cell index that remains consistent between layers (e.g., 112 out of `ncell`), even though the hexagonal cells do not follow a particular order as in a raster.
 
 This spatial consistency permits TARDIS to modify cell indexes to embed temporal position as well. Just as each graph node represents a discrete portion of continuous geographic space, each graph layer represents a discrete interval of continuous time. There can only ever maximally be `1:ncell` non-NA-valued cells indexes in a given spatial layer. Cells `1:ncell` come from the first grid in `$layers`, but cells in the second layer are then indexed as `(1:ncell) + (ncell * 1)`. In this way, the first possible grid cell in the subsequent time layer has an index of `ncell + 1`. This value falls outside of the range `1:ncell` so we know that it cannot come from the first time layer. The pattern continues for the third time layer `(1:ncell) + (ncell * 2)` and so on. In this way, the temporal index (layer number) can be retrieved by integer division: `cellid %/% ncell + 1`; while the spatial index (grid cell number) can be retrieved by the modulo: `cellid %% ncell`.
 
