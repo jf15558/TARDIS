@@ -71,9 +71,9 @@
 link_islands <- function(geog, klink = NULL, verbose = T) {
   #
   #
-  geog <- rasts
-  klink = 1
-  verbose = T
+  #geog <- rasts
+  #klink = 1
+  #verbose = T
 
 
   if(!exists("geog")) {
