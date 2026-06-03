@@ -1,7 +1,7 @@
 #' tardis_to_matrix
 #'
-#' Create either a weighted adjacency matrix (sparse), or a cost matrix,
-#' transition probability matrix, or a hitting time matrix (dense) from a TARDIS graph.
+#' Create either a sparse weighted adjacency or transition probability matrix,
+#' or a dense cost or hitting time matrix from a TARDIS graph.
 #'
 #' @param tardis A tardis graph
 #' @param weights `character`. A character string denoting the weighting scheme to use. By
