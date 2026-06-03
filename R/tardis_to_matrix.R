@@ -1,24 +1,25 @@
 #' tardis_to_matrix
 #'
-#' Create either a weighted adjacency matrix (sparse) or a distance matrix (dense)
-#' from a TARDIS graph.
+#' Create either a weighted adjacency matrix (sparse), or a cost matrix,
+#' transition probability matrix, or a hitting time matrix (dense) from a TARDIS graph.
 #'
 #' @param tardis A tardis graph
-#' @param weights A character string denoting the weighting scheme to use. By
+#' @param weights `character`. A character string denoting the weighting scheme to use. By
 #' default these are true geographic distances (gdist). Alternatively, the name
 #' of a weighting scheme added to the tardis object with weight_tardis().
-#' @param mode One of "adjacency" or "distance".
+#' @param mode `character`. One of "adjacency", "distance", "transition" or "hitting".
 #' @return `matrix` Either a `Matrix::sparseMatrix` adjacency matrix or a dense
 #' base R distance matrix.
 #' @import Matrix cppRouting
+#' @importFrom markovchain meanFirstPassageTime
+#' @importClassesFrom markovchain
 #' @export
 #'
 #' @details
-#' For the distance matrix, this can very quickly create
-#' large objects. For example, a TARDIS graph with ~20,000 cells (actual, not
-#' the tardis$gdat$ncell value) will give a 20k x 20k distance matrix approaching
-#' a gigabyte in size. You may wish to optimise the resolution and masking of
-#' your landscapes before creating a distance matrix.
+#' For dense matrix methods, this can very quickly create large objects. For
+#' example, a TARDIS graph with ~20,000 accessible cells will give a 20k x 20k
+#'  matrix approaching a gigabyte in size. You may wish to optimise the resolution
+#'  and masking of your landscapes first.
 #'
 #' @examples
 #' \dontrun{
@@ -34,6 +35,8 @@
 #' htd <- build_tardis(hexes)
 #' dm <- tardis_to_matrix(htd, mode = "distance")
 #' aj <- tardis_to_matrix(htd, mode = "adjacency")
+#' tr <- tardis_to_matrix(htd, mode = "transition")
+#' ht <- tardis_to_matrix(htd, mode = "hitting")
 #'}
 
 tardis_to_matrix <- function(tardis, weights = "gdist", mode = "adjacency") {
@@ -60,8 +63,8 @@ tardis_to_matrix <- function(tardis, weights = "gdist", mode = "adjacency") {
   if(!is.atomic(mode) | length(mode) != 1) {
     stop("mode should only contain one element")
   }
-  if(!is.character(mode) | !mode %in% c("adjacency", "distance")) {
-    stop("mode should be either 'adjacency' or 'distance'")
+  if(!is.character(mode) | !mode %in% c("adjacency", "distance", "transition", "hitting")) {
+    stop("mode should be one of 'adjacency', 'distance', 'transition' or 'hitting'")
   }
 
   tardis <- instantiate_tardis(tardis = tardis, weights = weights)
@@ -69,8 +72,24 @@ tardis_to_matrix <- function(tardis, weights = "gdist", mode = "adjacency") {
     mat <- sparseMatrix(i = tardis$tgraph$data$from + 1,
                         j = tardis$tgraph$data$to + 1,
                         x = tardis$tgraph$data$dist)
-  } else {
+  }
+  if(mode == "cost") {
     mat <- get_distance_matrix(tardis$tgraph, tardis$tgraph$dict$ref, tardis$tgraph$dict$ref)
+  }
+  if(mode %in% c("transition" ,"hitting")) {
+    # matrix as conductance rather than resistance
+    mat <- sparseMatrix(i = tardis$tgraph$data$from + 1,
+                        j = tardis$tgraph$data$to + 1, x = 1 / tardis$tgraph$data$dist)
+    # normalise into probability matrix
+    mat <- mat / rowSums(mat)
+
+    if(mode == "hitting") {
+      # create the Markov Chain object
+      mc <- new("markovchain", states = tardis$tgraph$dict$ref, transitionMatrix = mat)
+
+      # calculate the hitting times matrix
+      mat <- meanFirstPassageTime(mc)
+    }
   }
   return(mat)
 }
