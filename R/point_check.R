@@ -1,17 +1,21 @@
 #' point_check
 #'
-#' Check a set of space-time coordinates to determine whether they fall within
-#' an accessible cell within a TARDIS object and adjust discrepant points to
-#' their nearest accessible cell using great circle distances.
+#' Check a set of coordinates to determine whether they fall within an accessible
+#' cell within a TARDIS object. Discrepant points are adjusted to their nearest
+#' accessible cell based on great circle distance.
 #'
 #' @param tardis `tardis`. The output of `build_tardis()` or `weight_tardis()`.
-#' @param points `matrix`. A two or three column matrix giving the spatiotemporal coordinates.
-#' Column ordering is assumed to be longitude (decimal degrees), latitude (decimal
-#' degrees) and time (positive, time before present).
+#' @param points `matrix` or `data.frame`. A two or three column matrix or
+#' data.frame of coordinates. Column ordering is assumed to be longitude
+#' (decimal degrees), latitude (decimal degrees) and time (positive, time before
+#' present). The time column is only required if `tardis` contains multiple layers.
+#' @param max.dist `numeric`. The maximum distance in metres permitted for adjusting
+#' points to accessible cells. Points with adjustments above this threshold will
+#' be discarded. `NULL` by default, meaning that no points are discarded.
 #' @param verbose `logical` Should function progress be reported to the user?
-#' @return An `sf data.frame` containing valid points for the input points,
-#' recording the layer to which they belong and their adjusted distance (if
-#' shifted to accessible cells).
+#' @return A `SpatVector` of points, recording which input point they correspond
+#' to in case points were discarded (`$feature`), the layer to which they belong
+#' (`$layer`) and their adjusted distance (`$adj`).
 #' @import geosphere terra sf h3jsr
 #' @export
 #'
@@ -36,7 +40,7 @@
 #' hpts <- point_check(htd, org)
 #' }
 
-point_check <- function(tardis, points, verbose = TRUE) {
+point_check <- function(tardis, points, max.dist = NULL, verbose = TRUE) {
 
 
   # org <- hpts[1,]
@@ -57,6 +61,18 @@ point_check <- function(tardis, points, verbose = TRUE) {
   if (ncol(points) < 2 | ncol(points) > 3) {
     stop("Supply points as a data.frame or matrix with two or three columns")
   }
+  if(!is.null(max.dist)) {
+    if(!is.atomic(max.dist) | length(max.dist) != 1) {
+      stop("If not NULL, max.dist should be a single positive numeric")
+    }
+    if(!is.numeric(max.dist)) {
+      stop("If not NULL, max.dist should be a single positive numeric")
+    }
+    if(max.dist <= 0) {
+      stop("If not NULL, max.dist should be a single positive numeric")
+    }
+  }
+
   if (is.null(tardis$tdat)) {
     points <- cbind(points, rep(0.5, nrow(points)))
     tardis$tdat <- c(1, 0)
@@ -140,13 +156,22 @@ point_check <- function(tardis, points, verbose = TRUE) {
                           mod = pmod[!is.na(ptcell)])
 
   if(!is.na(tardis$gdat[7])) {
-    geom <- cell_to_point(grid[pcell], tardis$gdat[7])
+    geom <- vect(cell_to_point(grid[pcell], tardis$gdat[7]))
 
   } else {
     samprast <- rast(nrows = tardis$gdat[5] / tardis$gdat[6], ncols = tardis$gdat[6], ext = ext(tardis$gdat[1:4]))
-    geom <- xyFromCell(samprast, pcell)
-    geom <- st_sfc(apply(geom, 1, st_point, simplify = F), crs = "EPSG:4326")
+    geom <- vect(xyFromCell(samprast, pcell))
   }
-  st_geometry(out) <- st_geometry(geom)
-  return(out)
+  geom$feature <- out$feature
+  geom$layer <- out$bin
+  geom$adj <- out$mod
+
+  if(!is.null(geom$adj)) {
+    if(any(geom$adj > max.dist)) {
+      warning("Some point adjustments exceeded max.dist and were discarded")
+    }
+    geom <- geom[which(geom$adj) <= max.dist]
+  }
+
+  return(geom)
 }

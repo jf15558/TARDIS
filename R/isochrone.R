@@ -8,16 +8,16 @@
 #' `tardis$edges` to use. By default these are true geographic distances
 #' (`"gdist"`). Alternatively, the name of a weighting scheme added to the tardis
 #' object with `weight_tardis()`.
-#' @param origin `sf data.frame` A simple features collection produced by `point_check()`,
-#' denoting the points around which to calculate isochrones.
+#' @param origin `SpatVector`. The output of `point_check()`, denoting the points
+#' around which to calculate isochrones.
 #' @param cost The maximum cumulative cost of below which cells will be
 #' included within the isochrone in a point's time-specific origin landscape
 #' layer, either a single number or a vector with as many elements as points in
 #' origin to enable different costs for each point. By default, this value is
 #' in metres, corresponding to the TARDIS default weighting scheme.
 #' @param verbose `logical` Should function progress be reported to the user?
-#' @return An `sf data.frame` containing the isochrone calculated for each point
-#' in `origin`.
+#' @return A `SpatVector` containing isochrone polygons, recording to which input
+#' point in `origin` they correspond to (`$feature`) and their time layer (`$layer`)
 #' @import terra sf h3jsr
 #' @export
 #'
@@ -65,19 +65,19 @@ isochrone <- function(tardis, weights = "gdist", origin, cost = 1e5, verbose = T
                      ext = ext(tardis$gdat[1:4]))
   }
 
-  if (!class(origin)[1] == c("sf")) {
-    stop("Supply origin as the output of stp")
+  if (!class(origin)[1] == c("SpatVector")) {
+    stop("Supply origin as the output of point_check")
   }
 
   if(!is.na(tardis$gdat[7])) {
 
-    pcell <- point_to_cell(origin, tardis$gdat[7])
-    origin$cell <- match(pcell, grid) + (tardis$gdat[5] * (origin$bin - 1))
+    pcell <- point_to_cell(crds(origin), tardis$gdat[7])
+    origin$cell <- match(pcell, grid) + (tardis$gdat[5] * (origin$layer - 1))
 
   } else {
 
-    origin$cell <- cellFromXY(samprast, st_coordinates(origin)) +
-      (tardis$gdat[5] * (origin$bin - 1))
+    origin$cell <- cellFromXY(samprast, crds(origin)) +
+      (tardis$gdat[5] * (origin$layer - 1))
 
   }
 
@@ -139,5 +139,5 @@ isochrone <- function(tardis, weights = "gdist", origin, cost = 1e5, verbose = T
   rownames(out) <- ids
 
   # summarise and return
-  return(out)
+  return(vect(out)
 }

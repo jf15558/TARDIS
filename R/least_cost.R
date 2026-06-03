@@ -9,16 +9,19 @@
 #' `tardis$edges` to use. By default these are true geographic distances
 #' (`"gdist"`). Alternatively, the name of a weighting scheme added to the tardis
 #' object with `weight_tardis()`.
-#' @param origin `sf data.frame`. A simple features collection produced by `point_check()`, denoting
-#' the starting points of the least cost paths.
-#' @param dest `sf data.frame`. As for origin. The user should be careful to the time ordering
-#' of point pairs matches the time linking mode if tardis contains multiple
-#' layers (i.e., points in older layers cannot be accessed from points in younger
-#' layers if the linking mode is forwards in time (`tlink = 1`).
+#' @param origin `SpatVector`. The output of `point_check()`, denoting the
+#' starting points of the least cost paths.
+#' @param dest `SpatVector`. The output of `point_check()`, denoting the
+#' destination points of the least cost paths. The user should be careful to ensure
+#' that the time ordering of point pairs matches the time linking mode if
+#' tardis contains multiple layers (i.e., points in older layers cannot be
+#' accessed from points in younger layers if the linking mode is forwards in time
+#' (`tlink = 1`).
 #' @param verbose `logical`. Should function progress be reported to the user?
-#' @return An `sf data.frame` of time-discrete linestrings representing the least
-#' cost paths between each point pair, along with the path costs and geographic
-#' distances (identical if `weights = gdist`).
+#' @return An `SpatVector` of time-discrete lines representing the least
+#' cost paths between each point pair, recording which overall path they belong
+#' to (`$feature`), the costs along each line (`$cost`) and their geographic
+#' distances (`$distance`, identical if `weights = gdist`).
 #' @import terra sf cppRouting h3jsr
 #' @export
 #'
@@ -64,11 +67,11 @@ least_cost <- function(tardis, weights = "gdist", origin, dest, verbose = TRUE) 
                      ext = ext(tardis$gdat[1:4]))
   }
 
-  if (!class(origin)[1] == c("sf")) {
-    stop("Supply origin as the output of stp")
+  if (!class(origin)[1] == c("SpatVector")) {
+    stop("Supply origin as the output of point_check")
   }
-  if (!class(dest)[1] == c("sf")) {
-    stop("Supply dest as the output of stp")
+  if (!class(dest)[1] == c("SpatVector")) {
+    stop("Supply dest as the output of point_check")
   }
   if (nrow(origin) != nrow(dest)) {
     stop("The number of origin and destination points should be the same (i.e. paired points")
@@ -76,17 +79,17 @@ least_cost <- function(tardis, weights = "gdist", origin, dest, verbose = TRUE) 
 
   if(!is.na(tardis$gdat[7])) {
 
-    pcell <- point_to_cell(origin, tardis$gdat[7])
-    origin$cell <- match(pcell, grid) + (tardis$gdat[5] * (origin$bin - 1))
-    pcell <- point_to_cell(dest, tardis$gdat[7])
-    dest$cell <- match(pcell, grid) + (tardis$gdat[5] * (dest$bin - 1))
+    pcell <- suppressMessages(point_to_cell(crds(origin), tardis$gdat[7]))
+    origin$cell <- match(pcell, grid) + (tardis$gdat[5] * (origin$layer - 1))
+    pcell <- suppressMessages(point_to_cell(crds(dest), tardis$gdat[7]))
+    dest$cell <- match(pcell, grid) + (tardis$gdat[5] * (dest$layer - 1))
 
   } else {
 
-    origin$cell <- cellFromXY(samprast, st_coordinates(origin)) +
-      (tardis$gdat[5] * (origin$bin - 1))
-    dest$cell <- cellFromXY(samprast, st_coordinates(dest)) +
-      (tardis$gdat[5] * (dest$bin - 1))
+    origin$cell <- cellFromXY(samprast, crds(origin)) +
+      (tardis$gdat[5] * (origin$layer - 1))
+    dest$cell <- cellFromXY(samprast, crds(dest)) +
+      (tardis$gdat[5] * (dest$layer - 1))
 
   }
 
@@ -209,8 +212,8 @@ least_cost <- function(tardis, weights = "gdist", origin, dest, verbose = TRUE) 
                                                                                                                                                                         y[[3]]
                                                                                                                                                                       }))), distance = unlist(tvec), cost = unlist(wvec))
   ob$layer <- (ob$srt_bin + ob$end_bin) / 2
-  ob <- ob[,c("feature", "layer")]
+  ob <- ob[,c("feature", "layer", "cost", "distance")]
   st_geometry(ob) <- st_sfc(unlist(path_groups, recursive = F),
                             crs = "+proj=longlat")
-  return(ob)
+  return(vect(ob))
 }

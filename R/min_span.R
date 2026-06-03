@@ -10,11 +10,13 @@
 #' `tardis$edges` to use. By default these are true geographic distances
 #' (`"gdist"`). Alternatively, the name of a weighting scheme added to the tardis
 #' object with `weight_tardis()`.
-#' @param points `sf data.frame` A simple features collection produced by `point_check()`,
-#' denoting the points to be linked with a minimum spanning arborescence.
+#' @param points `SpatVector`. The output of `point_check()`, denoting the points
+#' to be linked.
 #' @param verbose `logical` Should function progress be reported to the user?
-#' @return An `sf data.frame` containing time-discrete linestrings that comprising the minimum
-#' spanning arboresence for the set of input points.
+#' @return An `SpatVector` of time-discrete lines representing the branches of
+#' the minimum spanning arborescence between each point in `points`, recording
+#' which overall branch they belong to (`$feature`), the costs along each line
+#' (`$cost`) and their geographic distances (`$distance`, identical if `weights = gdist`).
 #' @import terra sf cppRouting rlemon h3jsr
 #' @importFrom igraph graph_from_adjacency_matrix
 #' @importFrom igraph as_edgelist
@@ -79,19 +81,19 @@ min_span <- function(tardis, weights = "gdist", points, verbose = TRUE) {
                      ext = ext(tardis$gdat[1:4]))
   }
 
-  if (!class(points)[1] == c("sf")) {
-    stop("Supply origin as the output of stp")
+  if (!class(points)[1] == c("SpatVector")) {
+    stop("Supply origin as the output of point_check()")
   }
 
   if(!is.na(tardis$gdat[7])) {
 
-    points$cell <- match(point_to_cell(points, tardis$gdat[7]), grid) +
-      (tardis$gdat[5] * (points$bin - 1))
+    points$cell <- suppressMessages(match(point_to_cell(crds(points), tardis$gdat[7]), grid)) +
+      (tardis$gdat[5] * (points$layer - 1))
 
   } else {
 
-    points$cell <- cellFromXY(samprast, st_coordinates(points)) +
-      (tardis$gdat[5] * (points$bin - 1))
+    points$cell <- cellFromXY(samprast, crds(points)) +
+      (tardis$gdat[5] * (points$layer - 1))
 
   }
 
@@ -228,8 +230,9 @@ min_span <- function(tardis, weights = "gdist", points, verbose = TRUE) {
                                                                                                                                                                            y[[3]]
                                                                                                                                                                          }))), distance = unlist(tvec), cost = unlist(wvec))
   ob$layer <- (ob$srt_bin + ob$end_bin) / 2
-  ob <- ob[,c("feature", "layer")]
+  ob <- ob[,c("feature", "layer", "cost", "distance")]
   st_geometry(ob) <- st_sfc(unlist(path_groups, recursive = F),
                             crs = "+proj=longlat")
-  return(ob)
+  ob <- st_wrap_dateline(ob, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
+  return(vect(ob))
 }

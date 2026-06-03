@@ -13,8 +13,8 @@
 #' `tardis$edges` to use. By default these are true geographic distances
 #' (`"gdist"`). Alternatively, the name of a weighting scheme added to the tardis
 #' object with `weight_tardis()`.
-#' @param origin `sf data.frame` A simple features collection produced by `point_check()`,
-#' denoting the starting points for the random walks.
+#' @param origin `SpatVector`. The output of `point_check()`, denoting the
+#' starting points for the random walks.
 #' @param mode `character`. The nature of the random walk, either the number of 'steps' to
 #' take or the 'cost' in terms of the cumulative weight of the edges traversed.
 #' @param rwlen The length of the random walk as selected by @param mode, either
@@ -61,11 +61,12 @@ rand_walk <- function(tardis, weights = "gdist", origin, mode = "steps", rwlen =
 
    #tardis = rtd
    #weights = "gdist"
-   #origin = pt[1,]
-   #rwlen = 10000
+   #origin = pt
+   #rwlen = 1000
    #mode = "steps"
    #restrict = T
    #verbose = T
+   #trials = 100
 
   if (!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
@@ -81,19 +82,19 @@ rand_walk <- function(tardis, weights = "gdist", origin, mode = "steps", rwlen =
                      ext = ext(tardis$gdat[1:4]))
   }
 
-  if (!class(origin)[1] == c("sf")) {
-    stop("Supply origin as the output of stp")
+  if (!class(origin)[1] == c("SpatVector")) {
+    stop("Supply origin as the output of point_check()")
   }
 
   if(!is.na(tardis$gdat[7])) {
 
-    pcell <- point_to_cell(origin, tardis$gdat[7])
-    origin$cell <- match(pcell, grid) + (tardis$gdat[5] * (origin$bin - 1))
+    pcell <- suppressMessages(point_to_cell(crds(origin), tardis$gdat[7]))
+    origin$cell <- match(pcell, grid) + (tardis$gdat[5] * (origin$layer - 1))
 
   } else {
 
-    origin$cell <- cellFromXY(samprast, st_coordinates(origin)) +
-      (tardis$gdat[5] * (origin$bin - 1))
+    origin$cell <- cellFromXY(samprast, crds(origin)) +
+      (tardis$gdat[5] * (origin$layer - 1))
 
   }
 
@@ -160,7 +161,7 @@ rand_walk <- function(tardis, weights = "gdist", origin, mode = "steps", rwlen =
     fail <- T
     iter <- 1
     while(fail) {
-      rw <- as.vector(igraph::random_walk(grp, start = as.character(origin$cell[i]), steps = steps))
+      rw <- as.vector(igraph::random_walk(grp, start = origin$cell[i], steps = 10))
       iter <- iter + 1
       if(mode == "cost") {
         dst <- cumsum(tw[get.edge.ids(grp, c(rw[1], rep(rw[2:(length(rw) - 1)], each = 2), rw[length(rw)]))]) - rwlen[i]
@@ -203,5 +204,5 @@ rand_walk <- function(tardis, weights = "gdist", origin, mode = "steps", rwlen =
     det_list[[i]] <- out
   }
   # summarise and return
-  return(unlist(det_list, recursive = F))
+  return(svc(unlist(det_list, recursive = F)))
 }
