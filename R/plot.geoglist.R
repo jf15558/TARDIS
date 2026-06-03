@@ -57,7 +57,7 @@ plot.geoglist <- function(x, y = 1, pal = sf.colors(10), links = T,
                           legend = T, axes = T, bg = NA, add = F,
                           xlim = NULL, ylim = NULL, zlim = NULL, ...) {
 
-   #x = rw
+   #x = out
    #y = 1
    #pal = sf.colors(10)
    #links = T
