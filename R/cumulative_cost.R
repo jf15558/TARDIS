@@ -8,8 +8,8 @@
 #' `tardis$edges` to use. By default these are true geographic distances
 #' (`"gdist"`). Alternatively, the name of a weighting scheme added to the tardis
 #' object with `weight_tardis()`.
-#' @param origin `sf data.frame` A simple features collection produced by `point_check()`,
-#' denoting a single point from which to calculate cumulative costs
+#' @param origin `SpatVector`. The output of `point_check()`, denoting the point
+#' from which to calculate cumulative costs
 #' @param verbose `logical` Should function progress be reported to the user?
 #' @return A `geoglist` recording the costs required to reach, from the origin
 #' point, each cell in the same time slice as that point.
@@ -61,18 +61,18 @@ cumulative_cost <- function(tardis, weights = "gdist", origin, verbose = TRUE) {
                      ext = ext(tardis$gdat[1:4]))
   }
 
-  if (!class(origin)[1] == c("sf")) {
-    stop("Supply origin as the output of stp")
+  if (!class(origin)[1] == c("SpatVector")) {
+    stop("Supply origin as the output of point_check()")
   }
   if(!is.na(tardis$gdat[7])) {
 
-    pcell <- point_to_cell(origin, tardis$gdat[7])
-    origin$cell <- match(pcell, grid) + (tardis$gdat[5] * (origin$bin - 1))
+    pcell <- suppressMessages(point_to_cell(crds(origin), tardis$gdat[7]))
+    origin$cell <- match(pcell, grid) + (tardis$gdat[5] * (origin$layer - 1))
 
   } else {
 
-    origin$cell <- cellFromXY(samprast, st_coordinates(origin)) +
-      (tardis$gdat[5] * (origin$bin - 1))
+    origin$cell <- cellFromXY(samprast, crds(origin)) +
+      (tardis$gdat[5] * (origin$layer - 1))
   }
 
   if (!all(origin$cell %in% tardis$edges[, 1])) {
@@ -84,7 +84,7 @@ cumulative_cost <- function(tardis, weights = "gdist", origin, verbose = TRUE) {
   tardis <- instantiate_tardis(tardis = tardis, weights = weights)
 
   edges <- tardis$edges[which(tardis$edges[,3] != 2),]
-  dests <- edges[which((edges[,2] %/% tardis$gdat[[5]]) + 1 == origin$bin),2]
+  dests <- edges[which((edges[,2] %/% tardis$gdat[[5]]) + 1 == origin$layer),2]
 
 
   if (verbose) {

@@ -161,7 +161,7 @@ rand_walk <- function(tardis, weights = "gdist", origin, mode = "steps", rwlen =
     fail <- T
     iter <- 1
     while(fail) {
-      rw <- as.vector(igraph::random_walk(grp, start = origin$cell[i], steps = 10))
+      rw <- as.vector(igraph::random_walk(grp, start = origin$cell[i], steps = steps))
       iter <- iter + 1
       if(mode == "cost") {
         dst <- cumsum(tw[get.edge.ids(grp, c(rw[1], rep(rw[2:(length(rw) - 1)], each = 2), rw[length(rw)]))]) - rwlen[i]
