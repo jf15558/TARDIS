@@ -70,6 +70,6 @@ click_optim <- function(tardis, weights = "gdist", geog, time = NULL, n = 3, loo
 
   hlcp <- optim_route(tardis, points = hpts, loop = loop)
 
-  plot(hpts$geometry, col = col, pch = 16, add = T)
-  plot(st_wrap_dateline(hlcp$geometry, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180")), add = T, col = col, lwd = 2)
+  plot(hpts, col = col, pch = 16, add = T)
+  plot(hlcp, add = T, col = col, lwd = 2)
 }

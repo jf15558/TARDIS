@@ -62,6 +62,7 @@ click_msa <- function(tardis, weights = "gdist", geog, time = NULL, n = 1, col =
 
   hlcp <- min_span(tardis, points = hpts)
 
-  plot(hpts$geometry, col = col, pch = 16, add = T)
-  plot(st_wrap_dateline(hlcp$geometry, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180")), add = T, col = col, lwd = 2)
+  plot(hpts, col = col, pch = 16, add = T)
+  plot(hlcp, add = T, col = col, lwd = 2)
+  #plot(st_wrap_dateline(hlcp$geometry, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180")), add = T, col = col, lwd = 2)
 }

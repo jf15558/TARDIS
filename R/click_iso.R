@@ -64,6 +64,6 @@ click_iso <- function(tardis, weights = "gdist", geog, time = NULL, cost = 1e6, 
 
   hlcp <- isochrone(tardis, origin = hpts, cost = cost)
 
-  plot(hpts$geometry, col = col, pch = 16, add = T)
-  plot(hlcp$geometry, add = T, border = col, col = scales::alpha(col, 0.2), lwd = 2)
+  plot(hpts, col = col, pch = 16, add = T)
+  plot(hlcp, add = T, border = col, col = scales::alpha(col, 0.2), lwd = 2)
 }

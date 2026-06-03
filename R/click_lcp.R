@@ -62,6 +62,7 @@ click_lcp <- function(tardis, weights = "gdist", geog, time = NULL, n = 1, col =
 
   hlcp <- least_cost(tardis, weights = weights, origin = hpts[1:n,], dest = hpts[(n + 1):(n * 2),])
 
-  plot(hpts$geometry, col = col, pch = 16, add = T)
-  plot(st_wrap_dateline(hlcp$geometry, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180")), add = T, col = col, lwd = 2)
+  plot(hpts, col = col, pch = 16, add = T)
+  plot(hlcp, add = T, col = col, lwd = 2)
+  #plot(st_wrap_dateline(hlcp$geometry, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180")), add = T, col = col, lwd = 2)
 }
