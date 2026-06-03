@@ -57,27 +57,27 @@ plot.geoglist <- function(x, y = 1, pal = sf.colors(10), links = T,
                           legend = T, axes = T, bg = NA, add = F,
                           xlim = NULL, ylim = NULL, zlim = NULL, ...) {
 
-   #x = out
-   #y = 1
-   #pal = sf.colors(10)
-   #links = T
-   #lcol = 1
-   #lwd = 1
-   #lty = 1
-   #hex.border = NA
-   #legend = T
-   #axes = T
-   #add = F
-   #bg = NA
-   #xlim = NULL
-   #ylim = NULL
-   #xlim = c(-91, -89.5)
-   #ylim = c(-1.5, 0)
-   #xlim = c(-91, 50)
-   #ylim = c(-50, 80)
-   #zlim = NULL
-   #xlim = c(-1.5e7, 0)
-   #ylim = c(-5e6, 1e7)
+   # x = rasts
+   # y = 1
+   # pal = sf.colors(10)
+   # links = T
+   # lcol = 1
+   # lwd = 1
+   # lty = 1
+   # hex.border = NA
+   # legend = T
+   # axes = T
+   # add = F
+   # bg = NA
+   # xlim = NULL
+   # ylim = NULL
+   # #xlim = c(-91, -89.5)
+   # #ylim = c(-1.5, 0)
+   # #xlim = c(-91, 50)
+   # #ylim = c(-50, 80)
+   # zlim = NULL
+   # #xlim = c(-1.5e7, 0)
+   # #ylim = c(-5e6, 1e7)
 
   if(!exists("x")) {
     stop("Supply x as a geoglist with rast_to_geoglist()")
@@ -153,21 +153,29 @@ plot.geoglist <- function(x, y = 1, pal = sf.colors(10), links = T,
 
   # set plot canvas
   pol <- as.polygons(vect(cbind(xlim[c(1, 1, 2, 2, 1)], ylim[c(1, 2, 2, 1, 1)])))
+  frame <- crop(frame, pol)
   bounds <- intersect(frame, pol)
-  crs(bounds) <- crs(x$layers)
 
   # mask and crop to plotting bounds
-  rst <- mask(crop(x$layers[[y]], bounds), bounds)
-  # adjust the boundary polygon so that it conforms to the raster grid resolution
-  #if(inherits(rst, "SpatRaster")) {
-  #  frame <- crop(frame, bounds, ext = T)
-  #} else {
-  #  frame <- crop(frame, rst, ext = T)
-  #}
+  rst <- x$layers[[y]]
+  crs(rst) <- NA
+  rst <- mask(crop(rst, bounds), bounds)
 
-  # plot
-  plot(bounds, col = bg, border = NA, add = add, axes = F)
-  plot(rst, values = rst[[1]][,1], col = pal, legend = F, add = T, border = hex.border)
+  # if the frame bisects a raster row or column, adjust so it falls in step
+  if(inherits(rst, "SpatRaster")) {
+    #foo <- ext(frame)
+    #foo2 <- ext(rst)
+    #frame <- crop(frame, bounds, ext = T)
+  }
+
+  plot(frame, col = bg, border = NA, axes = F)
+  if(inherits(rst, "SpatRaster")) {
+    plot(rst, col = pal, xlim = ext(frame)[1:2], ylim = ext(frame)[3:4],
+         axes = F, add = T, legend = F)
+  } else {
+    plot(rst, values = rst[[1]][,1], col = pal, xlim = ext(frame)[1:2], ylim = ext(frame)[3:4],
+         border = hex.border, axes = F, add = T, legend = F)
+  }
 
   # add axes
   if(axes) {

@@ -13,15 +13,15 @@ tardis_to_matrix(tardis, weights = "gdist", mode = "adjacency")
 default these are true geographic distances (gdist). Alternatively, the name
 of a weighting scheme added to the tardis object with weight_tardis().}
 
-\item{mode}{\code{character}. One of "adjacency", "distance", "transition" or "hitting".}
+\item{mode}{\code{character}. One of "adjacency", "cost", "transition" or "hitting".}
 }
 \value{
 \code{matrix} Either a \code{Matrix::sparseMatrix} adjacency matrix or a dense
 base R distance matrix.
 }
 \description{
-Create either a weighted adjacency matrix (sparse), or a cost matrix,
-transition probability matrix, or a hitting time matrix (dense) from a TARDIS graph.
+Create either a sparse weighted adjacency or transition probability matrix,
+or a dense cost or hitting time matrix from a TARDIS graph.
 }
 \details{
 For dense matrix methods, this can very quickly create large objects. For
@@ -41,7 +41,7 @@ hexes <- rast_to_geoglist(gal[[1]], gal_m[[1]], as.hex = T, hex = 6)
 hexes <- link_islands(hexes)
 
 htd <- build_tardis(hexes)
-dm <- tardis_to_matrix(htd, mode = "distance")
+dm <- tardis_to_matrix(htd, mode = "cost")
 aj <- tardis_to_matrix(htd, mode = "adjacency")
 tr <- tardis_to_matrix(htd, mode = "transition")
 ht <- tardis_to_matrix(htd, mode = "hitting")
