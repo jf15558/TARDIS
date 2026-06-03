@@ -139,5 +139,5 @@ isochrone <- function(tardis, weights = "gdist", origin, cost = 1e5, verbose = T
   rownames(out) <- ids
 
   # summarise and return
-  return(vect(out)
+  return(vect(out))
 }

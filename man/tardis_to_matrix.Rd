@@ -31,6 +31,7 @@ a gigabyte in size. You may wish to optimise the resolution and masking of
 your landscapes before creating a distance matrix.
 }
 \examples{
+\dontrun{
 library(terra)
 library(TARDIS)
 
@@ -43,5 +44,5 @@ hexes <- link_islands(hexes)
 htd <- build_tardis(hexes)
 dm <- tardis_to_matrix(htd, mode = "distance")
 aj <- tardis_to_matrix(htd, mode = "adjacency")
-
+}
 }

@@ -14,8 +14,8 @@ isochrone(tardis, weights = "gdist", origin, cost = 1e+05, verbose = TRUE)
 (\code{"gdist"}). Alternatively, the name of a weighting scheme added to the tardis
 object with \code{weight_tardis()}.}
 
-\item{origin}{\verb{sf data.frame} A simple features collection produced by \code{point_check()},
-denoting the points around which to calculate isochrones.}
+\item{origin}{\code{SpatVector}. The output of \code{point_check()}, denoting the points
+around which to calculate isochrones.}
 
 \item{cost}{The maximum cumulative cost of below which cells will be
 included within the isochrone in a point's time-specific origin landscape
@@ -26,8 +26,8 @@ in metres, corresponding to the TARDIS default weighting scheme.}
 \item{verbose}{\code{logical} Should function progress be reported to the user?}
 }
 \value{
-An \verb{sf data.frame} containing the isochrone calculated for each point
-in \code{origin}.
+A \code{SpatVector} containing isochrone polygons, recording to which input
+point in \code{origin} they correspond to (\verb{$feature}) and their time layer (\verb{$layer})
 }
 \description{
 Calculate a cost isochrone around a point, that is all cells in the same

@@ -23,8 +23,8 @@ rand_walk(
 (\code{"gdist"}). Alternatively, the name of a weighting scheme added to the tardis
 object with \code{weight_tardis()}.}
 
-\item{origin}{\verb{sf data.frame} A simple features collection produced by \code{point_check()},
-denoting the starting points for the random walks.}
+\item{origin}{\code{SpatVector}. The output of \code{point_check()}, denoting the
+starting points for the random walks.}
 
 \item{mode}{\code{character}. The nature of the random walk, either the number of 'steps' to
 take or the 'cost' in terms of the cumulative weight of the edges traversed.}

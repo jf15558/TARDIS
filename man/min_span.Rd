@@ -14,14 +14,16 @@ min_span(tardis, weights = "gdist", points, verbose = TRUE)
 (\code{"gdist"}). Alternatively, the name of a weighting scheme added to the tardis
 object with \code{weight_tardis()}.}
 
-\item{points}{\verb{sf data.frame} A simple features collection produced by \code{point_check()},
-denoting the points to be linked with a minimum spanning arborescence.}
+\item{points}{\code{SpatVector}. The output of \code{point_check()}, denoting the points
+to be linked.}
 
 \item{verbose}{\code{logical} Should function progress be reported to the user?}
 }
 \value{
-An \verb{sf data.frame} containing time-discrete linestrings that comprising the minimum
-spanning arboresence for the set of input points.
+An \code{SpatVector} of time-discrete lines representing the branches of
+the minimum spanning arborescence between each point in \code{points}, recording
+which overall branch they belong to (\verb{$feature}), the costs along each line
+(\verb{$cost}) and their geographic distances (\verb{$distance}, identical if \code{weights = gdist}).
 }
 \description{
 Determine the least cost minimum spanning arborescence between a set of points

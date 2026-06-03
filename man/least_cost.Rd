@@ -14,20 +14,23 @@ least_cost(tardis, weights = "gdist", origin, dest, verbose = TRUE)
 (\code{"gdist"}). Alternatively, the name of a weighting scheme added to the tardis
 object with \code{weight_tardis()}.}
 
-\item{origin}{\verb{sf data.frame}. A simple features collection produced by \code{point_check()}, denoting
-the starting points of the least cost paths.}
+\item{origin}{\code{SpatVector}. The output of \code{point_check()}, denoting the
+starting points of the least cost paths.}
 
-\item{dest}{\verb{sf data.frame}. As for origin. The user should be careful to the time ordering
-of point pairs matches the time linking mode if tardis contains multiple
-layers (i.e., points in older layers cannot be accessed from points in younger
-layers if the linking mode is forwards in time (\code{tlink = 1}).}
+\item{dest}{\code{SpatVector}. The output of \code{point_check()}, denoting the
+destination points of the least cost paths. The user should be careful to ensure
+that the time ordering of point pairs matches the time linking mode if
+tardis contains multiple layers (i.e., points in older layers cannot be
+accessed from points in younger layers if the linking mode is forwards in time
+(\code{tlink = 1}).}
 
 \item{verbose}{\code{logical}. Should function progress be reported to the user?}
 }
 \value{
-An \verb{sf data.frame} of time-discrete linestrings representing the least
-cost paths between each point pair, along with the path costs and geographic
-distances (identical if \code{weights = gdist}).
+An \code{SpatVector} of time-discrete lines representing the least
+cost paths between each point pair, recording which overall path they belong
+to (\verb{$feature}), the costs along each line (\verb{$cost}) and their geographic
+distances (\verb{$distance}, identical if \code{weights = gdist}).
 }
 \description{
 Determine least cost paths between pairs of origin and destination coordinates

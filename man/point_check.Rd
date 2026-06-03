@@ -4,26 +4,31 @@
 \alias{point_check}
 \title{point_check}
 \usage{
-point_check(tardis, points, verbose = TRUE)
+point_check(tardis, points, max.dist = NULL, verbose = TRUE)
 }
 \arguments{
 \item{tardis}{\code{tardis}. The output of \code{build_tardis()} or \code{weight_tardis()}.}
 
-\item{points}{\code{matrix}. A two or three column matrix giving the spatiotemporal coordinates.
-Column ordering is assumed to be longitude (decimal degrees), latitude (decimal
-degrees) and time (positive, time before present).}
+\item{points}{\code{matrix} or \code{data.frame}. A two or three column matrix or
+data.frame of coordinates. Column ordering is assumed to be longitude
+(decimal degrees), latitude (decimal degrees) and time (positive, time before
+present). The time column is only required if \code{tardis} contains multiple layers.}
+
+\item{max.dist}{\code{numeric}. The maximum distance in metres permitted for adjusting
+points to accessible cells. Points with adjustments above this threshold will
+be discarded. \code{NULL} by default, meaning that no points are discarded.}
 
 \item{verbose}{\code{logical} Should function progress be reported to the user?}
 }
 \value{
-An \verb{sf data.frame} containing valid points for the input points,
-recording the layer to which they belong and their adjusted distance (if
-shifted to accessible cells).
+A \code{SpatVector} of points, recording which input point they correspond
+to in case points were discarded (\verb{$feature}), the layer to which they belong
+(\verb{$layer}) and their adjusted distance (\verb{$adj}).
 }
 \description{
-Check a set of space-time coordinates to determine whether they fall within
-an accessible cell within a TARDIS object and adjust discrepant points to
-their nearest accessible cell using great circle distances.
+Check a set of coordinates to determine whether they fall within an accessible
+cell within a TARDIS object. Discrepant points are adjusted to their nearest
+accessible cell based on great circle distance.
 }
 \examples{
 \dontrun{
