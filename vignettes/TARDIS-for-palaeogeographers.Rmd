@@ -2,7 +2,7 @@
 title: "TARDIS-for-palaeogeographers"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{TARDIS for palaeogeographers}
+  %\VignetteIndexEntry{TARDIS for Palaeogeographers}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -68,9 +68,9 @@ plot(hexes, 2)
 
 As mentioned in an earlier vignette, `TARDIS` was initially developed to be Google Maps for palaeobiologists. Over geological timescales, locations on Earth's surface have shifted substantially due to plate tectonic drift. As such, cells in a global palaeogeographic landscape may no longer be spatially homologous between layers. `TARDIS` can account for this effect by including plate rotation into `tardis` object construction. This is achieved using the argument `rotations`.
 
-The argument call requires quite a specific structure. It must be a list with as `nlayers - 1` elements as time layers in the accompanying `geoglist`. Each list element is then a two-column matrix of cell IDs describing pairs of cells to link between successive time layers. These IDs should be spatial, in other words row-major raster numeric index or hexagonal grid numeric index. This is to permit more intuitive construction of these matrices if desired, with temporal information added automatically during graph construction.
+The argument call requires quite a specific structure. It must be a list with `nlayers - 1` elements relative to the accompanying `geoglist`. Each list element is a two-column matrix of cell IDs describing pairs of cells to link between successive time layers. These IDs should be spatial, i.e., row-major raster numeric index or hexagonal grid numeric index, rather than full spatiotemporal indexes. This is to permit more intuitive construction of these matrices if desired, with temporal information added automatically during graph construction.
 
-In practise, these lists may be quite complicated to construct by hand, particularly for plate tectonic rotation models. `TARDIS` provides a function to automate this procedure called `get_rotations()`. This takes a `geoglist`, its accompanying time vector and a plate rotation model name as its principle arguments, then uses the `palaeoverse` R package function `palaeorotate()` to calculate rotations between cells in each successive pair of geoglist layers. The user is directed to the documentation for `palaeorotate()` for more detailed information on what plate rotation models are available. Crucially, however, this should match the palaeogeographic data used to construct the `geoglist`.
+In practice, these lists may be quite complicated to construct by hand, particularly for plate tectonic rotation models. `TARDIS` provides a function to automate this procedure called `get_rotations()`. This takes a `geoglist`, its accompanying time vector and a plate rotation model name as its principle arguments, then uses the `palaeoverse` R package function `palaeorotate()` to calculate rotations between cells in each successive pair of geoglist layers. The user is directed to the documentation for `palaeorotate()` for more detailed information on what plate rotation models are available. Crucially, however, this should match the palaeogeographic data used to construct the `geoglist`.
 
 We will implement this workflow below. The Devonian dataset contains 4 time layers, based on the PALEOMAP plate rotation model, at 5 million-year intervals. Firstly, we will resample to hexagons, both to better represent global geography and to speed up downstream function runs. We will derive rotations for the `geoglist`, using a corresponding vector of interval times. Note that the function also requires that times are ordered forwards in time:
 
