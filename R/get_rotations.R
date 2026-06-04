@@ -6,11 +6,12 @@
 #'
 #' @param geog `geoglist`. The output of `rast_to_geoglist()`. This should contain
 #' at least two layers, representing two palaeogeographic time slices where
-#' there is appreciable intervening plate roation.
+#' there is appreciable intervening plate rotation.
 #' @param times `numeric`. A  vector with `nlayers(geog) + 1` positive
 #' elements, expressing the temporal boundaries of each layer as millions of
 #' years in the past. The vector need not end in the present (i.e. `0`), but time
-#' must flow from oldest to youngest.
+#' must flow from oldest to youngest. Reconstructions will be made using the
+#' midpoints of these intervals
 #' @param model `character`. The desired plate reconstruction model. See `palaeoverse::palaeorotate()`
 #' for details.
 #' @param method `character`. The reconstruction method to use. See `palaeoverse::palaeorotate()`
@@ -40,11 +41,11 @@
 
 get_rotations <- function(geog, times, model, method = "grid", verbose = TRUE, ...) {
 
-  # geog <- rasts
-  # times <- c(125, 120)
-  # model = "PALEOMAP"
-  # method = "grid"
-  # verbose = TRUE
+  #geog <- hexes
+  #times <- tms
+  #model = "PALEOMAP"
+  #method = "grid"
+  #verbose = TRUE
 
   if(!exists("geog")) {
     stop("Supply geog as a geoglist from rast_to_geoglist()")
@@ -112,14 +113,14 @@ get_rotations <- function(geog, times, model, method = "grid", verbose = TRUE, .
     }
     cls
   })
-  rots <- cbind(do.call(cbind, rots), 1:geog$gdat[5])
+  rots <- do.call(cbind, rots)
 
   # format and return
   out <- lapply(1:(ncol(rots) - 1), function(x) {
     vals <- rots[,x:(x + 1)]
     vals[complete.cases(vals),]
   })
-  names(out) <- paste0(times[-length(times)], "-", times[-1])
+  names(out) <- paste0(mids[-length(mids)], "-", mids[-1])
   return(out)
 }
 

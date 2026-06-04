@@ -125,6 +125,12 @@ click_to_link <- function(geog, layer = 1, nlinks = 1, ...) {
     lnk$end <- cls[,2]
     lnk$layer <- layer
     lnk$distance <- perim(lnk)
+
+    # duplicate links for symmetry
+    lnk2 <- cls[,c(2, 1, 3, 4)]
+    colnames(lnk2) <- colnames(lnk)
+    lnk <- rbind(lnk, lnk2)
+
     if(!is.null(geog$links)) {
       geog$links <- unique(rbind(geog$links, lnk))
     } else {

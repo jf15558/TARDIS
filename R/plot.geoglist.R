@@ -95,7 +95,7 @@ plot.geoglist <- function(x, y = 1, pal = sf.colors(10), links = T,
   if(y %% 1 != 0) {
     stop("y should be a single integer")
   }
-  if(y > length(x$layers)) {
+  if(y > ifelse(inherits(x$layers, "SpatRaster"), nlyr(x$layers), length(x$layers))) {
     stop("The value of y exceeds of the number of layers in x")
   }
   if(!is.null(xlim)) {
