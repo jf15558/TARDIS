@@ -195,7 +195,7 @@ build_tardis <- function(geog, times = NULL, tlink = 1, rotations = NULL, verbos
     ed <- ed[ed[, 1] < ed[, 2], ]
     ed <- matrix(c(t(cbind(ed, ed[, 2:1]))), ncol = 2, byrow = T)
     h_dists <- distGeo(xyFromCell(geog$layers[[1]], ed[,1]), xyFromCell(geog$layers[[1]], ed[,2]))
-    h_ang <- distGeo(xyFromCell(geog$layers[[1]], ed[,1]), xyFromCell(geog$layers[[1]], ed[,2]))
+    h_ang <- bearing(xyFromCell(geog$layers[[1]], ed[,1]), xyFromCell(geog$layers[[1]], ed[,2]))
 
   } else {
 
