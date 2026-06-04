@@ -9,12 +9,13 @@ get_rotations(geog, times, model, method = "grid", verbose = TRUE, ...)
 \arguments{
 \item{geog}{\code{geoglist}. The output of \code{rast_to_geoglist()}. This should contain
 at least two layers, representing two palaeogeographic time slices where
-there is appreciable intervening plate roation.}
+there is appreciable intervening plate rotation.}
 
 \item{times}{\code{numeric}. A  vector with \code{nlayers(geog) + 1} positive
 elements, expressing the temporal boundaries of each layer as millions of
 years in the past. The vector need not end in the present (i.e. \code{0}), but time
-must flow from oldest to youngest.}
+must flow from oldest to youngest. Reconstructions will be made using the
+midpoints of these intervals}
 
 \item{model}{\code{character}. The desired plate reconstruction model. See \code{palaeoverse::palaeorotate()}
 for details.}
