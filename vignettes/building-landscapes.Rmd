@@ -156,6 +156,16 @@ rst <- link_delaunay(rst)
 plot(rst)
 ```
 
+Once we have added links, we can re-use the `regions()` function to determine which islands are linked together by setting `use.links = T`:
+
+```{r, fig.width=9.5, fig.height=10, dev="svg"}
+# link then plot
+regs <- regions(rst, use.links = T, bounds.only = F)
+plot(regs)
+```
+
+This will let us know if a layer still contains isolated regions (in this case none). This could be desirable for geographic realism, although they may cause problems for downstream functions and the user should consider masking them. The output of `regions()` itself could be used for this task.\
+
 ### Interactive linkage
 
 Beyond these core methods, TARDIS offers a function to build links interactively, `click_to_link()`. This function will plot the selected layer in the RStudio window and allow the user to add `nlink` new links by clicking on pairs of cells to connect. All clicks are resolved to the nearest available boundary cells. The inverse operation is also possible. `click_to_snip()` will plot the map and links, and the user can then click either side of `nsnip` links to remove them. You can try this out with the `rst` object created above.
@@ -328,24 +338,23 @@ cret_l <- classify(cret, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T),
 hexes <- rast_to_geoglist(cret, cret_l, as.hex = T, hex = 2)
 ```
 
-We will then derive rotations for the `geoglist`. Unlike for `build_tardis()`, `get_rotations` requires a vector with the same number of time elements as layers in the `geoglist`. As such, we can use the average layer ages directly. Note that the function also requires that ages are ordered forwards in time:
+We will then derive rotations for the `geoglist`, using a corresponding vector of interval times. Note that the function also requires that times are ordered forwards in time:
 
 ```{r}
 # construct our time vector
-ages <- c(115, 110)
+tms <- c(117.5, 112.5, 107.5)
 
 # get rotations for the PALEOMAP model
-rots <- get_rotations(hexes, ages, "PALEOMAP")
+rots <- get_rotations(hexes, tms, "PALEOMAP")
 
 # interrogate the output
 length(rots)
-head(rots)
+head(rots[[1]])
 ```
 
-As expected, `rots` contains two list elements, one per layer in `hexes`. We can also see the effect of the plate movement, with some cell indexes changing between layers. Now we can build our `tardis` object, using second vector of time intervals:
+As expected, `rots` contains one list element, for the two layers in `hexes`. We can also see the effect of the plate movement, with some cell indexes changing between layers. Now we can build our `tardis` object.
 
 ```{r}
 # build tardis
-tms <- c(117.5, 112.5, 107.5)
 htd <- build_tardis(hexes, tms, rotations = rots)
 ```
