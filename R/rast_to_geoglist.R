@@ -155,7 +155,7 @@ rast_to_geoglist <- function(geog, mask = NULL, as.hex = FALSE, hex = "auto", me
       }
 
       # crop to prevent potential failures in retrieval of very high latitude cells
-      pl <- st_crop(pl[[i]], xmin = -179.9, ymin = -89.9, xmax = 179.9, ymax = 89.9)
+      pl <- st_crop(pol[[i]], xmin = -179.9, ymin = -89.9, xmax = 179.9, ymax = 89.9)
 
       # both polygon and point to ensure that no cells fail to locate to a hex
       cls <- unique(na.omit(c(unlist(suppressMessages(polygon_to_cells(pl, hex))),
