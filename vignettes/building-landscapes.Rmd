@@ -1,8 +1,8 @@
 ---
-title: "Building Geographic Spaces"
+title: "2. Building Geographic Spaces"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Building Geographic Spaces}
+  %\VignetteIndexEntry{2.Building Geographic Spaces}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -229,7 +229,7 @@ The main element of the `tardis` class, however is `$edges`. This is a matrix wh
 head(rtd$edges)
 ```
 
-The matrix is an edgelist, describing the connections between cells and the properties of those edges. Columns `from` and `to` a numeric indexes that correspond to cells in the input `geoglist`. `type` denotes the link type: 0 for adjacent cells, 1 for links across masked space, and 2 for temporal links (see below). The final four columns describe the edge direction (`bearing`), horizonal distance (`hdist`), elevation change along its length (`vdist`) and the total Pythogorean distance incurred by horizonal and vertical movement (`gdist`). All edges are symmetric by default. If you examine the first two rows you will notice that `from` and `to` are inverted, with the elevation change switching its `sign` - i.e., uphill versus downhill.\
+The matrix is an edgelist, describing the connections between cells and the properties of those edges. Columns `from` and `to` a numeric indexes that correspond to cells in the input `geoglist`. `type` denotes the link type: 0 for adjacent cells, 1 for links across masked space, and 2 for temporal links (see below). The final four columns describe the edge direction (`bearing`), horizonal distance (`hdist`), elevation change along its length (`vdist`) and the total Pythogorean distance incurred by horizonal and vertical movement (`gdist`). All edges are symmetric by default. If you examine the first two rows you will notice that `from` and `to` are inverted, with the elevation change switching the sign of `vdist` - i.e., uphill versus downhill.\
 
 ## Cell indexing
 
@@ -254,7 +254,6 @@ Ultimately this system means that nodes in the resulting geospatial graph, which
 
 ```{r}
 head(rtd$tgraph$dict)
-max(rtd$tgraph$dict[,2])
 ```
 
 Here, column `ref` contains the TARDIS cell indices while column `id` is just a 0-indexed integer sequence. Ultimately, the edgelist in a `tgraph` object can be converted to graphs from a variety of other R packages for analysis of routes and distance (e.g., `igraph`, `cppRouting`, `rlemon`), cell indexes retrieved from node number, then resolved back to geographic space and temporal context as described above.\
