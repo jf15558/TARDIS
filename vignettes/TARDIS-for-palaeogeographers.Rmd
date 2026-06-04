@@ -55,7 +55,7 @@ dvn <- dem[[78:75]]
 dvn_l <- classify(dvn, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
 
 # convert to geoglist
-hexes <- rast_to_geoglist(dvn, dvn_l, as.hex = T, hex = 3)
+hexes <- rast_to_geoglist(dvn, dvn_l, as.hex = T, hex = 2)
 
 # add links
 hexes <- link_islands(hexes)
@@ -92,3 +92,5 @@ As expected, `rots` contains one list element, for the two layers in `hexes`. We
 # build tardis
 htd <- build_tardis(hexes, tms, rotations = rots)
 ```
+
+We now have a temporally varying palaeogeography model which we can analyse using other functions from `TARDIS`. These are covered by other vignettes.
