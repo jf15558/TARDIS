@@ -24,3 +24,7 @@
 #' (2025). The Cretaceous World: Plate Tectonics, Paleogeography, and
 #' Paleoclimate. Geological Society, London, Special Publications, 544(1),
 #' SP544b
+
+cretaceous <- function() {
+  rast(system.file("extdata", "cretaceous.tif", package = "TARDIS"))
+}

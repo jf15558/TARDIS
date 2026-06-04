@@ -319,7 +319,7 @@ crds <- xyFromCell(gal, spt)
 cbind(smp, tmp, spt, crds)[1:10,]
 ```
 
-### Plate tectonic drift
+## Plate tectonic drift
 
 As mentioned in an earlier vignette, `TARDIS` was initially developed to be Google Maps for palaeobiologists. Over geological timescales, locations on Earth's surface have shifted substantially due to plate tectonic drift. As such, cells in a global palaeogeographic landscape may no longer be spatially homologous between layers. `TARDIS` can account for this effect by including plate rotation into `tardis` object construction. This is achieved using the argument `rotations`.
 
@@ -358,3 +358,5 @@ As expected, `rots` contains one list element, for the two layers in `hexes`. We
 # build tardis
 htd <- build_tardis(hexes, tms, rotations = rots)
 ```
+
+There we have it - a full spatiotemporal model of the Earth's land surface for two time intervals. Now that we can construct landscape graphs, we can think about how we can modify costs and calculate spatial properties from them in the next vignette.
