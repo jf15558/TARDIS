@@ -76,12 +76,12 @@
 
 rast_to_geoglist <- function(geog, mask = NULL, as.hex = FALSE, hex = "auto", method = "mean", verbose = T, ...) {
 
-  # geog  = gal
-  # mask = gal_m
-  # as.hex = T
-  # hex = 6
-  # method = "mean"
-  # verbose = T
+   #geog  = dvn
+   #mask = dvn_l
+   #as.hex = T
+   #hex = 2
+   #method = "mean"
+   #verbose = T
 
   # check geography
   if(!exists("geog")) {
@@ -154,8 +154,11 @@ rast_to_geoglist <- function(geog, mask = NULL, as.hex = FALSE, hex = "auto", me
         if (i == nlyr(geog)) {cat("\n")}
       }
 
+      # crop to prevent potential failures in retrieval of very high latitude cells
+      pl <- st_crop(pl[[i]], xmin = -179.9, ymin = -89.9, xmax = 179.9, ymax = 89.9)
+
       # both polygon and point to ensure that no cells fail to locate to a hex
-      cls <- unique(na.omit(c(unlist(suppressMessages(polygon_to_cells(pol[[i]], hex))),
+      cls <- unique(na.omit(c(unlist(suppressMessages(polygon_to_cells(pl, hex))),
                               unlist(suppressMessages(point_to_cell(grid[[i]], hex))))))
 
       # very rarely, some cells are recovered which do not lie in bounds - these are dropped

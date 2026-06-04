@@ -66,7 +66,7 @@ get_rotations <- function(geog, times, model, method = "grid", verbose = TRUE, .
   if(length(times) < 2) {
     stop("times must contain at least two elements")
   }
-  if (!is.numeric(times) | length(times) != length(geog$layers) + 1) {
+  if (!is.numeric(times) | length(times) != ifelse(inherits(geog$layers, "SpatRaster"), nlyr(geog$layers), length(geog$layers)) + 1) {
     stop("Please supply times as a vector of time bin boundaries with n elements in geog$layers + 1")
   }
 
