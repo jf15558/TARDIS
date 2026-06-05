@@ -2,7 +2,7 @@
 title: "Package Overview"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{1. Introduction}
+  %\VignetteIndexEntry{Introduction}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

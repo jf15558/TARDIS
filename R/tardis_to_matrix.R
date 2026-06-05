@@ -42,8 +42,9 @@
 
 tardis_to_matrix <- function(tardis, weights = "gdist", mode = "adjacency") {
 
-  # tardis <- slice_tardis(tardis, c(2, 2))
-  # weights = "tdist"
+  #tardis <- h1
+  #weights = "gdist"
+  #mode = "hitting"
 
   if (!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
@@ -87,6 +88,10 @@ tardis_to_matrix <- function(tardis, weights = "gdist", mode = "adjacency") {
     if(mode == "hitting") {
       # create the Markov Chain object
       mc <- new("markovchain", states = tardis$tgraph$dict$ref, transitionMatrix = mat)
+
+      if(!is.irreducible(mc)) {
+        warning("The input tardis contains disconnected regions. Hitting times cannot be reliably calculated")
+      }
 
       # calculate the hitting times matrix
       mat <- meanFirstPassageTime(mc)

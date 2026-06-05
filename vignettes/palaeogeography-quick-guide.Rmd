@@ -56,7 +56,7 @@ dvn <- dem[[78:75]]
 dvn_l <- classify(dvn, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
 
 # convert to geoglist
-hexes <- rast_to_geoglist(dvn, dvn_l, as.hex = T, hex = 2)
+hexes <- rast_to_geoglist(dvn, dvn_l, as.hex = T, hex = 3)
 
 # plot
 plot(hexes, 2)

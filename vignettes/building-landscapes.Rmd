@@ -2,7 +2,7 @@
 title: "Building Geographic Spaces"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{2.Building Geographic Spaces}
+  %\VignetteIndexEntry{Building Geographic Spaces}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
