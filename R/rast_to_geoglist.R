@@ -79,7 +79,7 @@ rast_to_geoglist <- function(geog, mask = NULL, as.hex = FALSE, hex = "auto", me
    #geog  = dvn
    #mask = dvn_l
    #as.hex = T
-   #hex = 2
+   #hex = 3
    #method = "mean"
    #verbose = T
 
@@ -139,10 +139,14 @@ rast_to_geoglist <- function(geog, mask = NULL, as.hex = FALSE, hex = "auto", me
     }
 
     if(!is.null(mask)) {
+
+      mask <- disagg(mask, 2)
       grid <- lapply(mask, function(x) {xyFromCell(x, which(x[] == 1))})
-      pol <- lapply(1:nlyr(mask), function(x) {st_as_sf(as.polygons(mask[[x]]))})
+      #pol <- lapply(1:nlyr(mask), function(x) {st_as_sf(as.polygons(mask[[x]]))})
     } else {
-      pol <- grid <- lapply(1:length(geog), function(x) {xyFromCell(geog[[1]], 1:ncell(geog))})
+      #pol <- grid <- lapply(1:length(geog), function(x) {xyFromCell(geog[[1]], 1:ncell(geog))})
+      mask <- disagg(geog[[1]])
+      grid <- lapply(1:length(geog), function(x) {xyFromCell(mask, 1:ncell(mask))})
     }
 
     clist <- get_grid(as.vector(ext(geog)), hex)
@@ -154,12 +158,14 @@ rast_to_geoglist <- function(geog, mask = NULL, as.hex = FALSE, hex = "auto", me
         if (i == nlyr(geog)) {cat("\n")}
       }
 
+
       # crop to prevent potential failures in retrieval of very high latitude cells
-      pl <- suppressWarnings(st_crop(pol[[i]], xmin = -179.9, ymin = -89.9, xmax = 179.9, ymax = 89.9))
+      #pl <- suppressWarnings(st_as_sf(crop(vect(pol[[i]]), ext(c(xmin = -179.9, xmax = 179.9,  ymin = -89.9, ymax = 89.9)))))
 
       # both polygon and point to ensure that no cells fail to locate to a hex
-      cls <- unique(na.omit(c(unlist(suppressMessages(polygon_to_cells(pl, hex))),
-                              unlist(suppressMessages(point_to_cell(grid[[i]], hex))))))
+      #cls <- unique(na.omit(c(unlist(suppressMessages(polygon_to_cells(pl, hex))),
+      #                        unlist(suppressMessages(point_to_cell(grid[[i]], hex))))))
+      cls <- unique(na.omit(unlist(suppressMessages(point_to_cell(grid[[i]], hex)))))
 
       # very rarely, some cells are recovered which do not lie in bounds - these are dropped
       cls <- intersect(cls, clist)

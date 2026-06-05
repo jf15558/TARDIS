@@ -1,5 +1,5 @@
 ---
-title: "2. Building Geographic Spaces"
+title: "Building Geographic Spaces"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{2.Building Geographic Spaces}
@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
+```{r setup, echo=F}
 library(terra)
 library(TARDIS)
 ```
@@ -95,7 +95,7 @@ Much better! The mask now permits shallow marine circumnavigation of all islands
 To implement a mask, we simply supply the input raster and mask to `rast_to_geoglist()`. Note that the input raster cannot contain missing values. If your dataset contains such values, then these should be infilled, potentially with an average of the surrounding cells, or a dummy value, and then excluded using the mask if desired. We will use the land mask from earlier:
 
 ```{r, fig.width=9.5, fig.height=10, dev="svg"}
-rst <- rast_to_geoglist(gal, gal_l)
+rst <- rast_to_geoglist(gal, mask = gal_l)
 plot(rst)
 ```
 
@@ -178,7 +178,7 @@ Thus far, we have built our models of geographic space directly from a rectangul
 
 Hexagonal gridding is implemented in `rast_to_geoglist()` by setting `as.hex = T`. By default, the function will choose the H3 resolution level which most closely matches the resolution of the input raster (`hex = "auto"`). In practice, this grid could be a little finer than the input and result in quite a large grid. As such, you can alternatively select the resolution directly (e.g., `hex = 6`). We will use a different dataset this time, of the topography and bathymetry of the Earth in the late Cretaceous:
 
-```{r, echo=FALSE, fig.width=9.5, fig.height=4.5, dev="svg"}
+```{r, include=FALSE}
 # load the dataset and select the first time slice
 cret <- cretaceous()[[1]]
 
@@ -194,6 +194,11 @@ plot(h2)
 plot(h3)
 ```
 
+```{r, fig.width=9.5, fig.height=4.5, dev="svg"}
+plot(h2)
+plot(h3)
+```
+
 Islands in hexagonal grids can be linked in precisely the same way as shown above for raster grids. Let's add the Voronoi neighbourhood:
 
 ```{r}
@@ -203,7 +208,7 @@ h3 <- link_islands(h3)
 
 `TARDIS` also offers a function to transform geoglists to projections other than longitude-latitude. This is primarily intended for the sake of making plots as other `TARDIS` functions will not accept geoglists that are not longitude-latitude. As we are dealing with a global map, we will use the Equal Earth projection:
 
-```{r}
+```{r, fig.width=9.5, fig.height=10, dev="svg"}
 # project to Equal Earth (you can look up proj strings for other map types online)
 heq <- project_geoglist(h3, crs = "+proj=eqearth")
 

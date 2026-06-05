@@ -1,5 +1,5 @@
 ---
-title: "1. Introduction"
+title: "Package Overview"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{1. Introduction}
@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
+```{r setup, echo=F}
 library(sf)
 library(h3jsr)
 library(terra)
@@ -97,17 +97,19 @@ plot(gal_m[[1]], legend = F)
 
 `gdistance` also permits masking of rasters. A consequence of masking, however, is that it may produce 'islands' of cells completely isolated from other parts of geographic space. In some cases, we may wish for movement to be restricted in this way. In other cases, however, evidence may tell us that movement across masked regions genuinely occurred. The initial colonisation of the Pacific islands, for example, is incontrovertible evidence that humans traversed the oceans even though we are a terrestrial species. 
 
-`TARDIS` addresses the problem of island disconnection with  functions which link isolated patches of grid cells using different geometric principles. These links are represented as vectors using terra's `SpatVector` class and included as edges in resulting geospatial graph, in addition to the edges between adjacent, unmasked cells in the grid. This approach is similar to that offered by the `grainscape` R package, although this package ultimately converts patches of raster cells to single graph nodes, then determines their linkage across masked space.
+`TARDIS` addresses the problem of island disconnection with  functions which link isolated patches of grid cells using different geometric principles. These links are represented as vectors using terra's `SpatVector` class and included as edges in resulting geospatial graph, in addition to the edges between adjacent, unmasked cells in the grid. This approach is similar to that offered by the `grainscape` R package, although this package ultimately converts patches of raster cells to single graph nodes, then determines their linkage across masked space. See vignette *Building Landscapes* for full guidance on how to construct geographic spaces from raster data.
 
-```{r, echo=F, fig.width=9.5, fig.height=10, dev="svg"}
+```{r, include=F}
 # load and plot galapagos dataset
 rasts <- rast_to_geoglist(gal[[1]], gal_m[[1]])
 rasts <- link_islands(rasts, klink = 1)
-rasts
+```
+
+```{r, echo=F, fig.width=9.5, fig.height=10, dev="svg"}
 plot(rasts, legend = F)
 ```
 
-By default, the edges in a `TARDIS` geospatial graph correspond to the geographic distances between grid cells, as in `gdistance`. These are calculated as great circle distances, additionally adjusted for changes in elevation between cells provided that rasters with elevation data are used for graph construction. We may, however, expect factors other than geographic distance to control how we move through a given geographic space. Besides rasters representing elevation above/below sea level, one could also supply data on properties like climate, ocean currents, or vegetation. A custom (user-written) weighting function can then be used to change the cost of movement through geographic space according to those alternative properties, also like `gdistance`.
+By default, the edges in a `TARDIS` geospatial graph correspond to the geographic distances between grid cells, as in `gdistance`. These are calculated as great circle distances, additionally adjusted for changes in elevation between cells provided that rasters with elevation data are used for graph construction. We may, however, expect factors other than geographic distance to control how we move through a given geographic space. Besides rasters representing elevation above/below sea level, one could also supply data on properties like climate, ocean currents, or vegetation. A custom (user-written) weighting function can then be used to change the cost of movement through geographic space according to those alternative properties, also like `gdistance` (see vignette *Custom movement costs*).
 
 ## Geographic space through time
 
@@ -119,7 +121,19 @@ plot(gal_m[[1]], legend = F)
 plot(gal_m[[2]], legend = F)
 ```
 
-`TARDIS` accommodates these cases by taking a set of rasters that record the same geographic space at different points in time, converting each raster to its own geospatial graph, then layering graphs and linking their geographically homologous locations through time. Often, homologous locations will also remain constant with the geographic frame of reference. Palaeobiologists, however, have to contend with a major process which breaks this assumption - continental drift. As such, `TARDIS` can calculate how raster locations shift between graph layers according to various plate rotation models, supported by the `palaeoverse` R package.\
+`TARDIS` accommodates these cases by taking a set of rasters that record the same geographic space at different points in time, converting each raster to its own geospatial graph, then layering graphs and linking their geographically homologous locations through time. Often, homologous locations will also remain constant with the geographic frame of reference. Palaeobiologists, however, have to contend with a major process which breaks this assumption - continental drift. As such, `TARDIS` can calculate how raster locations shift between graph layers according to various plate rotation models (see vignette *Palaeogeography Quick Guide*), supported by the `palaeoverse` R package.\
 
 ## Distances and routes
 
+Once we've specified the architecture and connectivity of our geographic space, `TARDIS` offers a range of functions for measuring distances and routes within that space. Geometric structures like isochrones, shortest paths or minimum spanning trees can be constructed from sets of target points.
+
+```{r, echo=F, fig.width=9.5, fig.height=10, dev="svg"}
+rtd <- build_tardis(rasts)
+pts <- point_check(rtd, rbind(c(-88.97, -1.05), c(-90.77, 0.57)))
+lcp <- least_cost(rtd, origin = pts[1,], dest = pts[2,])
+plot(rasts)
+plot(pts, col = "gold", add = T)
+plot(lcp, col = "gold", add = T, lwd = 2)
+```
+
+Functions are mostly designed for scripting, but a few also have equivalents to allow a user to interactively query properties of a landscape. The full range of functions offered are covered in later vignettes.\
