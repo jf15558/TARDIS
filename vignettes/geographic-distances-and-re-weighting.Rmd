@@ -130,7 +130,7 @@ wfun <- function(origin, dest) {
   return((origin$value + dest$value) / 2)
 }
 
-# weighting function where base costs increase according to a random multiplier
+# weighting function where base costs increase between layers according to a random multiplier
 wfun <- function(origin, dest) {
   base_cost <- (origin$value + dest$value) / 2
   multiplier <- rgamma(n = length(base_cost), shape = origin$layer[1])
@@ -159,6 +159,16 @@ wfun <- function(origin, dest) {
   # return costs
   return(gdist)
 }
+```
+
+Lets apply this to our Galapagos `tardis` object from earlier:
+
+```{r}
+# apply the weighting
+rtd <- weight_tardis(rtd, name = "mask100", wfun = wfun)
+
+# view the scheme
+head(rtd$edges[,"mask100"])
 ```
 
 ### Example 2: the hiking function
@@ -198,21 +208,37 @@ wfun <- function(origin, dest) {
 }
 ```
 
-### Example 3:
-
+As before, lets apply this to our Galapagos dataset. This time we will also visualise the resulting cost surface:
 
 ```{r}
-rtd <- weight_tardis(rtd, name = "elev10",
-                     wfun = function(origin, dest, lnum, ...) {
-                       (origin$hdist^2 + abs(origin$vdist * 100)^2)
-                     }
-                     
-                     
-)
+# apply the weighting
+rtd <- weight_tardis(rtd, name = "tobler", wfun = wfun)
 
-rtd <- weight_tardis(rtd1, name = "elev10",
-                     wfun = function(origin, dest, lnum, ...) {
-                      (origin$hdist^2 + abs(origin$vdist * 10)^2)
-                     }
-)
+# calculate cost surface
+cc <- cost_surface(rtd, weights = "tobler")
+
+# plot
+plot(rst)
+plot(cc)
+```
+
+This shares some similarities with the raw elevation map. The cost surface most clearly picks out the slopes of the volcanoes, however, where the most extreme gradients are present.
+
+### Example 3: weighting with alternative geographic data
+
+So far we have used the basic geographic data already present in a `tardis` object to calculate our cost functions. If we want to introduce additional variables, we need to use the `vars` argument. This requires a specific format to work. It must be a named list of `geoglist` objects created from our alternative raster data. These must match the format of the `geoglist` used to create the `tardis` object, i.e., same resolution, masking, number of layers, and grid type (rectangular versus hexagonal). List names must be provided so that the data become indexable layers in `origin` and `dest`, and must not include any terms reserved for internal use by `TARDIS`, i.e., `cell`, `type`, `layer`, `hdist`, `vdist`, or `bearing`.
+
+To illustrate how to implement these requirements, we will re-use our input elevation data set for the Galapagos, as elevation itself is not present in the default `origin` and `dest` `data.frames` (only change in elevation along an edge). This is already in `geoglist` format so all we need to do is place it into a named list:
+
+```{r}
+# put our geoglist into a base R list
+wvars <- list(elev = rst)
+
+# a very simple cost function that penalises movement directly according to elevation
+wfun <- function(origin, dest) {
+  return(origin$elev)
+}
+
+# weight the tardis
+rtd <- weight_tardis(rtd, name = "elev", vars = wvars, wfun = wfun)
 ```
