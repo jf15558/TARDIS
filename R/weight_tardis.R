@@ -147,7 +147,7 @@ weight_tardis <- function(tardis, name, vars = NULL, wfun, verbose = TRUE) {
     }
   }
 
-  if(!exists(wfun)) {
+  if(!exists("wfun")) {
     stop("wfun should be a user-supplied function. See documentation for required function signature")
   }
 
