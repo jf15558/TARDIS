@@ -5,13 +5,14 @@
 #' alternative properties of a landscape.
 #'
 #' @param tardis `tardis`. The output of `build_tardis()`.
-#' @param name `character`. The name for weighting scheme to be generated.
+#' @param name `character`. The name for weighting scheme to be generated. The names 'cell', 'type', 'layer', 'bearing',
+#' 'hdist', 'vdist' and gdist' are reserved.
 #' @param vars `list`. A named list of `geoglist` objects, each recording an alternative
 #' geographic property of the landscape represented in `tardis`. As such, these
 #' must bear the same resolution, extent, number of layers and layer order as the
-#' `geoglist` used to create `tardis`. The names 'cell', 'type', 'bearing',
+#' `geoglist` used to create `tardis`. The names 'cell', 'type', 'layer', 'bearing',
 #' 'hdist', 'vdist' and gdist' are reserved.
-#' @param wfun `function(origin, dest, tnum, ...)` A function to calculate the
+#' @param wfun `function(origin, dest)` A function to calculate the
 #' cost of traversal for the edges in each graph layer. See @details for the required
 #' function signature.
 #' @param verbose `logical`. Should function progress be to the user?
@@ -47,15 +48,12 @@
 #' or any combination of origin and dest columns in any order.
 #'
 #' Weights are iteratively calculated for each landscape layer in tardis, with
-#' the index of the landscape layer internally supplied to the argument tnum to
-#' allow the user to design weighting rules that can vary through time. The
-#' function can additionally take a dots argument to allow data to be supplied
-#' to the weighting function from the global environment, for example an object
-#' with elements to be used in conjunction with tnum.
+#' the index of the landscape layer available in each data.frame to allow the
+#' user to design weighting rules that can vary through time.
 #'
-#' Crucially, all returned weights should be finite and >= 0, as negative
-#' weights are not permitted for downstream functions. `NA` values are permitted
-#' to allow the designation of impermeable edges (for example to restrict
+#' Crucially, all returned weights should be finite and > 0, as negative
+#' weights are not permitted for downstream functions and 0 is reserved for temporal links.
+#' `NA` values are permitted to allow the designation of impermeable edges (for example to restrict
 #' movement above a certain threshold cost). Such values, however, may introduce
 #' inaccessible islands into a landscape even if island linkage has already been
 #' performed.
