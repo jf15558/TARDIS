@@ -98,12 +98,12 @@
 
 weight_tardis <- function(tardis, name, vars = NULL, wfun = function(origin, dest, tnum = NULL, ...), verbose = TRUE, ...) {
 
-   tardis = rtd
-   name = "tobler"
-   vars = NULL
-   wfun = wfun
-   mfun = NULL
-   verbose = T
+   #tardis = rtd
+   #name = "tobler"
+   #vars = NULL
+   #wfun = wfun
+   #mfun = NULL
+   #verbose = T
 
   if(!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
