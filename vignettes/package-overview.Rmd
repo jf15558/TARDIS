@@ -2,7 +2,7 @@
 title: "Package Overview"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Introduction}
+  %\VignetteIndexEntry{Package Overview}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -136,4 +136,4 @@ plot(pts, col = "gold", add = T)
 plot(lcp, col = "gold", add = T, lwd = 2)
 ```
 
-Functions are mostly designed for scripting, but a few also have equivalents to allow a user to interactively query properties of a landscape. The full range of functions offered are covered in later vignettes.\
+Functions are mostly designed for scripting, but a few also have wrappers to allow a user to interactively edit or query properties of a landscape. The full range of functions offered are covered in later vignettes.\

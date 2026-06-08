@@ -322,3 +322,5 @@ crds <- xyFromCell(gal, spt)
 # print the first 10 as examples
 cbind(smp, tmp, spt, crds)[1:10,]
 ```
+
+Now that we can parameterise the connectivity of a geographic space, we can think about altering this connectivity according to other spatially varying properties or calculating distances and routes within its structure using other functions from `TARDIS`. These are covered by other vignettes.\

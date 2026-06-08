@@ -103,11 +103,11 @@
 
 weight_tardis <- function(tardis, name, vars = NULL, wfun = function(origin, dest, lnum = NULL, ...) {sqrt(origin$hdist^2 + abs(origin$vdist)^2)}, mfun = NULL, verbose = TRUE, ...) {
 
-  # tardis = rtd
-  # name = "clim"
-  # vars = list(clim = tmp)
-  # wfun = function(origin, dest, lnum = NULL, ...) {
-  #   (origin$clim + dest$clim) / 2
+   #tardis = rtd
+   #name = "clim"
+   #vars = list(clim = tmp)
+   #wfun = function(origin, dest, lnum = NULL, ...) {
+  #   rep(10, nrow(origin))
   # }
   # mfun = NULL
   # verbose = T
@@ -237,7 +237,11 @@ weight_tardis <- function(tardis, name, vars = NULL, wfun = function(origin, des
   }
 
   # attach weighting scheme and return
-  tardis$edges <- cbind(tardis$edges, wts)
-  colnames(tardis$edges)[ncol(tardis$edges)] <- name
+  if(name %in% colnames(tardis$edges)) {
+    tardis$edges[,name] <- wts
+  } else {
+    tardis$edges <- cbind(tardis$edges, wts)
+    colnames(tardis$edges)[ncol(tardis$edges)] <- name
+  }
   return(tardis)
 }
