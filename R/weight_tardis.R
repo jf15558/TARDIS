@@ -93,7 +93,7 @@
 #' gtw <- weight_tardis(rts, name = "altweight", vars = vrs, mfun = altfunc())
 #' }
 
-weight_tardis <- function(tardis, name, vars = NULL, wfun = function(origin, dest), verbose = TRUE) {
+weight_tardis <- function(tardis, name, vars = NULL, wfun, verbose = TRUE) {
 
    #tardis = rtd
    #name = "tobler"
@@ -145,6 +145,10 @@ weight_tardis <- function(tardis, name, vars = NULL, wfun = function(origin, des
         stop("Each geoglist in vars must share the extent, resolution and number of layers as tardis")
       }
     }
+  }
+
+  if(!exists(wfun)) {
+    stop("wfun should be a user-supplied function. See documentation for required function signature")
   }
 
   if(!is.function(wfun)) {

@@ -4,43 +4,25 @@
 \alias{weight_tardis}
 \title{weight_tardis}
 \usage{
-weight_tardis(
-  tardis,
-  name,
-  vars = NULL,
-  wfun = function(origin, dest, lnum = NULL, ...) {
-     sqrt(origin$hdist^2 +
-    abs(origin$vdist)^2)
- },
-  mfun = NULL,
-  verbose = TRUE,
-  ...
-)
+weight_tardis(tardis, name, vars = NULL, wfun, verbose = TRUE)
 }
 \arguments{
 \item{tardis}{\code{tardis}. The output of \code{build_tardis()}.}
 
-\item{name}{\code{character}. The name for weighting scheme to be generated.}
+\item{name}{\code{character}. The name for weighting scheme to be generated. The names 'cell', 'type', 'layer', 'bearing',
+'hdist', 'vdist' and gdist' are reserved.}
 
 \item{vars}{\code{list}. A named list of \code{geoglist} objects, each recording an alternative
 geographic property of the landscape represented in \code{tardis}. As such, these
 must bear the same resolution, extent, number of layers and layer order as the
-\code{geoglist} used to create \code{tardis}. The names 'cell', 'type', 'bearing',
+\code{geoglist} used to create \code{tardis}. The names 'cell', 'type', 'layer', 'bearing',
 'hdist', 'vdist' and gdist' are reserved.}
 
-\item{wfun}{\verb{function(origin, dest, lnum, ...)} A function to calculate the
+\item{wfun}{\verb{function(origin, dest)} A function to calculate the
 cost of traversal for the edges in each graph layer. See @details for the required
 function signature.}
 
-\item{mfun}{\code{NULL} or \verb{function(origin, dest, lnum, ...)}. A function to
-calculate the cost of traversal for any edges spanning masked regions,
-should the user desire them to be weighted differently. See @details for the
-required function signature. By default, \code{NULL}, so edge weights will come
-from @param wfun instead.}
-
 \item{verbose}{\code{logical}. Should function progress be to the user?}
-
-\item{...}{Additional arguments supplied to wfun() and mfun() if required.}
 }
 \value{
 The input \code{tardis} object with the new weighting scheme added to
@@ -57,9 +39,9 @@ used in the \code{gen3sis} R package by Oskar Hagen.
 
 Internally, weight_tardis generates two \code{data.frames}, \code{origin} and \code{dest}.
 These minimally record the properties for each pair of origin and destination cells
-comprising the edges in a graph layer. Each records the cell ID, the horizontal
-distance and bearing to its partner cell in metres and degrees respectively, and
-the vertical distance to its partner cell in metres. Horizontal distance will
+comprising the edges in a graph layer. Each records the cell ID, the type of edge it forms, the horizontal
+distance and bearing to its partner cell in metres and degrees respectively,
+the vertical distance to its partner cell in metres, and the time layer in which that cell resides. Horizontal distance will
 be the same in \code{origin} and \code{dest}, but the vertical distance will be positive
 or negative depending on whether elevation is gained or lost along an edge.
 
@@ -78,15 +60,12 @@ using Pythagoras's theorem on the horizontal (origin$hdist) and vertical
 or any combination of origin and dest columns in any order.
 
 Weights are iteratively calculated for each landscape layer in tardis, with
-the index of the landscape layer internally supplied to the argument lnum to
-allow the user to design weighting rules that can vary through time. The
-function can additionally take a dots argument to allow data to be supplied
-to the weighting function from the global environment, for example an object
-with elements to be used in conjunction with lnum.
+the index of the landscape layer available in each data.frame to allow the
+user to design weighting rules that can vary through time.
 
-Crucially, all returned weights should be finite and >= 0, as negative
-weights are not permitted for downstream functions. \code{NA} values are permitted
-to allow the designation of impermeable edges (for example to restrict
+Crucially, all returned weights should be finite and > 0, as negative
+weights are not permitted for downstream functions and 0 is reserved for temporal links.
+\code{NA} values are permitted to allow the designation of impermeable edges (for example to restrict
 movement above a certain threshold cost). Such values, however, may introduce
 inaccessible islands into a landscape even if island linkage has already been
 performed.
@@ -115,7 +94,7 @@ gal_v <- rast(gal_m, vals = rnorm(abs(ncell(gal_m) * nlyr(gal_m))))
 gvars <- rast_to_geoglist(gal_v, gal_m)
 
 # define a function where geographic distances are multiplied by 10
-altfunc <- function(origin, dest, lnum, ...) {
+altfunc <- function(origin, dest, tnum, ...) {
   (origin$hdist^2 + abs(origin$vdist)^2) * 10
 }
 
