@@ -1,0 +1,218 @@
+---
+title: "Geographic Distances and Re-Weighting"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{geographic-distances-and-re-weighting}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(TARDIS)
+```
+
+## Geographic distances
+
+Any geographic raster will have an associated coordinate system, enabling distances between locations in that space to be calculated. Like in the R package `gdistance`, `build_tardis()` uses this information to calculate horizonal distances in metres between adjacent grid cells in a `geoglist` layer, whether in a rectangular or hexagonal grid. `TARDIS` offers a couple of functions to visualise the resulting cost surface, either between grid cells or relative to a single starting point. We will start by building a global, unmasked `tardis` object at 1-degree resolution.
+
+```{r}
+# build a global raster with a constant cell value
+rst <- rast(nrow = 180, ncol = 360, vals = 1)
+
+# convert to a geoglist, then a tardis object
+rtd <- build_tardis(rast_to_geoglist(rst))
+```
+
+We can now visualise the average cost of movement through each grid cell in this landscape with the function `cost_surface()`. This returns a `geoglist` which we can plot using the standard method `TARDIS` provides:
+
+```{r}
+# calculate cost surface and plot
+cs <- cost_surface(rtd)
+plot(rtd)
+```
+
+This cost surface of geographic distance clearly shows the latitudinal distortion which rectangular grids incur at global scales, with much smaller distances between grid cells towards the poles compared to the equator.
+
+We can also create a surface describing the cost required to reach all cells in `geoglist` layer from a given starting point, using the function `cumulative_cost()`. Any `TARDIS` function which requires points for analysis requires those points to be checked and formatted using another function, `point_check()`, which ensures that all points can be resolved to unmasked cells. In this case, all cells are unmasked, but we still need to use the function to format our input point. We will choose the intersection of the equator and prime meridian - lon-lat [0,0]:
+
+```{r}
+# we supply our point as a two column, lon-lat matrix
+orig <- point_check(rtd, rbind(0, 0))
+
+# create a cumulative cost surface from this origin point
+cc <- cumulative_cost(rtd, origin = orig)
+
+# plot the surface
+plot(cc)
+```
+
+This is again the output that we expect for a global (spherical) surface. Costs increase radially from our origin point, with distortion of that radius towards the poles, and with the furthest points lying on the intersection of the equator and antimeridian on the opposite side of the globe.
+
+By default, `build_tardis()` will also assume that the input `geoglist` contains bathymetric and/or topographic information in metres. Differences in elevation between adjacent grid cells are consequently used to calculate the addition distance incurred during movement across the grid. At global scales this will be a second order effect, but will matter much more for smaller geographic areas.
+
+## The impact of masking and linking
+
+The above example was a very simple one - a smooth, isotropic sphere, i.e., no additional effects of elevational change on distance and freedom of movement in all directions to all cells in geographic space. `TARDIS` is built for representing connectivity and distance in much more complex landscapes. Let's revisit the Galapagos dataset from previous vignettes. As before, we will select the modern layer, mask it to the land surface and construct our `geoglist` and `tardis` object:
+
+```{r}
+# load and mask data
+gal <- galapagos()[[5]]
+gal_l <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
+
+# build the geoglist and tardis
+rst <- rast_to_geoglist(gal, gal_l)
+rtd <- build_tardis(rst)
+```
+
+Lets derive the cost and cumulative cost surfaces as before. For the latter, we will pick a point on the most northerly island, Pinta:
+
+```{r}
+# resolve our land point and get our surface plots
+pt <- point_check(rtd, rbind(c(-90.75, 0.58)))
+cc <- cumulative_cost(rtd, origin = pt)
+cs <- cost_surface(rtd)
+plot(cs)
+plot(cc)
+```
+
+Even at this scale, grid cells are still around 1 to 1.5 kilometres apart, compared to vertical differences of several to tens of metres, so the cost surface still looks relatively flat. Even so, we can start to see the impact of topography at this scale, with the volcanic caldera in the north of the largest island, Isabela. Something seems wrong for the other map. Most land is missing, but this is because we did not add in any island links, so our cumulative cost calculations relative to our origin point are completely restricted to Pinta island.
+
+To see how linkage affects distance, we will create two different `tardis` models, one with minimum spanning tree (MST) linkage, the other with Voronoi linkage and visualise the cumulative cost surfaces. Note that links can be added to a `geoglist` even if already contains links - `TARDIS` will automatically delete duplicate links if present:
+
+```{r}
+# mst
+rst <- link_islands(rst, klink = 1)
+rtd1 <- build_tardis(rst)
+cc1 <- cumulative_cost(rtd1, origin = pt)
+
+# voronoi
+rst2 <- link_islands(rst, klink = NULL)
+rtd2 <- build_tardis(rst2)
+cc2 <- cumulative_cost(rtd2, origin = pt)
+
+# plot solutions together
+par(mfrow = c(1, 2))
+plot(cc1, pal = sf.colors(100), zlim = c(0, 4e5), pal = sf.colors(20))
+plot(rst$links, add = T)
+plot(cc2, pal = sf.colors(100), zlim = c(0, 4e5), pal = sf.colors(20))
+plot(rst2$links, add = T)
+```
+
+Clearly linkage structure has a big impact on geographic distance in our landscapes. The costs to get to more distant locations are reduced when Voronoi connectivity is used, compared to MST.
+
+## Reweighting
+
+Altering linkage structure is one way of affecting movement in geographic space. The other way is by altering the cost of movement itself. Rather than use the default elevation-adjusted great circle distance, we may want to parameterise how movement is shaped by other sets of factors. To do this, we need to generate an alternative set of weights for the `TARDIS` graph with the function `weight_tardis()`. `gdistance` also permits custom weighting, but the inspiration for its implementation in `TARDIS` comes from a different R package, `gen3sis`. Weighting schemes are added as columns in `tardis$edges` under a user-supplied name. From there, these alternative weighting schemes can be called by name for use in other `TARDIS` functions rather than the default geographic distance weights (`tardis$edges$gdist`).
+
+`weight_tardis()` is itself a very simple function. Internally, for each time layer in a `tardis` object (`tardis$edges`), it splits the edge list in into two `data.frames` corresponding, respectively, to the origin and destination nodes of those edges. Each `data.frame` records the cell id and its time layer, along with the edge type, horizontal distance, change in elevation, and bearing along the edge it forms. If the user has supplied additional data for that geographic space with the argument `vars`, these will also be present as further columns in the `data.frames`:
+
+```{r}
+# example
+```
+
+The power of `weight_tardis()` comes from its capacity to flexibly implement very complex weighting scenarios by handing over creative control to the user with their custom function, `wfun()`. This should be designed to take the `data.frames` `origin` and `dest` as arguments, even if only one or the other is used. The function is then applied in a loop to each time layer in `tardis`, making it simple for the function output to vary according to the time layer if desired. Some simple examples are given below:
+
+```{r}
+# weighting function for elevation-adjusted great circle distance (tardis default)
+wfun <- function(origin, dest) {
+  return(sqrt(origin$hdist^2 + abs(origin$vdist)^2))
+}
+
+# weighting function for the average of some additional value supplied
+wfun <- function(origin, dest) {
+  return((origin$value + dest$value) / 2)
+}
+
+# weighting function where base costs increase according to a random multiplier
+wfun <- function(origin, dest) {
+  base_cost <- (origin$value + dest$value) / 2
+  multiplier <- rgamma(n = length(base_cost), shape = origin$layer[1])
+  return(base_cost * multiplier)
+}
+```
+
+The function must follow a couple of rules. Firstly, weights must be `NA` or greater than 0, with larger values denoting greater costs of movement. Negative weights are incompatible with the graph analysis tools that `TARDIS` uses, while weights of zero are reserved for temporal links in a `tardis` object. `NA` values are permissible, but their corresponding edges will be treated as impassable and excluded from the graph. The other rule is that it must return a vector. As such, it is advisable that the custom function itself comprise vectorised calculations. The rest of the vignette will explore some practical examples to illustrate function design.
+
+### Example 1: penalising travel across the mask
+
+As the link type is recorded in function inputs, it is very simple to penalise the cost of traversal for links which cross across masked areas. For example, this could reflect the increased cost of dispersal over water compared to movement across the land surface for a terrestrial species. As such, we can designate a multiplier for these links as follows:
+
+```{r}
+wfun <- function(origin, dest) {
+  
+  # calculate true geographic distance
+  gdist <- sqrt(origin$hdist^2 + abs(origin$vdist)^2)
+  
+  # get the indices of the mask links
+  mlink <- which(origin$type == 1)
+  
+  # multiply mask link costs by 100
+  gdist[mlink] <- gdist[mlink] * 100
+  
+  # return costs
+  return(gdist)
+}
+```
+
+### Example 2: the hiking function
+
+Human walking speed and so energy expenditure is affected by slope. Walking speed is fastest along gentle, negative gradients (~5% or 3 degrees), where gravity assists movement but without the need for excessive braking. This follows the form: `speed = 6 * exp(-3.5 * abs(slope + 0.05))`. This equation, known as Tobler's hiking function could be a more useful way of costing movement across a landscape compared to plain geographic distance where change in elevation may not have a huge impact on physical distance travelled. We can easily code this for `weight_tardis()` as follows:
+
+```{r}
+wfun <- function(origin, dest) {
+  
+  # get the slope incurred along an edge (rise over run)
+  slope <- origin$vdist / origin$hdist
+  
+  # Tobler's hiking function
+  speed <- 6 * exp(-3.5 * abs(slope + 0.05))
+  
+  # We want higher speeds to reflect a lower cost, so we return the reciprocal
+  return(1 / speed)
+}
+```
+
+A caveat of this function is that it assumes that an underlying unit of horizontal movement - i.e., comparing a 3 degree slope versus a -10 degree slope over the same distance travelled. For small rasters, horizontal distances between grid cells will be similar (and more so for hexagonal grids than rectangular grids; see *Package Overview*). For larger rasters, however, intercell distances may vary, so we may wish to correct for this within our function by normalising according to horizontal distance:
+
+```{r}
+wfun <- function(origin, dest) {
+  
+  # get the slope incurred along an edge (rise over run)
+  slope <- origin$vdist / origin$hdist
+  
+  # Tobler's hiking function
+  speed <- 6 * exp(-3.5 * abs(slope + 0.05))
+  
+  # multiply by normalised horizontal distance
+  speed_norm <- speed * (origin$hdist / max(origin$hdist))
+  
+  # return as the reciprocal (resistance rather than conductance)
+  return(1 / speed_norm)
+}
+```
+
+### Example 3:
+
+
+```{r}
+rtd <- weight_tardis(rtd, name = "elev10",
+                     wfun = function(origin, dest, lnum, ...) {
+                       (origin$hdist^2 + abs(origin$vdist * 100)^2)
+                     }
+                     
+                     
+)
+
+rtd <- weight_tardis(rtd1, name = "elev10",
+                     wfun = function(origin, dest, lnum, ...) {
+                      (origin$hdist^2 + abs(origin$vdist * 10)^2)
+                     }
+)
+```

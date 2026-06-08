@@ -11,14 +11,9 @@
 #' must bear the same resolution, extent, number of layers and layer order as the
 #' `geoglist` used to create `tardis`. The names 'cell', 'type', 'bearing',
 #' 'hdist', 'vdist' and gdist' are reserved.
-#' @param wfun `function(origin, dest, lnum, ...)` A function to calculate the
+#' @param wfun `function(origin, dest, tnum, ...)` A function to calculate the
 #' cost of traversal for the edges in each graph layer. See @details for the required
 #' function signature.
-#' @param mfun `NULL` or `function(origin, dest, lnum, ...)`. A function to
-#' calculate the cost of traversal for any edges spanning masked regions,
-#' should the user desire them to be weighted differently. See @details for the
-#' required function signature. By default, `NULL`, so edge weights will come
-#' from @param wfun instead.
 #' @param verbose `logical`. Should function progress be to the user?
 #' @param ... Additional arguments supplied to wfun() and mfun() if required.
 #' @return The input `tardis` object with the new weighting scheme added to
@@ -32,9 +27,9 @@
 #'
 #' Internally, weight_tardis generates two `data.frames`, `origin` and `dest`.
 #' These minimally record the properties for each pair of origin and destination cells
-#' comprising the edges in a graph layer. Each records the cell ID, the horizontal
-#' distance and bearing to its partner cell in metres and degrees respectively, and
-#' the vertical distance to its partner cell in metres. Horizontal distance will
+#' comprising the edges in a graph layer. Each records the cell ID, the type of edge it forms, the horizontal
+#' distance and bearing to its partner cell in metres and degrees respectively,
+#' the vertical distance to its partner cell in metres, and the time layer in which that cell resides. Horizontal distance will
 #' be the same in `origin` and `dest`, but the vertical distance will be positive
 #' or negative depending on whether elevation is gained or lost along an edge.
 #'
@@ -53,11 +48,11 @@
 #' or any combination of origin and dest columns in any order.
 #'
 #' Weights are iteratively calculated for each landscape layer in tardis, with
-#' the index of the landscape layer internally supplied to the argument lnum to
+#' the index of the landscape layer internally supplied to the argument tnum to
 #' allow the user to design weighting rules that can vary through time. The
 #' function can additionally take a dots argument to allow data to be supplied
 #' to the weighting function from the global environment, for example an object
-#' with elements to be used in conjunction with lnum.
+#' with elements to be used in conjunction with tnum.
 #'
 #' Crucially, all returned weights should be finite and >= 0, as negative
 #' weights are not permitted for downstream functions. `NA` values are permitted
@@ -90,7 +85,7 @@
 #' gvars <- rast_to_geoglist(gal_v, gal_m)
 #'
 #' # define a function where geographic distances are multiplied by 10
-#' altfunc <- function(origin, dest, lnum, ...) {
+#' altfunc <- function(origin, dest, tnum, ...) {
 #'   (origin$hdist^2 + abs(origin$vdist)^2) * 10
 #' }
 #'
@@ -101,16 +96,14 @@
 #' gtw <- weight_tardis(rts, name = "altweight", vars = vrs, mfun = altfunc())
 #' }
 
-weight_tardis <- function(tardis, name, vars = NULL, wfun = function(origin, dest, lnum = NULL, ...) {sqrt(origin$hdist^2 + abs(origin$vdist)^2)}, mfun = NULL, verbose = TRUE, ...) {
+weight_tardis <- function(tardis, name, vars = NULL, wfun = function(origin, dest, tnum = NULL, ...), verbose = TRUE, ...) {
 
-   #tardis = rtd
-   #name = "clim"
-   #vars = list(clim = tmp)
-   #wfun = function(origin, dest, lnum = NULL, ...) {
-  #   rep(10, nrow(origin))
-  # }
-  # mfun = NULL
-  # verbose = T
+   tardis = rtd
+   name = "tobler"
+   vars = NULL
+   wfun = wfun
+   mfun = NULL
+   verbose = T
 
   if(!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
@@ -133,8 +126,8 @@ weight_tardis <- function(tardis, name, vars = NULL, wfun = function(origin, des
   if(!is.character(name)) {
     stop("name should be a character string")
   }
-  if(name %in% c("from", "to", "cell", "bearing", "hdist", "vdist", "gdist")) {
-    stop("The names from, to, cell, bearing hdist, vdist and gdist are reserved for tardis internals. Please revise choose a different value for name")
+  if(name %in% c("from", "to", "cell", "type", "bearing", "hdist", "vdist", "gdist")) {
+    stop("The names from, to, cell, type, bearing, hdist, vdist and gdist are reserved for tardis internals. Please revise choose a different value for name")
   }
 
   if(!is.null(vars)) {
@@ -144,8 +137,8 @@ weight_tardis <- function(tardis, name, vars = NULL, wfun = function(origin, des
     if(is.null(names(vars))) {
       stop("Supply vars as a named list of geoglists")
     }
-    if(any(names(vars) %in% c("from", "to", "cell", "bearing", "hdist", "vdist", "gdist"))) {
-      stop("The names from, to, cell, bearing, hdist, vdist and gdist are reserved for tardis internals. Please revise choose a different value for name")
+    if(any(names(vars) %in% c("from", "to", "cell", "type", "bearing", "hdist", "vdist", "gdist"))) {
+      stop("The names from, to, cell, type, bearing, hdist, vdist and gdist are reserved for tardis internals. Please revise choose a different value for name")
     }
     if(!all(unlist(lapply(vars, inherits, "geoglist")))) {
       stop("One or more elements of vars is not a geoglist")
@@ -159,11 +152,6 @@ weight_tardis <- function(tardis, name, vars = NULL, wfun = function(origin, des
 
   if(!is.function(wfun)) {
     stop("wfun should be a user-supplied function. See documentation for required function signature")
-  }
-  if(!is.null(mfun)) {
-    if(!is.function(mfun)) {
-      stop("mfun should be a user-supplied function. See documentation for required function signature")
-    }
   }
 
   src <- ceiling(tardis$edges[,1] / tardis$gdat[5])
@@ -179,15 +167,19 @@ weight_tardis <- function(tardis, name, vars = NULL, wfun = function(origin, des
 
     links <- tardis$edges[which(src == i & src == dst),]
     links[,1:2] <- links[,1:2] %% tardis$gdat[5]
-    origin <- as.data.frame(links[,c(1, 4:6)])
-    dest <- as.data.frame(links[,c(2, 4:6)])
+    origin <- as.data.frame(links[,c(1, 3, 4:6)])
+    dest <- as.data.frame(links[,c(2, 3, 4:6)])
+    origin <- cbind.data.frame(origin, (origin[,1] %/% tardis$gdat[5] + 1))
+    dest <- cbind.data.frame(dest, (dest[,1] %/% tardis$gdat[5] + 1))
+    origin <- origin[,c(1, 2, 6, 3, 4, 5)]
+    dest <- dest[,c(1, 2, 6, 3, 4, 5)]
     if(!is.null(vars)) {
       vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][match(links[,1], as.numeric(rownames(y$layers[[i]])))]})
       origin <- cbind.data.frame(origin, vrs)
       vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][match(links[,2], as.numeric(rownames(y$layers[[i]])))]})
       dest <- cbind.data.frame(dest, vrs)
     }
-    colnames(origin) <- colnames(dest) <- c("cell", "bearing", "hdist", "vdist", names(vars))
+    colnames(origin) <- colnames(dest) <- c("cell", "layer", "type", "bearing", "hdist", "vdist", names(vars))
 
     weight <- try(wfun(origin = origin, dest = dest))
     if(class(weight)[1] == "try-error") {
@@ -205,29 +197,6 @@ weight_tardis <- function(tardis, name, vars = NULL, wfun = function(origin, des
     }
     if(any(na.omit(weight) <= 0)) {
       stop(paste0("wfun() resulted in a non-positive value in layer ", i, "/", layers, ". Ensure the function and data returns positive real numbers or NA"))
-    }
-
-    mlink <- which(links[,3] == 1)
-    if(!is.null(mfun) & length(mlink) != 0) {
-
-      mweight <- try(mfun(origin = origin[mlink,], dest = dest[mlink,]))
-      if(class(mweight)[1] == "try-error") {
-        stop(paste0("An error occurred in mfun() for layer ", i, "/", layers, ". Check that the column names in mfunc() match the names of vars, along with 'hdist' and 'vdist'"))
-      }
-      mweight <- as.vector(mweight)
-      if(!is.vector(mweight) | length(mweight) != length(mlink)) {
-        stop(paste0("mfun() did not return a vector with as many elements as edges in layer ", i, "/", layers, ". Ensure that the function returns a vector of correct length"))
-      }
-      if(any(is.nan(weight) | is.infinite(weight))) {
-        stop(paste0("mfun() resulted in a non-finite value (NaN, Inf) in  layer ", i, "/", layers, ". Ensure the function and data returns positive real numbers or NA"))
-      }
-      if(all(is.na(mweight))) {
-        stop(paste0("mfun() resulted in all NA weights in layer ", i, "/", layers))
-      }
-      if(any(na.omit(mweight) <= 0)) {
-        stop(paste0("mfun() resulted in a non-positive value in layer ", i, "/", layers, ". Ensure the function and data returns positive real numbers or NA"))
-      }
-      weight[mlink] <- mweight
     }
     wts[which(src == i & src == dst)] <- weight
   }
