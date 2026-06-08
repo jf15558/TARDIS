@@ -15,7 +15,6 @@
 #' cost of traversal for the edges in each graph layer. See @details for the required
 #' function signature.
 #' @param verbose `logical`. Should function progress be to the user?
-#' @param ... Additional arguments supplied to wfun() and mfun() if required.
 #' @return The input `tardis` object with the new weighting scheme added to
 #' `tardis$edges` under the column name given in `weights`.
 #' @import terra
@@ -96,7 +95,7 @@
 #' gtw <- weight_tardis(rts, name = "altweight", vars = vrs, mfun = altfunc())
 #' }
 
-weight_tardis <- function(tardis, name, vars = NULL, wfun = function(origin, dest, tnum = NULL, ...), verbose = TRUE, ...) {
+weight_tardis <- function(tardis, name, vars = NULL, wfun = function(origin, dest), verbose = TRUE) {
 
    #tardis = rtd
    #name = "tobler"
