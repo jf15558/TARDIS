@@ -171,10 +171,10 @@ plot.geoglist <- function(x, y = 1, pal = sf.colors(10), links = T,
   plot(frame, col = bg, border = NA, axes = F)
   if(inherits(rst, "SpatRaster")) {
     plot(rst, col = pal, xlim = ext(frame)[1:2], ylim = ext(frame)[3:4],
-         axes = F, add = T, legend = F, range = zlim)
+         axes = F, add = add, legend = F, range = zlim)
   } else {
     plot(rst, values = rst[[1]][,1], col = pal, xlim = ext(frame)[1:2], ylim = ext(frame)[3:4],
-         border = hex.border, axes = F, add = T, legend = F, range = zlim)
+         border = hex.border, axes = F, add = add, legend = F, range = zlim)
   }
 
   # add axes

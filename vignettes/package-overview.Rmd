@@ -113,7 +113,7 @@ By default, the edges in a `TARDIS` geospatial graph correspond to the geographi
 
 ## Geographic space through time
 
-In some cases, we can assume that the structure of geographic space does not change relative to the processes taking place within it. In other cases, however, that structure may change through a variety of different processes. Over smaller extents, this could be something as simple as deforestation altering the distribution of habitat space over several decades. Over geological timescales, however, we could instead experience massive modification of geographic space due to changes in sea level, continental position, or climatically favourable areas.
+In some cases, we can assume that the structure of geographic space does not change relative to the processes taking place within it. In other cases, however, that structure may change through a variety of different processes. Over smaller timescales, this could be something as simple as deforestation altering the distribution of habitat space over several decades. Over geological timescales, however, we could instead experience massive modification of geographic space due to changes in sea level, continental position, or climatically favourable areas.
 
 ```{r, echo=F, fig.width=9.5, fig.height=5, dev="svg"}
 par(mfrow = c(1, 2))
@@ -121,7 +121,7 @@ plot(gal_m[[1]], legend = F)
 plot(gal_m[[2]], legend = F)
 ```
 
-`TARDIS` accommodates these cases by taking a set of rasters that record the same geographic space at different points in time, converting each raster to its own geospatial graph, then layering graphs and linking their geographically homologous locations through time. Often, homologous locations will also remain constant with the geographic frame of reference. Palaeobiologists, however, have to contend with a major process which breaks this assumption - continental drift. As such, `TARDIS` can calculate how raster locations shift between graph layers according to various plate rotation models (see vignette *Palaeogeography Quick Guide*), supported by the `palaeoverse` R package.\
+`TARDIS` accommodates these cases by taking a set of rasters that record the same geographic space at different points in time, converting each raster to its own geospatial graph, then layering graphs and linking their geographically homologous locations through time. Often, homologous locations will also remain constant with the geographic frame of reference. Palaeobiologists, however, have to contend with a major process which breaks this assumption - continental drift. As such, `TARDIS` can calculate how raster locations shift between graph layers according to various plate rotation models (see vignette *Palaeogeography Quick Guide*), supported by the `palaeoverse` R package and `gplates` Web API.\
 
 ## Distances and routes
 

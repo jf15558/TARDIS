@@ -242,3 +242,4 @@ wfun <- function(origin, dest) {
 # weight the tardis
 rtd <- weight_tardis(rtd, name = "elev", vars = wvars, wfun = wfun)
 ```
+
