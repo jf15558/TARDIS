@@ -83,11 +83,12 @@
 
 build_tardis <- function(geog, times = NULL, tlink = 1, rotations = NULL, verbose = TRUE) {
 
-   # geog = hexes
+   # geog = rst
    # times = c(seq(2.25, 0, -0.5), 0)
    # times = c(117, 114, 112)
+   # times = bns
    # tlink = 1
-   # rotations = rots
+   # rotations = NULL
    # verbose = TRUE
 
   if(inherits(geog$layers, "SpatRaster")) {
@@ -201,7 +202,7 @@ build_tardis <- function(geog, times = NULL, tlink = 1, rotations = NULL, verbos
 
     grid <- get_grid(geog$gdat[1:4], geog$gdat[7])
     pts <- vect(cell_to_point(grid))
-    cls <- vect(cell_to_polygon(grid))
+    cls <- vect(st_wrap_dateline(cell_to_polygon(grid), options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180")))
     ed <- relate(cls, cls, "intersects", pairs = T)
     ed <- ed[which(ed[,1] != ed[,2]),]
     h_dists <- distGeo(crds(pts[ed[,1]]), crds(pts[ed[,2]]))

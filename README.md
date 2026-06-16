@@ -1,12 +1,29 @@
 # TARDIS <img src="man/figures/logo.png" align="right" height="135" />
 
-TARDIS (Terrains And Routes Directed In Spacetime) is a package for spatiotemporal landscape connectivity analysis.
+`TARDIS` (Terrains And Routes Directed In Spacetime) is an R package for spatiotemporal geographic connectivity analysis. It provides functions for constructing and analysing graph representations of complex geographic spaces at local to global scales, particularly where accessible spaces are discontinuously distributed but still display connectivity (e.g., island systems where isolation is strong but not necessarily absolute), and where that distribution also changes through time (e.g., habitat patch fragmentation or plate tectonic drift).
 
-In regular connectivity analysis, the cells of raster grid for a given landscape are converted to vertices in an xy lattice
-graph, with the weights of the edges parameterising the ease of travel across the landscape. A single lattice, however, cannot
-capture the effects of a changing landscape on ecological, evolutionary and biogeographic processes. TARDIS addresses this
-shortfall by providing methods for constructing xyz lattice graphs from a time-ordered stack of landscape rasters. 
+`TARDIS` was primarily designed to allow exploration of routes and distances across changing geographic architectures in deep time - Google Maps for palaeobiologists! Its general functionality, however, is also suitable for modern applications such as landscape genetics or dispersal ecology. As such, suggestions for enhancements or improvements are welcomed.
 
-TARDIS graphs can be thresholded and analysed using any tools applicable to graph analysis to investigate their properties.
-Some tools, primarily least cost path detection, are included in the package and more will be added in due course. Please
-do get in contact with any ideas/bug reports as TARDIS remains a work in progress.
+# Installation
+
+A stable release of `TARDIS` on CRAN is anticipated in the near future. For the time being, the development version of `TARDIS` can be installed via GitHub using:
+
+```r
+# install.packages("devtools")
+devtools::install_github("jf15558/TARDIS")
+```
+
+# Citation
+
+If you use the `TARDIS` R package in your work, please cite the original article describing the package:
+
+Flannery-Sutherland, J., Elsler, A., Farnsworth, A., Lunt, D., Benton, M. (2025). Landscape-explicit phylogeography illuminates the ecographic radiation of early archosauromorph reptiles. *Nature Ecology & Evolution* 9, 1138–1152. DOI: [10.1038/s41559-025-02739-y](https://doi.org/10.1038/s41559-025-02739-y).
+
+Please also cite the package version you are using:
+
+```r
+# Get citation
+citation("TARDIS")
+# Get citation in BibTex format
+toBibtex(citation("TARDIS"))
+```

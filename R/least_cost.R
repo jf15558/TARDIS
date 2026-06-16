@@ -45,11 +45,11 @@
 
 least_cost <- function(tardis, weights = "gdist", origin, dest, verbose = TRUE) {
 
-   #tardis = rtd
-   #weights = "gdist"
-   #origin = hpts[1,]
-   #dest = hpts[2,]
-   #verbose = TRUE
+   # tardis = rtd
+   # weights = "gdist"
+   # origin = pts[phy$edge[410,1],]
+   # dest = pts[phy$edge[410,2],]
+   # verbose = TRUE
 
   if (!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
