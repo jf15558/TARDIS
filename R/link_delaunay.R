@@ -55,8 +55,8 @@
 
 link_delaunay <- function(geog, max.dist = NULL, verbose = T) {
 
-  #geog = rast_to_geoglist(gal[[1]], gal_m[[1]])
-  #max.dist = NULL
+  #geog = rst
+  #max.dist = 2e6
   #verbose = T
 
   if(!exists("geog")) {
@@ -92,7 +92,7 @@ link_delaunay <- function(geog, max.dist = NULL, verbose = T) {
       bar <- relate(z, z, "intersects", pairs = T)
       z$patches <- components(graph_from_edgelist(bar))$membership
       z2 <- centroids(z[which(table(bar[,1]) != 7)])
-      list(z, aggregate(z2, by = "patches"))
+      list(makeValid(z), aggregate(z2, by = "patches"))
     })
     islands <- lapply(dat, `[[`, 1)
     bounds <- lapply(dat, `[[`, 2)
@@ -126,11 +126,11 @@ link_delaunay <- function(geog, max.dist = NULL, verbose = T) {
       } else {
 
         nr <- apply(relate(dl, islands[[i]], "intersects"), 1, which)
-        to_keep <- which(sapply(nr, length) == 2 & sapply(nr, function(x) {x[1] != x[length(x)]}))
+        to_keep <- which(sapply(nr, length) == 2)
         nr <- nr[to_keep]
-        #nr <- lapply(nr, function(x) {islands[[i]]$patches[x]})
-        #nr <- which(sapply(nr, function(x) {x[1] != x[2]}))
-        nr <- which(!sapply(nr, function(x) {is.related(islands[[i]][x[1]], islands[[i]][x[2]], "touches")}))
+        nr <- lapply(nr, function(x) {islands[[i]]$patches[x]})
+        nr <- which(sapply(nr, function(x) {x[1] != x[2]}))
+        #nr <- which(!sapply(nr[1:2], function(x) {is.related(islands[[i]][x[1]], islands[[i]][x[2]], "touches")}))
         dl <- dl[to_keep[nr]]
         cl <- suppressMessages(point_to_cell(geom(dl)[,3:4], res = geog$gdat[7]))
         cl <- match(cl, grid)
