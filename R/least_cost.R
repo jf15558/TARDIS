@@ -45,11 +45,11 @@
 
 least_cost <- function(tardis, weights = "gdist", origin, dest, verbose = TRUE) {
 
-   # tardis = rtd
-   # weights = "gdist"
-   # origin = pts[phy$edge[410,1],]
-   # dest = pts[phy$edge[410,2],]
-   # verbose = TRUE
+   #tardis = rtd
+   #weights = "gdist"
+   #origin = s1[172:173,]
+   #dest = s2[172:173,]
+   #verbose = TRUE
 
   if (!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
@@ -149,70 +149,83 @@ least_cost <- function(tardis, weights = "gdist", origin, dest, verbose = TRUE) 
   path_groups <- path_ids <- wvec <- tvec <- orgs <- dsts <- list()
   for (i in 1:length(paths)) {
 
-    if(!is.na(tardis$gdat[7])) {
-      path_xy <- st_coordinates(cell_to_point(grid[paths[[i]] %% tardis$gdat[5]]))
+    if(length(paths[[i]]) != 0) {
 
-    } else {
-      path_xy <- xyFromCell(samprast, paths[[i]] %% tardis$gdat[5])
-    }
+      if(!is.na(tardis$gdat[7])) {
+        path_xy <- st_coordinates(cell_to_point(grid[paths[[i]] %% tardis$gdat[5]]))
 
-    pbin <- (paths[[i]] %/% tardis$gdat[5]) + 1
-    pseq <- rep(1:length(rle(pbin)$length), rle(pbin)$length)
-    wcst <- rev(rev(c(rbind(tapply(wpaths[[i]], INDEX = pseq,
-                                   sum), 0)))[-1])
-    dcst <- rev(rev(c(rbind(tapply(tpaths[[i]], INDEX = pseq,
-                                   sum), 0)))[-1])
-    pgrp <- list()
-    within <- tapply(1:length(pseq), INDEX = pseq, function(y) {
-      if (length(y) == 1) {
-        st_linestring(path_xy[c(y, y), ])
+      } else {
+        path_xy <- xyFromCell(samprast, paths[[i]] %% tardis$gdat[5])
       }
-      else {
-        st_linestring(path_xy[y, ])
-      }
-    })
-    for (j in 1:length(seq(1, length(wcst), 2))) {
-      pgrp[[seq(1, length(wcst), 2)[j]]] <- within[[j]]
-    }
-    pids <- paste0(i, "_", pbin[1], "-", pbin[1])
-    if (length(unique(pbin)) > 1) {
-      between <- lapply(which(diff(pseq) != 0) + 1, function(y) {
-        st_linestring(as.matrix(path_xy[c(y - 1, y),
-                                        , drop = FALSE]))
+
+      pbin <- (paths[[i]] %/% tardis$gdat[5]) + 1
+      pseq <- rep(1:length(rle(pbin)$length), rle(pbin)$length)
+      wcst <- rev(rev(c(rbind(tapply(wpaths[[i]], INDEX = pseq,
+                                     sum), 0)))[-1])
+      dcst <- rev(rev(c(rbind(tapply(tpaths[[i]], INDEX = pseq,
+                                     sum), 0)))[-1])
+      pgrp <- list()
+      within <- tapply(1:length(pseq), INDEX = pseq, function(y) {
+        if (length(y) == 1) {
+          st_linestring(path_xy[c(y, y), ])
+        }
+        else {
+          st_linestring(path_xy[y, ])
+        }
       })
-      for (j in 1:length(seq(2, length(wcst), 2))) {
-        pgrp[[seq(2, length(wcst), 2)[j]]] <- between[[j]]
+      for (j in 1:length(seq(1, length(wcst), 2))) {
+        pgrp[[seq(1, length(wcst), 2)[j]]] <- within[[j]]
       }
-      pids <- pbin[c(1, which(diff(pbin) != 0) + 1)]
-      pids <- rev(rev(c(t(cbind(paste0(i, "_", pids, "-",
-                                       pids), c(paste0(i, "_", pids[-length(pids)],
-                                                       "-", pids[-1]), NA)))))[-1])
+      pids <- paste0(i, "_", pbin[1], "-", pbin[1])
+      if (length(unique(pbin)) > 1) {
+        between <- lapply(which(diff(pseq) != 0) + 1, function(y) {
+          st_linestring(as.matrix(path_xy[c(y - 1, y),
+                                          , drop = FALSE]))
+        })
+        for (j in 1:length(seq(2, length(wcst), 2))) {
+          pgrp[[seq(2, length(wcst), 2)[j]]] <- between[[j]]
+        }
+        pids <- pbin[c(1, which(diff(pbin) != 0) + 1)]
+        pids <- rev(rev(c(t(cbind(paste0(i, "_", pids, "-",
+                                         pids), c(paste0(i, "_", pids[-length(pids)],
+                                                         "-", pids[-1]), NA)))))[-1])
+      }
+      pord <- if (pords[i] == 1) {
+        1:length(pgrp)
+      } else {
+        rev(1:length(pgrp))
+      }
+      path_groups[[i]] <- pgrp[pord]
+      path_ids[[i]] <- pids[pord]
+      wvec[[i]] <- wcst[pord]
+      tvec[[i]] <- dcst[pord]
+
+
     }
-    pord <- if (pords[i] == 1) {
-      1:length(pgrp)
-    } else {
-      rev(1:length(pgrp))
-    }
-    path_groups[[i]] <- pgrp[pord]
-    path_ids[[i]] <- pids[pord]
-    wvec[[i]] <- wcst[pord]
-    tvec[[i]] <- dcst[pord]
   }
   path_ids <- unlist(path_ids)
-  ob <- cbind.data.frame(feature = as.numeric(unlist(lapply(strsplit(path_ids,
-                                                                  "_"), function(y) {
-                                                                    y[[1]]
-                                                                  }))), srt_bin = as.numeric(unlist(lapply(strsplit(path_ids,
-                                                                                                                    "_|-"), function(y) {
-                                                                                                                      y[[2]]
-                                                                                                                    }))), end_bin = as.numeric(unlist(lapply(strsplit(path_ids,
-                                                                                                                                                                      "_|-"), function(y) {
-                                                                                                                                                                        y[[3]]
-                                                                                                                                                                      }))), distance = unlist(tvec), cost = unlist(wvec))
-  ob$layer <- (ob$srt_bin + ob$end_bin) / 2
-  ob <- ob[,c("feature", "layer", "cost", "distance")]
-  st_geometry(ob) <- st_sfc(unlist(path_groups, recursive = F),
-                            crs = "+proj=longlat")
-  ob <- st_wrap_dateline(ob, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
-  return(vect(ob))
+  if(length(path_ids) == 0) {
+    warning("No valid paths available for any point pairs, returning NULL")
+    return(NULL)
+  } else {
+    ob <- cbind.data.frame(feature = as.numeric(unlist(lapply(strsplit(path_ids,
+                                                                       "_"), function(y) {
+                                                                         y[[1]]
+                                                                       }))), srt_bin = as.numeric(unlist(lapply(strsplit(path_ids,
+                                                                                                                         "_|-"), function(y) {
+                                                                                                                           y[[2]]
+                                                                                                                         }))), end_bin = as.numeric(unlist(lapply(strsplit(path_ids,
+                                                                                                                                                                           "_|-"), function(y) {
+                                                                                                                                                                             y[[3]]
+                                                                                                                                                                           }))), distance = unlist(tvec), cost = unlist(wvec))
+    ob$layer <- (ob$srt_bin + ob$end_bin) / 2
+    ob <- ob[,c("feature", "layer", "cost", "distance")]
+    st_geometry(ob) <- st_sfc(unlist(path_groups, recursive = F),
+                              crs = "+proj=longlat")
+    ob <- st_wrap_dateline(ob, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
+    if(length(unique(ob$feature)) != nrow(origin)) {
+      warning("Some point pairs failed to return valid paths")
+    }
+    return(vect(ob))
+  }
 }
