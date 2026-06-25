@@ -76,15 +76,15 @@
 
 rast_to_geoglist <- function(geog, mask = NULL, as.hex = FALSE, hex = "auto", method = "mean", verbose = T, ...) {
 
-   gal <- galapagos()
-   gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
+   #gal <- galapagos()
+   #gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
 
-   geog  = gal
-   mask = gal_m
-   as.hex = T
-   hex = 6
-   method = "mean"
-   verbose = T
+   #geog  = gal
+   #mask = gal_m
+   #as.hex = T
+   #hex = 6
+   #method = "mean"
+   #verbose = T
 
   # check geography
   if(!exists("geog")) {
@@ -182,6 +182,31 @@ rast_to_geoglist <- function(geog, mask = NULL, as.hex = FALSE, hex = "auto", me
       dat$id <- id
       st_geometry(dat) <- clsp
       dat <- dat[order(dat$id),]
+
+      ## CODE FOR MAKING SVC EQUIVALENT TO SPATRASTERSTACK
+      #foo <- vect(dat[st_is_valid(dat),])
+      #baz <- vect(cbind(1:(length(clist) - length(foo)), 1, NA, NA, 0), type = "polygon")
+      #baz$layer <- NA
+      #baz$id <- setdiff(1:length(clist), foo$id)
+      #baz <- rbind(baz, foo)
+      #baz <- baz[order(baz$id)]
+      #baz$id <- clist
+
+      ## DOWNSTREAM GEOM OPS ON NEW OBJECT
+      ## intersection (automatically removes empty geoms)
+      #bar <- relate(baz, baz, "intersects", pairs = T)
+
+      ## membership (record origin cell indices, then reduce bar to consecutive integers)
+      #orig <- unique(bar[,1])
+      #bar <- matrix(match(bar, unique(c(bar))), ncol = 2)
+      #baz$patches <- NA
+      #baz$patches[orig] <- components(graph_from_edgelist(bar))$membership
+
+      ## centroids (table new bar ids, select true index using orig)
+      #z2 <- centroids(baz[orig[which(table(bar[, 1]) != 7)]])
+      #z2 <- aggregate(z2, by = "patches")
+      #plot(baz, values = baz$patches)
+
       hex_list[[i]] <- vect(dat[st_is_valid(dat),])
     }
     out <- list(gdat = c(as.vector(ext(geog)), ncell = length(clist), ncol = NA, hex = hex), layers = svc(hex_list))
