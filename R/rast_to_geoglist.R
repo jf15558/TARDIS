@@ -76,12 +76,15 @@
 
 rast_to_geoglist <- function(geog, mask = NULL, as.hex = FALSE, hex = "auto", method = "mean", verbose = T, ...) {
 
-   #geog  = dvn
-   #mask = dvn_l
-   #as.hex = T
-   #hex = 3
-   #method = "mean"
-   #verbose = T
+   gal <- galapagos()
+   gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
+
+   geog  = gal
+   mask = gal_m
+   as.hex = T
+   hex = 6
+   method = "mean"
+   verbose = T
 
   # check geography
   if(!exists("geog")) {
@@ -178,6 +181,7 @@ rast_to_geoglist <- function(geog, mask = NULL, as.hex = FALSE, hex = "auto", me
       colnames(dat)[1] <- names(geog[[i]])
       dat$id <- id
       st_geometry(dat) <- clsp
+      dat <- dat[order(dat$id),]
       hex_list[[i]] <- vect(dat[st_is_valid(dat),])
     }
     out <- list(gdat = c(as.vector(ext(geog)), ncell = length(clist), ncol = NA, hex = hex), layers = svc(hex_list))
