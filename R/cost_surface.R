@@ -33,8 +33,8 @@
 
 cost_surface <- function(tardis, weights = "gdist", verbose = T) {
 
-   #tardis = rtd
-   #weights = "gdist"
+   tardis = rtd
+   weights = "gdist"
 
   if (!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
@@ -104,7 +104,7 @@ cost_surface <- function(tardis, weights = "gdist", verbose = T) {
   if(is.na(tardis$gdat[7])) {
     out <- rast(out)
   } else {
-    out <- svc(lapply(out, vect))
+    out <- svc(out))
   }
   out <- list(gdat = tardis$gdat, layers = out)
   class(out) <- "geoglist"
