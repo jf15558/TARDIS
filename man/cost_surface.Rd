@@ -4,16 +4,18 @@
 \alias{cost_surface}
 \title{cost_surface}
 \usage{
-cost_surface(tardis, weights = "gdist", verbose = T)
+cost_surface(tardis, weights = "gdist", exclude.links = F, verbose = T)
 }
 \arguments{
-\item{tardis}{An object of class 'tardis'}
+\item{tardis}{\code{tardis}. An object of class 'tardis'}
 
-\item{weights}{A character string denoting the weighting scheme to visualise.
+\item{weights}{\code{character}. A character string denoting the weighting scheme to visualise.
 By default these are true geographic distances (gdist). Alternatively, the
 name of a weighting scheme added to the tardis object with weight_tardis().}
 
-\item{verbose}{A logical indicating whether function progress should be
+\item{exclude.links}{\code{logical}. Should the weights of island links be excluded from the cost calculation? Defaults to \code{FALSE}.}
+
+\item{verbose}{\code{logical}. A logical indicating whether function progress should be
 reported to the user.}
 }
 \value{
@@ -22,7 +24,7 @@ layers in the graph, and cell values calculated as the mean of its inbound edge 
 }
 \description{
 Convenience function to visualise the weighting scheme for the layers in a
-tardis object.
+tardis object. Weights are calculated as the mean of inbound edges for a given cell.
 }
 \examples{
 \dontrun{

@@ -1,19 +1,17 @@
 #' tardis_to_matrix
 #'
 #' Create either a sparse weighted adjacency or transition probability matrix,
-#' or a dense cost or hitting time matrix from a TARDIS graph.
+#' or a dense cost matrix from a TARDIS graph.
 #'
 #' @param tardis A tardis graph
 #' @param weights `character`. A character string denoting the weighting scheme to use. By
 #' default these are true geographic distances (gdist). Alternatively, the name
 #' of a weighting scheme added to the tardis object with weight_tardis().
-#' @param mode `character`. One of "adjacency", "cost", "transition" or "hitting".
+#' @param mode `character`. One of "adjacency", "cost", or "transition".
 #' @return `matrix` Either a `Matrix::sparseMatrix` adjacency matrix or a dense
 #' base R distance matrix.
 #' @import Matrix cppRouting
-#' @importFrom markovchain meanFirstPassageTime
 #' @importFrom methods new
-#' @importClassesFrom markovchain markovchain
 #' @export
 #'
 #' @details
@@ -65,8 +63,8 @@ tardis_to_matrix <- function(tardis, weights = "gdist", mode = "adjacency") {
   if(!is.atomic(mode) | length(mode) != 1) {
     stop("mode should only contain one element")
   }
-  if(!is.character(mode) | !mode %in% c("adjacency", "cost", "transition", "hitting")) {
-    stop("mode should be one of 'adjacency', 'cost', 'transition' or 'hitting'")
+  if(!is.character(mode) | !mode %in% c("adjacency", "cost", "transition")) {
+    stop("mode should be one of 'adjacency', 'cost' or 'transition'")
   }
 
   tardis <- instantiate_tardis(tardis = tardis, weights = weights)
@@ -78,24 +76,12 @@ tardis_to_matrix <- function(tardis, weights = "gdist", mode = "adjacency") {
   if(mode == "cost") {
     mat <- get_distance_matrix(tardis$tgraph, tardis$tgraph$dict$ref, tardis$tgraph$dict$ref)
   }
-  if(mode %in% c("transition" ,"hitting")) {
+  if(mode == "transition") {
     # matrix as conductance rather than resistance
     mat <- sparseMatrix(i = tardis$tgraph$data$from + 1,
                         j = tardis$tgraph$data$to + 1, x = 1 / tardis$tgraph$data$dist)
     # normalise into probability matrix
     mat <- mat / rowSums(mat)
-
-    if(mode == "hitting") {
-      # create the Markov Chain object
-      mc <- new("markovchain", states = tardis$tgraph$dict$ref, transitionMatrix = mat)
-
-      if(!is.irreducible(mc)) {
-        warning("The input tardis contains disconnected regions. Hitting times cannot be reliably calculated")
-      }
-
-      # calculate the hitting times matrix
-      mat <- meanFirstPassageTime(mc)
-    }
   }
   return(mat)
 }

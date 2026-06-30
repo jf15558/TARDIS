@@ -99,9 +99,9 @@ cumulative_cost <- function(tardis, weights = "gdist", origin, verbose = TRUE) {
     names(tmp)[1] <- weights
     tmp$id <- as.numeric(names(paths))
 
-    baz <- vect(cbind(1:(rtd$gdat[5] - length(tmp)), 1, NA, NA, 0), type = "polygon")
+    baz <- vect(cbind(1:(tardis$gdat[5] - length(tmp)), 1, NA, NA, 0), type = "polygon")
     baz$distance <- rep(NA, length(baz))
-    baz$id <- setdiff(1:rtd$gdat[5], tmp$id)
+    baz$id <- setdiff(1:tardis$gdat[5], tmp$id)
     baz <- rbind(tmp, baz)
     baz$distance[is.nan(baz$distance)] <- NA
     baz <- baz[order(baz$id)]

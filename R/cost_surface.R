@@ -1,13 +1,14 @@
 #' cost_surface
 #'
 #' Convenience function to visualise the weighting scheme for the layers in a
-#' tardis object.
+#' tardis object. Weights are calculated as the mean of inbound edges for a given cell.
 #'
-#' @param tardis An object of class 'tardis'
-#' @param weights A character string denoting the weighting scheme to visualise.
+#' @param tardis `tardis`. An object of class 'tardis'
+#' @param weights `character`. A character string denoting the weighting scheme to visualise.
 #' By default these are true geographic distances (gdist). Alternatively, the
 #' name of a weighting scheme added to the tardis object with weight_tardis().
-#' @param verbose A logical indicating whether function progress should be
+#' @param exclude.links `logical`. Should the weights of island links be excluded from the cost calculation? Defaults to `FALSE`.
+#' @param verbose `logical`. A logical indicating whether function progress should be
 #' reported to the user.
 #' @return A geoglist with layers corresponding to the original landscape
 #' layers in the graph, and cell values calculated as the mean of its inbound edge weights.
@@ -31,10 +32,12 @@
 #' cost_surface(rtd)
 #' }
 
-cost_surface <- function(tardis, weights = "gdist", verbose = T) {
+cost_surface <- function(tardis, weights = "gdist", exclude.links = F, verbose = T) {
 
    #tardis = rtd
    #weights = "gdist"
+   #exclude.links = F
+   #verbose = T
 
   if (!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
@@ -60,7 +63,12 @@ cost_surface <- function(tardis, weights = "gdist", verbose = T) {
     stop("weights should be a column name in tardis$edges")
   }
 
-  edges <- tardis$edges[which(tardis$edges[,3] == 0),]
+  if(exclude.links) {
+    edges <- tardis$edges[which(tardis$edges[,3] < 1),]
+  } else {
+    edges <- tardis$edges[which(tardis$edges[,3] < 2),]
+  }
+
   pt <- edges[,2] %/% tardis$gdat[[5]] + 1
   pcell <- edges[,2] %% tardis$gdat[5]
 
@@ -82,9 +90,9 @@ cost_surface <- function(tardis, weights = "gdist", verbose = T) {
       tmp$weight <- wts
       tmp$id <- as.numeric(names(wts))
 
-      baz <- vect(cbind(1:(rtd$gdat[5] - length(tmp)), 1, NA, NA, 0), type = "polygon")
+      baz <- vect(cbind(1:(tardis$gdat[5] - length(tmp)), 1, NA, NA, 0), type = "polygon")
       baz$weight <- rep(NA, length(baz))
-      baz$id <- setdiff(1:rtd$gdat[5], tmp$id)
+      baz$id <- setdiff(1:tardis$gdat[5], tmp$id)
       baz <- rbind(tmp, baz)
       baz$weight[is.nan(baz$weight)] <- NA
       baz <- baz[order(baz$id)]
