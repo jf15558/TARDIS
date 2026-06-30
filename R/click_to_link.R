@@ -74,11 +74,12 @@ click_to_link <- function(geog, layer = 1, nlinks = 1, ...) {
 
     grid <- get_grid(geog$gdat[1:4], geog$gdat[7])
     bounds <- geog$layers[[layer]]
+    bounds <- na.omit(bounds, field = names(bounds)[1])
     bar <- relate(bounds, bounds, "intersects", pairs = T)
     bounds <- centroids(bounds[which(table(bar[,1]) != 7)])
   }
 
-  plot.geoglist(geog, layer, ...)
+  plot(geog, layer, ...)
 
   lnk <- list()
   for(i in 1:nlinks) {
@@ -127,7 +128,7 @@ click_to_link <- function(geog, layer = 1, nlinks = 1, ...) {
     lnk$distance <- perim(lnk)
 
     # duplicate links for symmetry
-    lnk2 <- cls[,c(2, 1, 3, 4)]
+    lnk2 <- lnk[,c(2, 1, 3, 4)]
     colnames(lnk2) <- colnames(lnk)
     lnk <- rbind(lnk, lnk2)
 
