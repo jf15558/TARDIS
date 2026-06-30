@@ -32,7 +32,7 @@ regions <- function(geog, bounds.only = T, use.links = F) {
   #
    #geog = rasts
    #bounds.only = F
-   #use.links = F
+   #use.links = T
 
   if(!exists("geog")) {
     stop("Supply geog as a geoglist from rast_to_geoglist()")
@@ -68,27 +68,36 @@ regions <- function(geog, bounds.only = T, use.links = F) {
   } else {
 
     ils <- lapply(geog$layers, function(z) {
+
+      orig <- length(z)
+      z$id <- 1:orig
+      z <- na.omit(z, field = names(z)[1])
       bar <- relate(z, z, "intersects", pairs = T)
       z[,1] <- components(graph_from_edgelist(bar))$membership
       if(bounds.only) {
         z <- z[which(table(bar[,1]) != 7)]
       }
       names(z)[1] <- "region"
-      z
+      baz <- vect(cbind(1:(orig - length(z)), 1, NA, NA, 0), type = "polygon")
+      baz$region <- rep(NA, length(baz))
+      baz$id <- setdiff(1:orig, z$id)
+      baz <- rbind(z, baz)
+      baz$region[is.nan(baz$region)] <- NA
+      baz <- baz[order(baz$id)]
+      baz[,1]
     })
 
     if(use.links) {
       ils <- lapply(1:length(ils), function(x) {
         lnk <- geog$links[which(geog$links$layer == x)]
-        if(length(lnk) != 0) {
-          ig <- t(apply(relate(lnk, ils[[x]], "intersects", pairs = T), 1, function(y) {ils[[x]]$region[y]}))
-          ig2 <- graph_from_edgelist(ig, directed = F)
-          ils[[x]]$region <- components(ig2)$membership[ils[[x]]$region]
-        }
+        ig <- cbind(ils[[x]]$region[lnk$srt], ils[[x]]$region[lnk$end])
+        ig2 <- graph_from_edgelist(ig, directed = F)
+        ils[[x]]$region[!is.na(ils[[x]]$region)] <- components(ig2)$membership[ ils[[x]]$region[!is.na(ils[[x]]$region)]]
         ils[[x]]
       })
     }
   }
+  if(!inherits(geog$layers, "SpatRaster")) {ils <- svc(ils)}
 
   geog$layers <- ils
   return(geog)

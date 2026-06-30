@@ -99,5 +99,5 @@ extract_geoglist <- function(geog, geom, layer = NULL) {
     })
     do.call(rbind, vals2)
   })
-  return(do.call(rbind, vals))
+  return(vect(do.call(rbind, vals)))
 }

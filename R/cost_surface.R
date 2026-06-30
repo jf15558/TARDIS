@@ -77,11 +77,19 @@ cost_surface <- function(tardis, weights = "gdist", verbose = T) {
     wts[!is.finite(wts)] <- NA
 
     if(!is.na(tardis$gdat[7])) {
-      tmp <- cell_to_polygon(grid[as.numeric(names(wts))])
-      wts <- data.frame(wts)
-      colnames(wts) <- weights
-      st_geometry(wts) <- st_wrap_dateline(tmp, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
-      tmp <- wts
+
+      tmp <- vect(st_wrap_dateline(cell_to_polygon(grid[as.numeric(names(wts))]), options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180")))
+      tmp$weight <- wts
+      tmp$id <- as.numeric(names(wts))
+
+      baz <- vect(cbind(1:(rtd$gdat[5] - length(tmp)), 1, NA, NA, 0), type = "polygon")
+      baz$weight <- rep(NA, length(baz))
+      baz$id <- setdiff(1:rtd$gdat[5], tmp$id)
+      baz <- rbind(tmp, baz)
+      baz$weight[is.nan(baz$weight)] <- NA
+      baz <- baz[order(baz$id)]
+      names(baz)[1] <- weights
+      tmp <- baz[,1]
 
     } else {
       tmp <- samprast

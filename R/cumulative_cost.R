@@ -84,7 +84,7 @@ cumulative_cost <- function(tardis, weights = "gdist", origin, verbose = TRUE) {
   tardis <- instantiate_tardis(tardis = tardis, weights = weights)
 
   edges <- tardis$edges[which(tardis$edges[,3] != 2),]
-  dests <- edges[which((edges[,2] %/% tardis$gdat[[5]]) + 1 == origin$layer),2]
+  dests <- unique(edges[which((edges[,2] %/% tardis$gdat[[5]]) + 1 == origin$layer),2])
 
 
   if (verbose) {
@@ -97,7 +97,16 @@ cumulative_cost <- function(tardis, weights = "gdist", origin, verbose = TRUE) {
                             options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180")))
     tmp$distance <- paths
     names(tmp)[1] <- weights
-    tmp <- svc(tmp)
+    tmp$id <- as.numeric(names(paths))
+
+    baz <- vect(cbind(1:(rtd$gdat[5] - length(tmp)), 1, NA, NA, 0), type = "polygon")
+    baz$distance <- rep(NA, length(baz))
+    baz$id <- setdiff(1:rtd$gdat[5], tmp$id)
+    baz <- rbind(tmp, baz)
+    baz$distance[is.nan(baz$distance)] <- NA
+    baz <- baz[order(baz$id)]
+
+    tmp <- svc(baz[,1])
 
   } else {
     tmp <- samprast

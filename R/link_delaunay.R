@@ -165,3 +165,117 @@ link_delaunay <- function(geog, max.dist = NULL, verbose = T) {
     return(geog)
   }
 }
+
+link_delaunay2 <- function(geog, max.dist = NULL, verbose = T) {
+
+  #geog = out
+  #max.dist = 5e4
+  #verbose = T
+
+  if(!exists("geog")) {
+    stop("Supply geog as a geoglist from rast_to_geoglist()")
+  }
+  if(!inherits(geog, "geoglist")) {
+    stop("Supply geog as a geoglist from rast_to_geoglist()")
+  }
+  if(!is.null(max.dist)) {
+    if (length(max.dist) != 1 | !inherits(max.dist, "numeric")) {
+      stop("If not NULL, max.dist should be a numeric distance in metres")
+    }
+    if (!max.dist%%1 == 0) {
+      stop("If not NULL, max.dist should be a numeric distance in metres")
+    }
+  }
+  if(!is.logical(verbose) | length(verbose) != 1) {
+    stop("verbose should be logical")
+  }
+
+  if(inherits(geog$layers, "SpatRaster")) {
+
+    islands <- rast(lapply(geog$layers, patches, directions = 8, allowGaps = F))
+    bounds <- lapply(1:nlyr(islands), function(x) {
+      pt <- as.points(mask(islands[[x]], classify(boundaries(islands[[x]]), cbind(0, NA))))
+      aggregate(pt, by = "patches")
+    })
+
+  } else {
+
+    grid <- get_grid(geog$gdat[1:4], geog$gdat[7])
+    dat <- lapply(geog$layers, function(z) {
+      z <- na.omit(z, field = names(z)[1])
+      bar <- relate(z, z, "intersects", pairs = T)
+      z$patches <- components(graph_from_edgelist(bar))$membership
+      z2 <- centroids(z[which(table(bar[,1]) != 7)])
+      list(makeValid(z), aggregate(z2, by = "patches"))
+    })
+    islands <- lapply(dat, `[[`, 1)
+    bounds <- lapply(dat, `[[`, 2)
+  }
+
+  res_list <- list()
+  for (i in 1:length(bounds)) {
+
+    if (verbose) {
+      cat(paste0("Resolving layers [", i, "/", length(bounds), "]\r"))
+      if (i == length(bounds)) {cat("\n")}
+    }
+
+    if(!all(bounds[[i]]$patches == 1)) {
+
+      pts <- bounds[[i]]
+      dl <- delaunay(pts)
+      dl <- disagg(as.lines(dl), segments = T)
+
+      if(inherits(geog$layers, "SpatRaster")) {
+        nr <- extract(islands[[i]], dl)
+        nr <- subset(nr, complete.cases(nr))
+        to_keep <- which(tapply(nr$patches, nr$ID, length) == 2 & tapply(nr$patches, nr$ID, function(x) {x[1] != x[length(x)]}))
+        dl <- dl[to_keep]
+        nr <- matrix(cellFromXY(geog$layers[[1]], geom(dl)[,3:4]), ncol = 2,  byrow = T)
+        to_keep <- which(!abs(nr[,1] - nr[,2]) %in% c(1, geog$gdat[6], geog$gdat[6] + 1, geog$gdat[6] - 1))
+        dl <- dl[to_keep]
+        cl <- cellFromXY(geog$layers[[1]], geom(dl)[,3:4])
+        cls <- as.data.frame(matrix(cl, ncol = 2, byrow = T))
+
+      } else {
+
+        nr <- apply(relate(dl, islands[[i]], "intersects"), 1, which)
+        to_keep <- which(sapply(nr, length) == 2)
+        nr <- nr[to_keep]
+        nr <- lapply(nr, function(x) {islands[[i]]$patches[x]})
+        nr <- which(sapply(nr, function(x) {x[1] != x[2]}))
+        #nr <- which(!sapply(nr[1:2], function(x) {is.related(islands[[i]][x[1]], islands[[i]][x[2]], "touches")}))
+        dl <- dl[to_keep[nr]]
+        cl <- suppressMessages(point_to_cell(geom(dl)[,3:4], res = geog$gdat[7]))
+        cl <- match(cl, grid)
+        cls <- as.data.frame(matrix(cl, ncol = 2, byrow = T))
+      }
+
+      colnames(cls) <- c("srt", "end")
+      cls$layer <- i
+      cls$distance <- perim(dl)
+      st_geometry(cls) <- st_as_sf(dl)$geometry
+      if(!is.null(max.dist)) {
+        cls <- cls[which(cls$distance <= max.dist),]
+      }
+
+      # duplicate links for symmetry
+      cls2 <- cls[,c(2, 1, 3, 4)]
+      colnames(cls2) <- colnames(cls)
+
+      res_list[[i]] <- rbind(cls, cls2)
+    }
+  }
+  if(all(sapply(res_list, is.null))) {
+    message("No islands found in any layers, no links will be returned")
+    return(NULL)
+  } else {
+    lnks <- st_wrap_dateline(do.call(rbind, res_list), options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
+    if(!is.null(geog$links)) {
+      geog$links <- unique(rbind(geog$links, vect(lnks)))
+    } else {
+      geog$links <- vect(lnks)
+    }
+    return(geog)
+  }
+}

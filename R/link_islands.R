@@ -71,7 +71,7 @@
 link_islands <- function(geog, klink = NULL, verbose = T) {
   #
   #
-  #geog <- rasts
+  #geog <- out
   #klink = 1
   #verbose = T
 
@@ -106,6 +106,7 @@ link_islands <- function(geog, klink = NULL, verbose = T) {
 
     grid <- get_grid(geog$gdat[1:4], geog$gdat[7])
     dat <- lapply(geog$layers, function(z) {
+      z <- na.omit(z, field = names(z)[1])
       bar <- relate(z, z, "intersects", pairs = T)
       z$patches <- components(graph_from_edgelist(bar))$membership
       z2 <- centroids(z[which(table(bar[,1]) != 7)])
@@ -267,4 +268,3 @@ link_islands <- function(geog, klink = NULL, verbose = T) {
     return(geog)
   }
 }
-

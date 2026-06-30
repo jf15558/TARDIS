@@ -80,16 +80,17 @@
 #' # build a tardis from raster cells
 #' rtd <- build_tardis(rasts, times = c(seq(2.25, 0, -0.5), 0))
 #' }
+#'
 
 build_tardis <- function(geog, times = NULL, tlink = 1, rotations = NULL, verbose = TRUE) {
 
-   # geog = rst
-   # times = c(seq(2.25, 0, -0.5), 0)
-   # times = c(117, 114, 112)
-   # times = bns
-   # tlink = 1
-   # rotations = NULL
-   # verbose = TRUE
+  #geog = rasts
+  #times = c(seq(2.25, 0, -0.5), 0)
+  # times = c(117, 114, 112)
+  # times = bns
+  #tlink = 1
+  #rotations = NULL
+  #verbose = TRUE
 
   if(inherits(geog$layers, "SpatRaster")) {
     nlayers <- nlyr(geog$layers)
@@ -217,11 +218,12 @@ build_tardis <- function(geog, times = NULL, tlink = 1, rotations = NULL, verbos
       if (i == nlayers) {cat("\n")}
     }
 
-    if(inherits(geog$layers, "SpatRaster")) {
-      matched <- which(ed[,1] %in% which(!is.na(geog$layers[[i]][])) & ed[,2] %in% which(!is.na(geog$layers[[i]][])))
-    } else {
-      matched <- which(ed[,1] %in% geog$layers[[i]]$id & ed[,2] %in% geog$layers[[i]]$id)
-    }
+    # if(inherits(geog$layers, "SpatRaster")) {
+    #   matched <- which(ed[,1] %in% which(!is.na(geog$layers[[i]][])) & ed[,2] %in% which(!is.na(geog$layers[[i]][])))
+    # } else {
+    #   matched <- which(ed[,1] %in% geog$layers[[i]]$id & ed[,2] %in% geog$layers[[i]]$id)
+    # }
+    matched <- which(ed[,1] %in% which(!is.na(geog$layers[[i]][[1]][])) & ed[,2] %in% which(!is.na(geog$layers[[i]][[1]][])))
 
     ed2 <- ed[matched,]
     h_dists2 <- h_dists[matched]
@@ -244,12 +246,12 @@ build_tardis <- function(geog, times = NULL, tlink = 1, rotations = NULL, verbos
     }
     rownames(ed2) <- NULL
 
-    if(inherits(geog$layers, "SpatRaster")) {
-      v_dists <- geog$layers[[i]][][ed2[, 2]] - geog$layers[[i]][][ed2[, 1]]
-    } else {
-      v_dists <- geog$layers[[i]][[1]][match(ed2[,1], geog$layers[[i]]$id),] - geog$layers[[i]][[1]][match(ed2[,2], geog$layers[[i]]$id),]
-    }
-
+    # if(inherits(geog$layers, "SpatRaster")) {
+    #   v_dists <- geog$layers[[i]][][ed2[, 2]] - geog$layers[[i]][][ed2[, 1]]
+    # } else {
+    #   v_dists <- geog$layers[[i]][[1]][match(ed2[,1], geog$layers[[i]]$id),] - geog$layers[[i]][[1]][match(ed2[,2], geog$layers[[i]]$id),]
+    # }
+    v_dists <- geog$layers[[i]][[1]][][ed2[, 2],] - geog$layers[[i]][[1]][][ed2[, 1],]
     t_dists <- sqrt(h_dists2^2 + (abs(v_dists)^2))
     t_dists[which(type == 1)] <- h_dists2[which(type == 1)] + v_dists[which(type == 1)]
     edge <- cbind(from = ed2[, 1], to = ed2[, 2], type = type, bearing = h_ang2, hdist = h_dists2, vdist = v_dists, gdist = t_dists)
@@ -258,8 +260,7 @@ build_tardis <- function(geog, times = NULL, tlink = 1, rotations = NULL, verbos
 
   if (!is.null(times)) {
     for (i in 1:length(rotations)) {
-      glinked[[i + 1]][, 1:2] <- glinked[[i + 1]][, 1:2] +
-        (i * geog$gdat[5])
+      glinked[[i + 1]][, 1:2] <- glinked[[i + 1]][, 1:2] + (i * geog$gdat[5])
       ob <- rotations[[i]]
 
       angs <- rep(0, nrow(ob))
@@ -273,8 +274,7 @@ build_tardis <- function(geog, times = NULL, tlink = 1, rotations = NULL, verbos
       }
       ob[, 1] <- ob[, 1] + ((i - 1) * geog$gdat[5])
       ob[, 2] <- ob[, 2] + (i * geog$gdat[5])
-      ob[!ob[, 1] %in% glinked[[i]][, 1], 1] <- NA
-      ob[!ob[, 2] %in% glinked[[i + 1]], 2] <- NA
+      ob[which(!ob[,1] %in% glinked[[i]][,1] & !ob[,2] %in% glinked[[i + 1]]),] <- NA
       angs <- angs[complete.cases(ob)]
       ob <- ob[complete.cases(ob), , drop = F]
       angs <- angs[!duplicated(ob)]

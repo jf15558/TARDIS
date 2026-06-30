@@ -76,15 +76,15 @@
 
 rast_to_geoglist <- function(geog, mask = NULL, as.hex = FALSE, hex = "auto", method = "mean", verbose = T, ...) {
 
-   #gal <- galapagos()
-   #gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
+  #gal <- galapagos()
+  #gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
 
-   #geog  = gal
-   #mask = gal_m
-   #as.hex = T
-   #hex = 6
-   #method = "mean"
-   #verbose = T
+  #geog  = gal
+  #mask = gal_m
+  #as.hex = T
+  #hex = 7
+  #method = "mean"
+  #verbose = T
 
   # check geography
   if(!exists("geog")) {
@@ -145,9 +145,7 @@ rast_to_geoglist <- function(geog, mask = NULL, as.hex = FALSE, hex = "auto", me
 
       mask <- disagg(mask, 2)
       grid <- lapply(mask, function(x) {xyFromCell(x, which(x[] == 1))})
-      #pol <- lapply(1:nlyr(mask), function(x) {st_as_sf(as.polygons(mask[[x]]))})
     } else {
-      #pol <- grid <- lapply(1:length(geog), function(x) {xyFromCell(geog[[1]], 1:ncell(geog))})
       mask <- disagg(geog[[1]])
       grid <- lapply(1:length(geog), function(x) {xyFromCell(mask, 1:ncell(mask))})
     }
@@ -158,16 +156,9 @@ rast_to_geoglist <- function(geog, mask = NULL, as.hex = FALSE, hex = "auto", me
 
       if (verbose) {
         cat(paste0("Resampling layer [", i, "/", nlyr(geog), "]\r"))
-        if (i == nlyr(geog)) {cat("\n")}
       }
 
-
       # crop to prevent potential failures in retrieval of very high latitude cells
-      #pl <- suppressWarnings(st_as_sf(crop(vect(pol[[i]]), ext(c(xmin = -179.9, xmax = 179.9,  ymin = -89.9, ymax = 89.9)))))
-
-      # both polygon and point to ensure that no cells fail to locate to a hex
-      #cls <- unique(na.omit(c(unlist(suppressMessages(polygon_to_cells(pl, hex))),
-      #                        unlist(suppressMessages(point_to_cell(grid[[i]], hex))))))
       cls <- unique(na.omit(unlist(suppressMessages(point_to_cell(grid[[i]], hex)))))
 
       # very rarely, some cells are recovered which do not lie in bounds - these are dropped
@@ -176,7 +167,8 @@ rast_to_geoglist <- function(geog, mask = NULL, as.hex = FALSE, hex = "auto", me
       clsp <- st_make_valid(clsp)
       clsp <- st_wrap_dateline(clsp, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
       id <- match(cls, clist)
-      vrs <- exact_extract(geog[[i]], clsp, fun = method, weights = "area", ...)
+      vrs <- exact_extract(geog[[i]], clsp, fun = method, weights = "area")
+      cat(paste0("\r"))
       dat <- data.frame(vrs)
       colnames(dat)[1] <- names(geog[[i]])
       dat$id <- id
@@ -184,30 +176,16 @@ rast_to_geoglist <- function(geog, mask = NULL, as.hex = FALSE, hex = "auto", me
       dat <- dat[order(dat$id),]
 
       ## CODE FOR MAKING SVC EQUIVALENT TO SPATRASTERSTACK
-      #foo <- vect(dat[st_is_valid(dat),])
-      #baz <- vect(cbind(1:(length(clist) - length(foo)), 1, NA, NA, 0), type = "polygon")
-      #baz$layer <- NA
-      #baz$id <- setdiff(1:length(clist), foo$id)
-      #baz <- rbind(baz, foo)
-      #baz <- baz[order(baz$id)]
-      #baz$id <- clist
+      foo <- vect(dat[st_is_valid(dat),])
+      baz <- vect(cbind(1:(length(clist) - length(foo)), 1, NA, NA, 0), type = "polygon")
+      baz$layer <- rep(NA, length(baz))
+      baz$id <- setdiff(1:length(clist), foo$id)
+      baz <- rbind(foo, baz)
+      baz$layer[is.nan(baz$layer)] <- NA
+      baz <- baz[order(baz$id)]
+      baz$id <- clist
 
-      ## DOWNSTREAM GEOM OPS ON NEW OBJECT
-      ## intersection (automatically removes empty geoms)
-      #bar <- relate(baz, baz, "intersects", pairs = T)
-
-      ## membership (record origin cell indices, then reduce bar to consecutive integers)
-      #orig <- unique(bar[,1])
-      #bar <- matrix(match(bar, unique(c(bar))), ncol = 2)
-      #baz$patches <- NA
-      #baz$patches[orig] <- components(graph_from_edgelist(bar))$membership
-
-      ## centroids (table new bar ids, select true index using orig)
-      #z2 <- centroids(baz[orig[which(table(bar[, 1]) != 7)]])
-      #z2 <- aggregate(z2, by = "patches")
-      #plot(baz, values = baz$patches)
-
-      hex_list[[i]] <- vect(dat[st_is_valid(dat),])
+      hex_list[[i]] <- baz[,1]
     }
     out <- list(gdat = c(as.vector(ext(geog)), ncell = length(clist), ncol = NA, hex = hex), layers = svc(hex_list))
 

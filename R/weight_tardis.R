@@ -173,19 +173,19 @@ weight_tardis <- function(tardis, name, vars = NULL, wfun, verbose = TRUE) {
     dest <- cbind.data.frame(dest, (dest[,1] %/% tardis$gdat[5] + 1))
     origin <- origin[,c(1, 2, 6, 3, 4, 5)]
     dest <- dest[,c(1, 2, 6, 3, 4, 5)]
-    if(!is.null(vars)) {
-      if(inherits(y$layers, "SpatRaster")) {
-        vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][links[,1]]})
+    #if(!is.null(vars)) {
+      #if(inherits(y$layers, "SpatRaster")) {
+        vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][links[,1],]})
         origin <- cbind.data.frame(origin, vrs)
-        vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][links[,2]]})
+        vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][links[,2],]})
         dest <- cbind.data.frame(dest, vrs)
-      } else {
-        vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][match(links[,1], y$layers[[i]]$id)]})
-        origin <- cbind.data.frame(origin, vrs)
-        vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][match(links[,2], y$layers[[i]]$id)]})
-        dest <- cbind.data.frame(dest, vrs)
-      }
-    }
+      #} else {
+        #vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][match(links[,1], y$layers[[i]]$id)]})
+        #origin <- cbind.data.frame(origin, vrs)
+        #vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][match(links[,2], y$layers[[i]]$id)]})
+        #dest <- cbind.data.frame(dest, vrs)
+      #}
+    #}
     colnames(origin) <- colnames(dest) <- c("cell", "layer", "type", "bearing", "hdist", "vdist", names(vars))
 
     weight <- try(wfun(origin = origin, dest = dest))
