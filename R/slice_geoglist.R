@@ -1,12 +1,12 @@
 #' slice_geoglist
-#' 
+#'
 #' Extract layers in a geoglist to their own geoglist, along with any links if present
-#' 
+#'
 #' @param geog `geoglist`. A geoglist object, with or without links.
 #' @param layers `numeric`. The layer index to extract or a range.
 #' @return `geoglist`. A subsetted geoglist.
 #' @export
-#' 
+#'
 #' @examples
 #' \dontrun{
 #' library(terra)
@@ -21,7 +21,7 @@
 #' }
 
 slice_geoglist <- function(geog, layers) {
-  
+
   if(!inherits(geog, "geoglist")) {
     stop("geog should be `geoglist` object")
   }
@@ -41,7 +41,10 @@ slice_geoglist <- function(geog, layers) {
   if(any(layers > nly)) {
     stop("One or more elements in layers exceeds the number of available layers in geog")
   }
-  geog$layers <- geog$layers[layers]
+  geog$layers <- geog$layers[layers])
+  if(length(layers) == 1) {
+    geog$layers <- svc(geog$layers)
+  }
   if(!is.null(geog$links)) {
     geog$links <- geog$links[which(geog$links$layer %in% layers)]
   }
