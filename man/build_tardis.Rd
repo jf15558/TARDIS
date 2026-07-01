@@ -9,11 +9,12 @@ build_tardis(geog, times = NULL, tlink = 1, rotations = NULL, verbose = TRUE)
 \arguments{
 \item{geog}{\code{geoglist}. The output of \code{rast_to_geoglist()}.}
 
-\item{times}{\code{numeric} or \code{NULL}. If there is only one layer in geog, then
-times is not used. Otherwise, a  vector with \code{nlayers(geog) + 1} positive
+\item{times}{\code{numeric} or \code{NULL}. A  vector with \code{nlayers(geog) + 1} positive
 elements, expressing the temporal boundaries of each layer as time in the past.
 The vector need not end in the present (i.e. \code{0}), but time must flow from
-oldest to youngest.}
+oldest to youngest. If only a single layer is being analysed, \code{times} can be
+disregarded for convenience, although this may cause problems in some downstream
+functions.}
 
 \item{tlink}{\code{integer}. The linking mode between layers, either \code{1} (forwards-in-time),
 \code{2} (backwards-in-time) or \code{3} (bidirectional). The forwards-in-time case is

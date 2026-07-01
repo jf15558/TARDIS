@@ -1,4 +1,4 @@
-#' extract_geoglist
+#' extract_from_geoglist
 #'
 #' Extract values from the layers in a geoglist object, using an sf geometry
 #' collection. This geometry is expected to be from another TARDIS function
@@ -40,7 +40,7 @@
 #' vals <- extract_geoglist(rasts, rlcp)
 #' }
 
-extract_geoglist <- function(geog, geom, layer = NULL) {
+extract_from_geoglist <- function(geog, geom, layer = NULL) {
 
   # geog = rasts
   # geom = ln

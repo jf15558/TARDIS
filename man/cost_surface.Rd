@@ -23,8 +23,8 @@ A geoglist with layers corresponding to the original landscape
 layers in the graph, and cell values calculated as the mean of its inbound edge weights.
 }
 \description{
-Convenience function to visualise the weighting scheme for the layers in a
-tardis object. Weights are calculated as the mean of inbound edges for a given cell.
+Visualise the weighting scheme for the layers in a tardis object. Weights are
+calculated as the mean of inbound edges for a given cell.
 }
 \examples{
 \dontrun{
