@@ -102,10 +102,10 @@ slice_tardis <- function(tardis, times = NULL, layers = NULL) {
   tardis$tgraph$src <- tardis$tgraph$src[valid]
   tardis$tgraph$dst <- tardis$tgraph$dst[valid]
   tardis$edges <- tardis$edges[valid,]
-  tardis$edges[,1:2] <- tardis$edges[,1:2] - (as.numeric(cls[1]) - 1)
-  tardis$tgraph$dict <- tardis$tgraph$dict[which(tardis$tgraph$dict$ref %in% cls),]
+  tardis$tgraph$dict <- tardis$tgraph$dict[which(tardis$tgraph$dict$ref %in% c(tardis$tgraph$src, tardis$tgraph$dst)),]
 
   # adjust cell id parameters
+  tardis$edges[,1:2] <- tardis$edges[,1:2] - (as.numeric(cls[1]) - 1)
   tardis$tdat <- tardis$tdat[layers[1]:(layers[2] + 1)]
   tardis$tgraph$nbnode <- nrow(tardis$tgraph$dict)
   tardis$tgraph$dict$id <- (1:tardis$tgraph$nbnode) - 1

@@ -1,7 +1,7 @@
 #' cost_surface
 #'
-#' Convenience function to visualise the weighting scheme for the layers in a
-#' tardis object. Weights are calculated as the mean of inbound edges for a given cell.
+#' Visualise the weighting scheme for the layers in a tardis object. Weights are
+#' calculated as the mean of inbound edges for a given cell.
 #'
 #' @param tardis `tardis`. An object of class 'tardis'
 #' @param weights `character`. A character string denoting the weighting scheme to visualise.

@@ -7,11 +7,12 @@
 #' Connections through time can be spatially constant, or variable.
 #'
 #' @param geog `geoglist`. The output of `rast_to_geoglist()`.
-#' @param times `numeric` or `NULL`. If there is only one layer in geog, then
-#' times is not used. Otherwise, a  vector with `nlayers(geog) + 1` positive
+#' @param times `numeric` or `NULL`. A  vector with `nlayers(geog) + 1` positive
 #' elements, expressing the temporal boundaries of each layer as time in the past.
 #' The vector need not end in the present (i.e. `0`), but time must flow from
-#' oldest to youngest.
+#' oldest to youngest. If only a single layer is being analysed, `times` can be
+#' disregarded for convenience, although this may cause problems in some downstream
+#' functions.
 #' @param tlink `integer`. The linking mode between layers, either `1` (forwards-in-time),
 #' `2` (backwards-in-time) or `3` (bidirectional). The forwards-in-time case is
 #' the default.
