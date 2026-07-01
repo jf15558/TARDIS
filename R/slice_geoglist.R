@@ -1,6 +1,7 @@
 #' slice_geoglist
 #'
-#' Extract layers in a geoglist to their own geoglist, along with any links if present
+#' Extract layers in a geoglist to their own geoglist, along with any links if present.
+#' Unlike with `slice_tardis()`, discontinuous ranges of layers can be selected.
 #'
 #' @param geog `geoglist`. A geoglist object, with or without links.
 #' @param layers `numeric`. The layer index to extract or a range.
@@ -41,7 +42,7 @@ slice_geoglist <- function(geog, layers) {
   if(any(layers > nly)) {
     stop("One or more elements in layers exceeds the number of available layers in geog")
   }
-  geog$layers <- geog$layers[layers])
+  geog$layers <- geog$layers[layers]
   if(length(layers) == 1) {
     geog$layers <- svc(geog$layers)
   }

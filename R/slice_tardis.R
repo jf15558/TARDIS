@@ -1,6 +1,6 @@
 #' slice_tardis
 #'
-#' Temporally subset a TARDIS graph to specific layers, or using a time range.
+#' Temporally subset a tardis graph to a range of layers.
 #'
 #' @param tardis `tardis`. The output of `build_tardis()` or `weight_tardis()`.
 #' @param times `numeric`. A vector of two positive numbers denoting the desired time range
