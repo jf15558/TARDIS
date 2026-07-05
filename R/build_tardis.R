@@ -85,13 +85,13 @@
 
 build_tardis <- function(geog, times = NULL, tlink = 1, rotations = NULL, verbose = TRUE) {
 
-  geog = rasts
-  times = c(seq(2.25, 0, -0.5), 0)
-  #times = c(117, 114, 112)
-  #times = bns
-  tlink = 1
-  rotations = NULL
-  verbose = TRUE
+  # geog = rasts
+  # times = c(seq(2.25, 0, -0.5), 0)
+  # #times = c(117, 114, 112)
+  # #times = bns
+  # tlink = 1
+  # rotations = NULL
+  # verbose = TRUE
 
   if(inherits(geog$layers, "SpatRaster")) {
     nlayers <- nlyr(geog$layers)
