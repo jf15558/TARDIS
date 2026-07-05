@@ -85,13 +85,13 @@
 
 build_tardis <- function(geog, times = NULL, tlink = 1, rotations = NULL, verbose = TRUE) {
 
-  #geog = rasts
-  #times = c(seq(2.25, 0, -0.5), 0)
-  # times = c(117, 114, 112)
-  # times = bns
-  #tlink = 1
-  #rotations = NULL
-  #verbose = TRUE
+  geog = rasts
+  times = c(seq(2.25, 0, -0.5), 0)
+  #times = c(117, 114, 112)
+  #times = bns
+  tlink = 1
+  rotations = NULL
+  verbose = TRUE
 
   if(inherits(geog$layers, "SpatRaster")) {
     nlayers <- nlyr(geog$layers)
@@ -273,16 +273,17 @@ build_tardis <- function(geog, times = NULL, tlink = 1, rotations = NULL, verbos
           angs[to_do] <- bearing(st_coordinates(cell_to_point(grid[ob[to_do,1]])), st_coordinates(cell_to_point(grid[ob[to_do,2]])))
         }
       }
-      ob[, 1] <- ob[, 1] + ((i - 1) * geog$gdat[5])
-      ob[, 2] <- ob[, 2] + (i * geog$gdat[5])
-      ob[which(!ob[,1] %in% glinked[[i]][,1] & !ob[,2] %in% glinked[[i + 1]]),] <- NA
-      angs <- angs[complete.cases(ob)]
-      ob <- ob[complete.cases(ob), , drop = F]
-      angs <- angs[!duplicated(ob)]
-      ob <- ob[!duplicated(ob), , drop = F]
-      if (nrow(ob) == 0) {
+
+      to_keep <- which(!is.na(rasts$layers[[i]]$layer[ob[,1]]) & !is.na(rasts$layers[[i + 1]]$layer[ob[,2]]))
+      if(length(to_keep) == 0) {
         stop(paste0("No links are available from time layer ", i, ". Check rotations and layer masks"))
       }
+      angs <- angs[to_keep]
+      ob <- ob[to_keep,]
+      ob[, 1] <- ob[, 1] + ((i - 1) * geog$gdat[5])
+      ob[, 2] <- ob[, 2] + (i * geog$gdat[5])
+      angs <- angs[!duplicated(ob)]
+      ob <- ob[!duplicated(ob), , drop = F]
       if(tlink == 2) {ob <- ob[, 2:1]}
       if(tlink == 3) {
         ob <- matrix(c(t(cbind(ob, ob[, 2:1]))), ncol = 2, byrow = T)

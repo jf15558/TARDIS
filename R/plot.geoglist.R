@@ -31,11 +31,7 @@
 #' @param ylim `numeric`. If not `NULL`, then a vector of two numbers to set the
 #' minimum and maximum y extent of the plot in terms of the projection system in
 #' `geoglist`.
-#' @param zlim `numeric`. If not `NULL`, then a vector of two numbers to set the
-#' range on the plotting legend.
-#' the range of values
-#' @param ... Other arguments passed to `terra::plot()`. Use will probably cause
-#' errors.
+#' @param ... Other arguments passed to `terra::plot()`.
 #' @import sf terra
 #' @importFrom graphics par
 #' @importFrom graphics axis
@@ -55,7 +51,7 @@
 plot.geoglist <- function(x, y = 1, pal = sf.colors(10), links = T,
                           lcol = "grey", lwd = 1, lty = 1, hex.border = NA,
                           legend = T, axes = T, bg = NA, add = F,
-                          xlim = NULL, ylim = NULL, zlim = NULL, ...) {
+                          xlim = NULL, ylim = NULL, ...) {
 
    # x = rasts
    # y = 1
@@ -114,14 +110,6 @@ plot.geoglist <- function(x, y = 1, pal = sf.colors(10), links = T,
       stop("ylim should be numeric")
     }
   }
-  if(!is.null(zlim)) {
-    if(!is.atomic(zlim) | length(zlim) != 2) {
-      stop("zlim should be a vector of length 2")
-    }
-    if(!is.numeric(zlim)) {
-      stop("zlim should be numeric")
-    }
-  }
 
   if(legend) {
     pr <- newmar <- par("mar")
@@ -170,11 +158,11 @@ plot.geoglist <- function(x, y = 1, pal = sf.colors(10), links = T,
 
   plot(frame, col = bg, border = NA, axes = F, add = add)
   if(inherits(rst, "SpatRaster")) {
-    plot(rst, col = pal, xlim = ext(frame)[1:2], ylim = ext(frame)[3:4],
-         axes = F, add = T, legend = F, range = zlim, ...)
+    foo <- plot(rst, col = pal, xlim = ext(frame)[1:2], ylim = ext(frame)[3:4],
+                axes = F, add = T, legend = F, ...)
   } else {
     plot(rst, values = rst[[1]][,1], col = pal, xlim = ext(frame)[1:2], ylim = ext(frame)[3:4],
-         border = hex.border, axes = F, add = T, legend = F, range = zlim, ...)
+         border = hex.border, axes = F, add = T, legend = F, ...)
   }
 
   # add axes
@@ -199,7 +187,10 @@ plot.geoglist <- function(x, y = 1, pal = sf.colors(10), links = T,
 
   # add legend
   if(legend) {
-    if(is.null(zlim)) {
+
+    if(!is.null(list(...)$range)) {
+      zlim = list(...)$range
+    } else {
       if(inherits(x$layers[[1]], "SpatRaster")) {
         zlim <- c(minmax(x$layers[[y]]))
       } else {
