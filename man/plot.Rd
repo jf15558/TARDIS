@@ -20,7 +20,6 @@
   add = F,
   xlim = NULL,
   ylim = NULL,
-  zlim = NULL,
   ...
 )
 }
@@ -64,12 +63,7 @@ minimum and maximum x extent of the plot in terms of the projection system in
 minimum and maximum y extent of the plot in terms of the projection system in
 \code{geoglist}.}
 
-\item{zlim}{\code{numeric}. If not \code{NULL}, then a vector of two numbers to set the
-range on the plotting legend.
-the range of values}
-
-\item{...}{Other arguments passed to \code{plot_sf()}. Use will probably cause
-errors.}
+\item{...}{Other arguments passed to \code{terra::plot()}.}
 }
 \value{
 None.

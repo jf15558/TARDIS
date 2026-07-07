@@ -95,11 +95,13 @@
 
 weight_tardis <- function(tardis, name, vars = NULL, wfun, verbose = TRUE) {
 
-   #tardis = rtd
-   #name = "elev"
-   #vars = wvars
-   #wfun = wfun
-   #verbose = T
+   # tardis = rtd
+   # name = "clim"
+   # vars = list(elev = elev)
+   # wfun = function(origin, dest) {
+   #   return(dest$elev * dest$gdist)
+   # }
+   # verbose = T
 
   if(!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
@@ -171,8 +173,8 @@ weight_tardis <- function(tardis, name, vars = NULL, wfun, verbose = TRUE) {
     dest <- as.data.frame(links[,c(2, 3, 4:6)])
     origin <- cbind.data.frame(origin, (origin[,1] %/% tardis$gdat[5] + 1))
     dest <- cbind.data.frame(dest, (dest[,1] %/% tardis$gdat[5] + 1))
-    origin <- origin[,c(1, 2, 6, 3, 4, 5)]
-    dest <- dest[,c(1, 2, 6, 3, 4, 5)]
+    origin <- origin[,c(1, 6, 2, 3, 4, 5)]
+    dest <- dest[,c(1, 6, 2, 3, 4, 5)]
     #if(!is.null(vars)) {
       #if(inherits(y$layers, "SpatRaster")) {
         vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][links[,1],]})

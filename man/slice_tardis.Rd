@@ -19,7 +19,7 @@ layers to subset from tardis. Either this or 'times' must be specified}
 A \code{tardis} object comprising the requested layers
 }
 \description{
-Temporally subset a TARDIS graph to specific layers, or using a time range.
+Temporally subset a tardis graph to a range of layers.
 }
 \details{
 This function was developed for instances where successive analyses do not require

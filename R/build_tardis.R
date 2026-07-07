@@ -274,7 +274,7 @@ build_tardis <- function(geog, times = NULL, tlink = 1, rotations = NULL, verbos
         }
       }
 
-      to_keep <- which(!is.na(rasts$layers[[i]]$layer[ob[,1]]) & !is.na(rasts$layers[[i + 1]]$layer[ob[,2]]))
+      to_keep <- which(!is.na(geog$layers[[i]][,1][ob[,1]]) & !is.na(geog$layers[[i + 1]][,1][ob[,2]]))
       if(length(to_keep) == 0) {
         stop(paste0("No links are available from time layer ", i, ". Check rotations and layer masks"))
       }

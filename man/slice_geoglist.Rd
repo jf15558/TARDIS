@@ -15,7 +15,8 @@ slice_geoglist(geog, layers)
 \code{geoglist}. A subsetted geoglist.
 }
 \description{
-Extract layers in a geoglist to their own geoglist, along with any links if present
+Extract layers in a geoglist to their own geoglist, along with any links if present.
+Unlike with \code{slice_tardis()}, discontinuous ranges of layers can be selected.
 }
 \examples{
 \dontrun{
