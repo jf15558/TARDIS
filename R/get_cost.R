@@ -3,7 +3,7 @@
 #' Get the cost of movement between cells in a tardis graph. Costs can be calculated
 #' between pairs of cell, from one cell to many, or between a set of cells.
 #'
-#' @param tardis A tardis graph
+#' @param tardis `tardis`. A tardis graph as produced by build_tardis().
 #' @param weights `character`. A character string denoting the weighting scheme to use. By
 #' default these are true geographic distances (gdist). Alternatively, the name
 #' of a weighting scheme added to the tardis object with weight_tardis().

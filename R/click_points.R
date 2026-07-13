@@ -9,8 +9,11 @@
 #' its links.
 #' @param points `numeric`. The number of links you wish to generate.
 #' Simply rerun the function if you need to add more lines.
+#' @param print.only `logical`. Defaults to `TRUE` and the cell indices and values
+#' are only printed to the console. If `FALSE`, then those points are returned
+#' as a `SpatVector` object.
 #' @param ... Additional arguments passed to `plot.geoglist()`
-#' @return The input `geoglist` with added links.
+#' @return Either `NULL` (default) or a `SpatVector` of the clicked points.
 #' @import terra sf h3jsr
 #' @export
 #'
@@ -30,7 +33,7 @@
 #' click_points(rasts, points = 2)
 #' }
 
-click_points <- function(geog, layer = 1, points = 1) {
+click_points <- function(geog, layer = 1, points = 1, print.only = T, ...) {
   #
   # geog = rasts
   # layer = 1
@@ -79,7 +82,7 @@ click_points <- function(geog, layer = 1, points = 1) {
     bounds <- centroids(bounds[which(table(bar[,1]) != 7)])
   }
 
-  plot(geog, layer)
+  plot(geog, layer, ...)
 
   lnk <- list()
   for(i in 1:points) {
@@ -103,5 +106,10 @@ click_points <- function(geog, layer = 1, points = 1) {
     lnk[[i]] <- pt
   }
   lnk <- do.call(rbind, lnk)
-  return(lnk)
+
+  if(print.only) {
+    print(as.data.frame(lnk))
+  } else {
+    return(lnk)
+  }
 }

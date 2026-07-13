@@ -4,7 +4,7 @@
 \alias{click_points}
 \title{click_points}
 \usage{
-click_points(geog, layer = 1, points = 1)
+click_points(geog, layer = 1, points = 1, print.only = T, ...)
 }
 \arguments{
 \item{geog}{\code{geoglist}. The output of \code{rast_to_geoglist()}.}
@@ -12,13 +12,17 @@ click_points(geog, layer = 1, points = 1)
 \item{layer}{\code{numeric}. The layer in the geoglist to be plotted, along with
 its links.}
 
-\item{nlinks}{\code{numeric}. The number of links you wish to generate.
+\item{points}{\code{numeric}. The number of links you wish to generate.
 Simply rerun the function if you need to add more lines.}
+
+\item{print.only}{\code{logical}. Defaults to \code{TRUE} and the cell indices and values
+are only printed to the console. If \code{FALSE}, then those points are returned
+as a \code{SpatVector} object.}
 
 \item{...}{Additional arguments passed to \code{plot.geoglist()}}
 }
 \value{
-The input \code{geoglist} with added links.
+Either \code{NULL} (default) or a \code{SpatVector} of the clicked points.
 }
 \description{
 Click locations on a geoglist layer and return the coordinates and cell IDs
@@ -37,7 +41,7 @@ gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), r
 # make geoglist
 rasts <- rast_to_geoglist(gal, gal_m)
 
-# click the start and end points for two links
-click_points(rasts, nlinks = 2)
+# click to get two points
+click_points(rasts, points = 2)
 }
 }

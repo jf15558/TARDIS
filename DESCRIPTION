@@ -1,10 +1,10 @@
 Package: TARDIS
 Title: An R Package For Spatiotemporal Landscape Connectivity Analysis
-Version: 1.2.3
+Version: 1.3.0
 Authors@R: 
     person("Joe", "Flannery-Sutherland", , "josephflannerysutherland@gmail.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+           comment = c(ORCID = "0000-0001-8232-6773"))
+Description: TARDIS (Terrains And Routes Directed In Spacetime) is an R package for spatiotemporal geographic connectivity analysis. It provides functions for constructing and analysing graph representations of complex geographic spaces at local to global scales, particularly where accessible spaces are discontinuously distributed but still display connectivity (e.g., island systems where isolation is strong but not necessarily absolute), and where that distribution also changes through time (e.g., habitat patch fragmentation or plate tectonic drift).
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -22,6 +22,7 @@ Imports:
     methods,
     palaeoverse,
     rlemon,
+    samc,
     scales,
     sf,
     stats,

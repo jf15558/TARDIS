@@ -22,8 +22,9 @@ be discarded. \code{NULL} by default, meaning that no points are discarded.}
 }
 \value{
 A \code{SpatVector} of points, recording which input point they correspond
-to in case points were discarded (\verb{$feature}), the layer to which they belong
-(\verb{$layer}) and their adjusted distance (\verb{$adj}).
+to in case points were discarded (\verb{$feature}), the id of the tardis cell they
+fall into (\verb{$cell}), the layer to which they belong (\verb{$layer}) and their
+adjusted distance (\verb{$adj}).
 }
 \description{
 Check a set of coordinates to determine whether they fall within an accessible

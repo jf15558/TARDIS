@@ -14,8 +14,9 @@
 #' be discarded. `NULL` by default, meaning that no points are discarded.
 #' @param verbose `logical` Should function progress be reported to the user?
 #' @return A `SpatVector` of points, recording which input point they correspond
-#' to in case points were discarded (`$feature`), the layer to which they belong
-#' (`$layer`) and their adjusted distance (`$adj`).
+#' to in case points were discarded (`$feature`), the id of the tardis cell they
+#' fall into (`$cell`), the layer to which they belong (`$layer`) and their
+#' adjusted distance (`$adj`).
 #' @import geosphere terra sf h3jsr
 #' @export
 #'
@@ -43,12 +44,12 @@
 point_check <- function(tardis, points, max.dist = NULL, verbose = TRUE) {
 
 
-  # org <- hpts[1,]
-  # dst <- hpts[2,]
-   #tardis = rtd
-   #points = org
-   #verbose = T
-   #max.dist = NULL
+  #org <- hpts[1,]
+  #dst <- hpts[2,]
+  #tardis = rtd
+  #points = chel$biogeography[1:13,3:5]
+  #verbose = T
+  #max.dist = NULL
 
   if (!exists("tardis")) {
     stop("Supply tardis as the output of build_tardis")
@@ -158,12 +159,14 @@ point_check <- function(tardis, points, max.dist = NULL, verbose = TRUE) {
 
   if(!is.na(tardis$gdat[7])) {
     geom <- vect(cell_to_point(grid[pcell], tardis$gdat[7]))
+    geom$cell <- match(geom$h3_address, grid)
 
   } else {
     samprast <- rast(nrows = tardis$gdat[5] / tardis$gdat[6], ncols = tardis$gdat[6], ext = ext(tardis$gdat[1:4]))
     geom <- vect(xyFromCell(samprast, pcell))
+    geom$cell <- ptcell
   }
-  geom$feature <- out$feature
+  geom$feature <- out$point
   geom$layer <- out$bin
   geom$adj <- out$mod
 
@@ -173,5 +176,5 @@ point_check <- function(tardis, points, max.dist = NULL, verbose = TRUE) {
     }
     geom <- geom[which(geom$adj <= max.dist)]
   }
-  return(geom)
+  return(geom[,c(3,2,4,5)])
 }

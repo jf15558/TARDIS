@@ -7,7 +7,7 @@
 get_cost(tardis, weights = "gdist", origin, dest)
 }
 \arguments{
-\item{tardis}{A tardis graph}
+\item{tardis}{\code{tardis}. A tardis graph as produced by build_tardis().}
 
 \item{weights}{\code{character}. A character string denoting the weighting scheme to use. By
 default these are true geographic distances (gdist). Alternatively, the name
