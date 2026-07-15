@@ -95,13 +95,26 @@
 
 weight_tardis <- function(tardis, name, vars = NULL, wfun, verbose = TRUE) {
 
-   # tardis = rtd
-   # name = "clim"
-   # vars = list(elev = elev)
-   # wfun = function(origin, dest) {
-   #   return(dest$elev * dest$gdist)
-   # }
-   # verbose = T
+   #tardis = rtd
+   #name = "delaunay"
+   #vars = NULL
+   #wfun = function(origin, dest) {
+
+     # normalise horizontal and vertical distances
+     origin$hdist <- origin$hdist / max(origin$hdist)
+     origin$vdist <- origin$vdist / max(origin$vdist)
+
+     # do 'pythagorean' distance
+     gdist <- sqrt(origin$hdist^2 + abs(origin$vdist)^2)
+
+     # upweight ocean connections by a factor of 10
+     gdist[which(origin$type == 1)] <- gdist[which(origin$type == 1)] * 10
+
+     # return
+     return(gdist)
+   }
+
+   verbose = T
 
   if(!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
@@ -175,19 +188,19 @@ weight_tardis <- function(tardis, name, vars = NULL, wfun, verbose = TRUE) {
     dest <- cbind.data.frame(dest, (dest[,1] %/% tardis$gdat[5] + 1))
     origin <- origin[,c(1, 6, 2, 3, 4, 5)]
     dest <- dest[,c(1, 6, 2, 3, 4, 5)]
-    #if(!is.null(vars)) {
-      #if(inherits(y$layers, "SpatRaster")) {
+    if(!is.null(vars)) {
+      if(inherits(y$layers, "SpatRaster")) {
         vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][links[,1],]})
         origin <- cbind.data.frame(origin, vrs)
         vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][links[,2],]})
         dest <- cbind.data.frame(dest, vrs)
-      #} else {
-        #vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][match(links[,1], y$layers[[i]]$id)]})
-        #origin <- cbind.data.frame(origin, vrs)
-        #vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][match(links[,2], y$layers[[i]]$id)]})
-        #dest <- cbind.data.frame(dest, vrs)
-      #}
-    #}
+      } else {
+        vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][match(links[,1], y$layers[[i]]$id)]})
+        origin <- cbind.data.frame(origin, vrs)
+        vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][match(links[,2], y$layers[[i]]$id)]})
+        dest <- cbind.data.frame(dest, vrs)
+      }
+    }
     colnames(origin) <- colnames(dest) <- c("cell", "layer", "type", "bearing", "hdist", "vdist", names(vars))
 
     weight <- try(wfun(origin = origin, dest = dest))
