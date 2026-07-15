@@ -100,22 +100,6 @@ weight_tardis <- function(tardis, name, vars = NULL, wfun, verbose = TRUE) {
    #vars = NULL
    #wfun = function(origin, dest) {
 
-     # normalise horizontal and vertical distances
-     origin$hdist <- origin$hdist / max(origin$hdist)
-     origin$vdist <- origin$vdist / max(origin$vdist)
-
-     # do 'pythagorean' distance
-     gdist <- sqrt(origin$hdist^2 + abs(origin$vdist)^2)
-
-     # upweight ocean connections by a factor of 10
-     gdist[which(origin$type == 1)] <- gdist[which(origin$type == 1)] * 10
-
-     # return
-     return(gdist)
-   }
-
-   verbose = T
-
   if(!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
   }
