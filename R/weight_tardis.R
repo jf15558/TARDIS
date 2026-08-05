@@ -173,7 +173,7 @@ weight_tardis <- function(tardis, name, vars = NULL, wfun, verbose = TRUE) {
     origin <- origin[,c(1, 6, 2, 3, 4, 5)]
     dest <- dest[,c(1, 6, 2, 3, 4, 5)]
     if(!is.null(vars)) {
-      if(inherits(y$layers, "SpatRaster")) {
+      if(inherits(vars[[1]]$layers, "SpatRaster")) {
         vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][links[,1],]})
         origin <- cbind.data.frame(origin, vrs)
         vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][links[,2],]})
