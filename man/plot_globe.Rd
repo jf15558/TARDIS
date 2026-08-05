@@ -13,7 +13,11 @@ plot_globe(
   lcol = "steelblue",
   lwd = 1,
   lty = 1,
-  bg = "aliceblue"
+  bg = "aliceblue",
+  graticule = T,
+  grat.col = "grey95",
+  add = F,
+  ...
 )
 }
 \arguments{
@@ -32,7 +36,7 @@ with continuous values.}
 
 \item{links}{\code{logical}. Should mask links be plotted, if available?}
 
-\item{lcol}{\code{character} or \code{integer}. The colour to be used for plotting links}
+\item{lcol}{\code{character} or \code{integer}. The colour to be used for plotting links.}
 
 \item{lwd}{\code{integer}. The line width to be used for plotting links.}
 
@@ -40,8 +44,16 @@ with continuous values.}
 
 \item{bg}{\code{character} or \code{integer}. The colour to use for the globe background.}
 
-\item{...}{Other arguments passed to \code{rgl} primitive plotting functions. Note
-that some of these are set internally and so using this argument may cause errors.}
+\item{graticule}{\code{logical}. Should a lon-lat graticular be added to the sphere?
+Defaults to \code{TRUE}.}
+
+\item{grat.col}{\code{character} or \code{integer}. The colour to be used for the graticule lines.}
+
+\item{add}{\code{logical}. Should the geoglist data be added to an existing rgl window?
+#' @param ... Other arguments passed to \code{rgl} primitive plotting functions. Note
+that some of these are set internally and so using this argument may cause errors.
+Defaults to \code{FALSE}, which will intiate plotting on a blank sphere in a new
+rgl window.}
 }
 \value{
 None.
@@ -50,6 +62,18 @@ None.
 Plot a geoglist on a 3D interactive globe. Geoglists of any spatial scale can
 be plotted, but is primarily intended for those which cover the total surface
 of the Earth or at least a decent portion of one of its hemispheres.
+}
+\details{
+Longitude-latitude coordinates are converted to spherical coordinates internally
+as follows, using an authalic Earth radius of 6371.007 km
+
+\code{radius <- 6371.007}
+\code{x <- radius * cos(lat) * cos(long)}
+\code{y <- radius * cos(lat) * sin(long)}
+\code{z <- radius * sin(lat)}
+
+The background sphere is produced using a slightly smaller radius to prevent
+occulusion and artefacts in features plotted onto its surface
 }
 \examples{
 \dontrun{
