@@ -75,7 +75,7 @@ plot_globe <- function(x, y = 1, range = NULL, pal = sf.colors(10), links = T, l
 
     cls <- x$layers[[1]][][,1]
     cls <- cls[is.finite(cls)]
-    cls <- map2color(cls, sf.colors(5))
+    cls <- map2color(cls, pal)
 
   } else {
 
@@ -95,7 +95,7 @@ plot_globe <- function(x, y = 1, range = NULL, pal = sf.colors(10), links = T, l
 
     cls <- x$layers[[y]][[1]][,1]
     cls <- cls[is.finite(cls)]
-    cls <- map2color(cls, sf.colors(5))
+    cls <- map2color(cls, pal)
     cls <- rep(cls, times = sapply(tris, nrow))
     tris <- do.call(rbind, tris)
   }
