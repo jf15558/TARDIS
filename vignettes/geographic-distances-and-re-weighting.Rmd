@@ -15,6 +15,8 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
+library(sf)
+library(terra)
 library(TARDIS)
 ```
 
@@ -35,7 +37,7 @@ We can now visualise the average cost of movement through each grid cell in this
 ```{r}
 # calculate cost surface and plot
 cs <- cost_surface(rtd)
-plot(rtd)
+plot(cs)
 ```
 
 This cost surface of geographic distance clearly shows the latitudinal distortion which rectangular grids incur at global scales, with much smaller distances between grid cells towards the poles compared to the equator.
@@ -44,7 +46,7 @@ We can also create a surface describing the cost required to reach all cells in 
 
 ```{r}
 # we supply our point as a two column, lon-lat matrix
-orig <- point_check(rtd, rbind(0, 0))
+orig <- point_check(rtd, cbind(0, 0))
 
 # create a cumulative cost surface from this origin point
 cc <- cumulative_cost(rtd, origin = orig)
@@ -99,9 +101,9 @@ cc2 <- cumulative_cost(rtd2, origin = pt)
 
 # plot solutions together
 par(mfrow = c(1, 2))
-plot(cc1, pal = sf.colors(100), zlim = c(0, 4e5), pal = sf.colors(20))
+plot(cc1, zlim = c(0, 4e5), pal = sf.colors(20))
 plot(rst$links, add = T)
-plot(cc2, pal = sf.colors(100), zlim = c(0, 4e5), pal = sf.colors(20))
+plot(cc2, zlim = c(0, 4e5), pal = sf.colors(20))
 plot(rst2$links, add = T)
 ```
 

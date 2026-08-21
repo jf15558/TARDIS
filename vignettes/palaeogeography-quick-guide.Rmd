@@ -12,11 +12,20 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+if(!require("chronosphere")) {
+  install.packages("chronosphere",
+                   repos = "http://cran.us.r-project.org")
+}
+if(!require("via")) {
+  install.packages("via",
+                   repos = "http://cran.us.r-project.org")
+}
 ```
 
 ```{r setup, echo=F}
 library(terra)
 library(TARDIS)
+library(via)
 library(chronosphere)
 ```
 

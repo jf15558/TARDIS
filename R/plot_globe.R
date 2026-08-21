@@ -22,7 +22,7 @@
 #' Defaults to `TRUE`.
 #' @param grat.col `character` or `integer`. The colour to be used for the graticule lines.
 #' @param add `logical`. Should the geoglist data be added to an existing rgl window?
-#' #' @param ... Other arguments passed to `rgl` primitive plotting functions. Note
+#' @param ... Other arguments passed to `rgl` primitive plotting functions. Note
 #' that some of these are set internally and so using this argument may cause errors.
 #' Defaults to `FALSE`, which will intiate plotting on a blank sphere in a new
 #' rgl window.

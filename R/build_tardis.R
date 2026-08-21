@@ -85,13 +85,13 @@
 
 build_tardis <- function(geog, times = NULL, tlink = 1, rotations = NULL, verbose = TRUE) {
 
-  # geog = rasts
-  # times = c(seq(2.25, 0, -0.5), 0)
-  # #times = c(117, 114, 112)
-  # #times = bns
-  # tlink = 1
-  # rotations = NULL
-  # verbose = TRUE
+  #geog = rasts
+  #times = c(seq(2.25, 0, -0.5), 0)
+  #times = c(117, 114, 112)
+  #times = bns
+  #tlink = 1
+  #rotations = NULL
+  #verbose = TRUE
 
   if(inherits(geog$layers, "SpatRaster")) {
     nlayers <- nlyr(geog$layers)
@@ -274,7 +274,7 @@ build_tardis <- function(geog, times = NULL, tlink = 1, rotations = NULL, verbos
         }
       }
 
-      to_keep <- which(!is.na(geog$layers[[i]][,1][ob[,1]]) & !is.na(geog$layers[[i + 1]][,1][ob[,2]]))
+      to_keep <- which(!is.na(geog$layers[[i]][ob[,1],1]) & !is.na(geog$layers[[i + 1]][ob[,2],1]))
       if(length(to_keep) == 0) {
         stop(paste0("No links are available from time layer ", i, ". Check rotations and layer masks"))
       }

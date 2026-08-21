@@ -49,8 +49,9 @@ Defaults to \code{TRUE}.}
 
 \item{grat.col}{\code{character} or \code{integer}. The colour to be used for the graticule lines.}
 
-\item{add}{\code{logical}. Should the geoglist data be added to an existing rgl window?
-#' @param ... Other arguments passed to \code{rgl} primitive plotting functions. Note
+\item{add}{\code{logical}. Should the geoglist data be added to an existing rgl window?}
+
+\item{...}{Other arguments passed to \code{rgl} primitive plotting functions. Note
 that some of these are set internally and so using this argument may cause errors.
 Defaults to \code{FALSE}, which will intiate plotting on a blank sphere in a new
 rgl window.}

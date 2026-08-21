@@ -95,10 +95,12 @@
 
 weight_tardis <- function(tardis, name, vars = NULL, wfun, verbose = TRUE) {
 
-   #tardis = rtd
-   #name = "delaunay"
-   #vars = NULL
-   #wfun = function(origin, dest) {
+
+   # tardis = rtd
+   # name = "elev"
+   # vars = wvars
+   # wfun = wfun
+
 
   if(!exists("tardis")) {
     stop("Supply tardis as the output of create_tardis")
@@ -174,9 +176,9 @@ weight_tardis <- function(tardis, name, vars = NULL, wfun, verbose = TRUE) {
     dest <- dest[,c(1, 6, 2, 3, 4, 5)]
     if(!is.null(vars)) {
       if(inherits(vars[[1]]$layers, "SpatRaster")) {
-        vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][links[,1],]})
+        vrs <- lapply(vars, function(y) {y$layers[[i]][][links[,1],]})
         origin <- cbind.data.frame(origin, vrs)
-        vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][links[,2],]})
+        vrs <- lapply(vars, function(y) {y$layers[[i]][][links[,2],]})
         dest <- cbind.data.frame(dest, vrs)
       } else {
         vrs <- lapply(vars, function(y) {y$layers[[i]][[1]][match(links[,1], y$layers[[i]]$id)]})
