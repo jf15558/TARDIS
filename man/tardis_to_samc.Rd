@@ -37,7 +37,7 @@ probability can be used (0 by default). Probabilities equal to 1 are permitted.}
 An object of class \code{samc}.
 }
 \description{
-Create a spatial absorbing markov chain (samc) matrix from a TARDIS graph
+Create a spatial absorbing markov chain (samc) matrix from a rTARDIS graph
 layer. This object can then be analysed using functions from the samc R
 package.
 }
@@ -54,7 +54,7 @@ probabilities for that row sum to one.
 \examples{
 \dontrun{
 library(terra)
-library(TARDIS)
+library(rTARDIS)
 
 # load galapagos dataset
 gal <- galapagos()

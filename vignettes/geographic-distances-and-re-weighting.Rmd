@@ -17,12 +17,12 @@ knitr::opts_chunk$set(
 ```{r setup}
 library(sf)
 library(terra)
-library(TARDIS)
+library(rTARDIS)
 ```
 
 ## Geographic distances
 
-Any geographic raster will have an associated coordinate system, enabling distances between locations in that space to be calculated. Like in the R package `gdistance`, `build_tardis()` uses this information to calculate horizonal distances in metres between adjacent grid cells in a `geoglist` layer, whether in a rectangular or hexagonal grid. `TARDIS` offers a couple of functions to visualise the resulting cost surface, either between grid cells or relative to a single starting point. We will start by building a global, unmasked `tardis` object at 1-degree resolution.
+Any geographic raster will have an associated coordinate system, enabling distances between locations in that space to be calculated. Like in the R package `gdistance`, `build_tardis()` uses this information to calculate horizonal distances in metres between adjacent grid cells in a `geoglist` layer, whether in a rectangular or hexagonal grid. `rTARDIS` offers a couple of functions to visualise the resulting cost surface, either between grid cells or relative to a single starting point. We will start by building a global, unmasked `tardis` object at 1-degree resolution.
 
 ```{r}
 # build a global raster with a constant cell value
@@ -42,7 +42,7 @@ plot(cs)
 
 This cost surface of geographic distance clearly shows the latitudinal distortion which rectangular grids incur at global scales, with much smaller distances between grid cells towards the poles compared to the equator.
 
-We can also create a surface describing the cost required to reach all cells in `geoglist` layer from a given starting point, using the function `cumulative_cost()`. Any `TARDIS` function which requires points for analysis requires those points to be checked and formatted using another function, `point_check()`, which ensures that all points can be resolved to unmasked cells. In this case, all cells are unmasked, but we still need to use the function to format our input point. We will choose the intersection of the equator and prime meridian - lon-lat [0,0]:
+We can also create a surface describing the cost required to reach all cells in `geoglist` layer from a given starting point, using the function `cumulative_cost()`. Any `rTARDIS` function which requires points for analysis requires those points to be checked and formatted using another function, `point_check()`, which ensures that all points can be resolved to unmasked cells. In this case, all cells are unmasked, but we still need to use the function to format our input point. We will choose the intersection of the equator and prime meridian - lon-lat [0,0]:
 
 ```{r}
 # we supply our point as a two column, lon-lat matrix
@@ -61,7 +61,7 @@ By default, `build_tardis()` will also assume that the input `geoglist` contains
 
 ## The impact of masking and linking
 
-The above example was a very simple one - a smooth, isotropic sphere, i.e., no additional effects of elevational change on distance and freedom of movement in all directions to all cells in geographic space. `TARDIS` is built for representing connectivity and distance in much more complex landscapes. Let's revisit the Galapagos dataset from previous vignettes. As before, we will select the modern layer, mask it to the land surface and construct our `geoglist` and `tardis` object:
+The above example was a very simple one - a smooth, isotropic sphere, i.e., no additional effects of elevational change on distance and freedom of movement in all directions to all cells in geographic space. `rTARDIS` is built for representing connectivity and distance in much more complex landscapes. Let's revisit the Galapagos dataset from previous vignettes. As before, we will select the modern layer, mask it to the land surface and construct our `geoglist` and `tardis` object:
 
 ```{r}
 # load and mask data
@@ -86,7 +86,7 @@ plot(cc)
 
 Even at this scale, grid cells are still around 1 to 1.5 kilometres apart, compared to vertical differences of several to tens of metres, so the cost surface still looks relatively flat. Even so, we can start to see the impact of topography at this scale, with the volcanic caldera in the north of the largest island, Isabela. Something seems wrong for the other map. Most land is missing, but this is because we did not add in any island links, so our cumulative cost calculations relative to our origin point are completely restricted to Pinta island.
 
-To see how linkage affects distance, we will create two different `tardis` models, one with minimum spanning tree (MST) linkage, the other with Voronoi linkage and visualise the cumulative cost surfaces. Note that links can be added to a `geoglist` even if already contains links - `TARDIS` will automatically delete duplicate links if present:
+To see how linkage affects distance, we will create two different `tardis` models, one with minimum spanning tree (MST) linkage, the other with Voronoi linkage and visualise the cumulative cost surfaces. Note that links can be added to a `geoglist` even if already contains links - `rTARDIS` will automatically delete duplicate links if present:
 
 ```{r}
 # mst
@@ -111,7 +111,7 @@ Clearly linkage structure has a big impact on geographic distance in our landsca
 
 ## Reweighting
 
-Altering linkage structure is one way of affecting movement in geographic space. The other way is by altering the cost of movement itself. Rather than use the default elevation-adjusted great circle distance, we may want to parameterise how movement is shaped by other sets of factors. To do this, we need to generate an alternative set of weights for the `TARDIS` graph with the function `weight_tardis()`. `gdistance` also permits custom weighting, but the inspiration for its implementation in `TARDIS` comes from a different R package, `gen3sis`. Weighting schemes are added as columns in `tardis$edges` under a user-supplied name. From there, these alternative weighting schemes can be called by name for use in other `TARDIS` functions rather than the default geographic distance weights (`tardis$edges$gdist`).
+Altering linkage structure is one way of affecting movement in geographic space. The other way is by altering the cost of movement itself. Rather than use the default elevation-adjusted great circle distance, we may want to parameterise how movement is shaped by other sets of factors. To do this, we need to generate an alternative set of weights for the `rTARDIS` graph with the function `weight_tardis()`. `gdistance` also permits custom weighting, but the inspiration for its implementation in `TARDIS` comes from a different R package, `gen3sis`. Weighting schemes are added as columns in `tardis$edges` under a user-supplied name. From there, these alternative weighting schemes can be called by name for use in other `rTARDIS` functions rather than the default geographic distance weights (`tardis$edges$gdist`).
 
 `weight_tardis()` is itself a very simple function. Internally, for each time layer in a `tardis` object (`tardis$edges`), it splits the edge list in into two `data.frames` corresponding, respectively, to the origin and destination nodes of those edges. Each `data.frame` records the cell id and its time layer, along with the edge type, horizontal distance, change in elevation, and bearing along the edge it forms. If the user has supplied additional data for that geographic space with the argument `vars`, these will also be present as further columns in the `data.frames`:
 
@@ -228,7 +228,7 @@ This shares some similarities with the raw elevation map. The cost surface most 
 
 ### Example 3: weighting with alternative geographic data
 
-So far we have used the basic geographic data already present in a `tardis` object to calculate our cost functions. If we want to introduce additional variables, we need to use the `vars` argument. This requires a specific format to work. It must be a named list of `geoglist` objects created from our alternative raster data. These must match the format of the `geoglist` used to create the `tardis` object, i.e., same resolution, masking, number of layers, and grid type (rectangular versus hexagonal). List names must be provided so that the data become indexable layers in `origin` and `dest`, and must not include any terms reserved for internal use by `TARDIS`, i.e., `cell`, `type`, `layer`, `hdist`, `vdist`, or `bearing`.
+So far we have used the basic geographic data already present in a `tardis` object to calculate our cost functions. If we want to introduce additional variables, we need to use the `vars` argument. This requires a specific format to work. It must be a named list of `geoglist` objects created from our alternative raster data. These must match the format of the `geoglist` used to create the `tardis` object, i.e., same resolution, masking, number of layers, and grid type (rectangular versus hexagonal). List names must be provided so that the data become indexable layers in `origin` and `dest`, and must not include any terms reserved for internal use by `rTARDIS`, i.e., `cell`, `type`, `layer`, `hdist`, `vdist`, or `bearing`.
 
 To illustrate how to implement these requirements, we will re-use our input elevation data set for the Galapagos, as elevation itself is not present in the default `origin` and `dest` `data.frames` (only change in elevation along an edge). This is already in `geoglist` format so all we need to do is place it into a named list:
 

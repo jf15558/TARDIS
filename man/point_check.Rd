@@ -28,13 +28,13 @@ adjusted distance (\verb{$adj}).
 }
 \description{
 Check a set of coordinates to determine whether they fall within an accessible
-cell within a TARDIS object. Discrepant points are adjusted to their nearest
+cell within a tardis object. Discrepant points are adjusted to their nearest
 accessible cell based on great circle distance.
 }
 \examples{
 \dontrun{
 library(terra)
-library(TARDIS)
+library(rTARDIS)
 
 gal <- galapagos()
 gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)

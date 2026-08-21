@@ -1,6 +1,6 @@
 #' tardis_to_samc
 #'
-#' Create a spatial absorbing markov chain (samc) matrix from a TARDIS graph
+#' Create a spatial absorbing markov chain (samc) matrix from a rTARDIS graph
 #' layer. This object can then be analysed using functions from the samc R
 #' package.
 #'
@@ -36,7 +36,7 @@
 #' @examples
 #' \dontrun{
 #' library(terra)
-#' library(TARDIS)
+#' library(rTARDIS)
 #'
 #' # load galapagos dataset
 #' gal <- galapagos()

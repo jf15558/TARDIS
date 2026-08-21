@@ -29,7 +29,7 @@ The input \code{tardis} object with the new weighting scheme added to
 \code{tardis$edges} under the column name given in \code{weights}.
 }
 \description{
-Generate a custom weighting scheme for a \code{tardis} object. This may be based
+Generate a custom weighting scheme for a \code{tardis} graph This may be based
 on the properties in \code{tardis} itself or derived from \code{geoglist} objects recording
 alternative properties of a landscape.
 }
@@ -37,7 +37,7 @@ alternative properties of a landscape.
 The \code{weight_tardis} function is heavily inspired by the weighting function
 used in the \code{gen3sis} R package by Oskar Hagen.
 
-Internally, weight_tardis generates two \code{data.frames}, \code{origin} and \code{dest}.
+Internally, \code{weight_tardis()} generates two \code{data.frames}, \code{origin} and \code{dest}.
 These minimally record the properties for each pair of origin and destination cells
 comprising the edges in a graph layer. Each records the cell ID, the type of edge it forms, the horizontal
 distance and bearing to its partner cell in metres and degrees respectively,
@@ -48,7 +48,7 @@ or negative depending on whether elevation is gained or lost along an edge.
 If \code{vars} are supplied, then subsequent columns in both data.frames record the
 cell characteristics in each \code{geoglist}. The columns in these data.frames can
 then be used to calculate weights with a custom, user-supplied weighting function.
-If the TARDIS graph contains mask links, these can be weighted differently if
+If the tardis graph contains mask links, these can be weighted differently if
 desired.
 
 The core of the weighting function can have as many steps as the
@@ -73,10 +73,10 @@ performed.
 \examples{
 \dontrun{
 library(terra)
-library(TARDIS)
+library(rTARDIS)
 
 # load a dataset of the Galapagos archipelago through geological time
-gal <- TARDIS::galapagos()
+gal <- galapagos()
 gal <- crop(gal, ext(-92, -88, -2, 1))
 
 # create a land-sea mask from the archipelago raster set

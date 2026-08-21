@@ -30,7 +30,7 @@ in the same time slice in a tardis graph and return the cumulative cost surface
 \examples{
 \dontrun{
 #library(terra)
-#library(TARDIS)
+#library(rTARDIS)
 
 # load data
 gal <- galapagos()

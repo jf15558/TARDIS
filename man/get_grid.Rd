@@ -32,7 +32,7 @@ avoiding subsequent complications for H3 cell retrieval.
 }
 \examples{
 \dontrun{
-library(TARDIS)
+library(rTARDIS)
 get_grid(bbox = c(-10, 13.2, -0.5, 30), hex = 3)
 }
 }

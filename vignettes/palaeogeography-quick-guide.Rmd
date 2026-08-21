@@ -24,14 +24,14 @@ if(!require("via")) {
 
 ```{r setup, echo=F}
 library(terra)
-library(TARDIS)
+library(rTARDIS)
 library(via)
 library(chronosphere)
 ```
 
 ## Palaeogeographic rasters
 
-Rasterised representations of deep time geography, and extending to other properties like vegetation type or climate zone, are increasingly available to palaeobiologists. Some are archived in paper electronic supplements (e.g., the source of the palaeo-Galapagos data included in `TARDIS`), but easy access to some of these datasets is provided by a few different R packages. First among these is `chronosphere`. This vignette gives a short overview of how to quickly access data suitable for building `TARDIS` models for palaeogeographic analysis using this package. First we will load the `chronosphere` package (prior installation required) and examine the raster datasets it offers:
+Rasterised representations of deep time geography, and extending to other properties like vegetation type or climate zone, are increasingly available to palaeobiologists. Some are archived in paper electronic supplements (e.g., the source of the palaeo-Galapagos data included in `rTARDIS`), but easy access to some of these datasets is provided by a few different R packages. First among these is `chronosphere`. This vignette gives a short overview of how to quickly access data suitable for building `rTARDIS` models for palaeogeographic analysis using this package. First we will load the `chronosphere` package (prior installation required) and examine the raster datasets it offers:
 
 ```{r}
 library(chronosphere)
@@ -44,7 +44,7 @@ The first of these options is the most relevant to our purposes - digital elevat
 dem <- fetch("paleomap", "dem")
 ```
 
-The data is returned as a `RasterArray`, a class from the `via` R package designed for storing temporal arrays of vector and raster data. A bit like a `geoglist` from `TARDIS`, this simply wraps a `SpatRaster` and a vector of time intervals which we can extract directly. The `via` package has functions which can conflict with those from `terra`, so we will immediately unload it to avoid these issues:
+The data is returned as a `RasterArray`, a class from the `via` R package designed for storing temporal arrays of vector and raster data. A bit like a `geoglist` from `rTARDIS`, this simply wraps a `SpatRaster` and a vector of time intervals which we can extract directly. The `via` package has functions which can conflict with those from `terra`, so we will immediately unload it to avoid these issues:
 
 ```{r}
 tms <- dem@index
@@ -53,7 +53,7 @@ unloadNamespace("via")
 dem
 ```
 
-If we examine `dem`, we can see it contains 113 layers, corresponding to the ages in the vector `tms`. These ages are also present in the raster layer names (000, 005, 010 ect.). We can select any contiguous subset of these layers to use with `TARDIS`. Indeed, the `cretaceous` data set in the package is just the time layers for 115 and 110 million years ago, taken from `chronosphere`.
+If we examine `dem`, we can see it contains 113 layers, corresponding to the ages in the vector `tms`. These ages are also present in the raster layer names (000, 005, 010 ect.). We can select any contiguous subset of these layers to use with `rTARDIS`. Indeed, the `cretaceous` data set in the package is just the time layers for 115 and 110 million years ago, taken from `chronosphere`.
 
 For this vignette, we will extract 4 time slices for the Devonian from the `chronosphere` data set, mask those rasters to the land surface, and create a `geoglist` with hexagonal re-gridding to improve representation of geographic space at the poles:
 
@@ -95,11 +95,11 @@ This is quite a conservative linking scheme and others are available. You can ta
 
 ## Plate tectonic drift
 
-Over geological timescales, locations on Earth's surface have shifted substantially due to plate tectonic drift. As such, cells in a global palaeogeographic landscape may no longer be spatially homologous between layers. `TARDIS` can account for this effect by including plate rotation into landscape construction.
+Over geological timescales, locations on Earth's surface have shifted substantially due to plate tectonic drift. As such, cells in a global palaeogeographic landscape may no longer be spatially homologous between layers. `rTARDIS` can account for this effect by including plate rotation into landscape construction.
 
 Quite a specific data structure is requiree. It must be a list with `nlayers - 1` elements relative to the accompanying `geoglist`. Each list element is a two-column matrix of cell IDs describing pairs of cells to link between successive time layers. These IDs should be spatial, i.e., row-major raster numeric index or hexagonal grid numeric index, rather than full spatiotemporal indexes. This is to permit more intuitive construction of these matrices if desired, with temporal information added automatically during graph construction.
 
-In practice, these lists may be quite complicated to construct by hand, particularly for plate tectonic rotation models. `TARDIS` provides a function to automate this procedure called `get_rotations()`. This takes a `geoglist`, its accompanying time vector and a plate rotation model name as its principle arguments, then uses the `palaeoverse` R package function `palaeorotate()` to calculate rotations between cells in each successive pair of geoglist layers. The user is directed to the documentation for `palaeorotate()` for more detailed information on what plate rotation models are available. Crucially, however, this should match the palaeogeographic data used to construct the `geoglist`.
+In practice, these lists may be quite complicated to construct by hand, particularly for plate tectonic rotation models. `rTARDIS` provides a function to automate this procedure called `get_rotations()`. This takes a `geoglist`, its accompanying time vector and a plate rotation model name as its principle arguments, then uses the `palaeoverse` R package function `palaeorotate()` to calculate rotations between cells in each successive pair of geoglist layers. The user is directed to the documentation for `palaeorotate()` for more detailed information on what plate rotation models are available. Crucially, however, this should match the palaeogeographic data used to construct the `geoglist`.
 
 We will implement this workflow below. The Devonian dataset contains 4 time layers, based on the PALEOMAP plate rotation model, at 5 million-year intervals. Firstly, we will resample to hexagons, both to better represent global geography and to speed up downstream function runs. We will derive rotations for the `geoglist`, using a corresponding vector of interval times. Note that the function also requires that times are ordered forwards in time:
 
@@ -122,4 +122,4 @@ As expected, `rots` contains three list elements, for the four layers in `hexes`
 htd <- build_tardis(hexes, tms, rotations = rots)
 ```
 
-We now have a temporally varying palaeogeography model which we can analyse using other functions from `TARDIS`. These are covered by other vignettes.\
+We now have a temporally varying palaeogeography model which we can analyse using other functions from `rTARDIS`. These are covered by other vignettes.\

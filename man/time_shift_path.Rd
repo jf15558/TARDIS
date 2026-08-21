@@ -33,9 +33,9 @@ rotation (\verb{$from}, \verb{$to}).
 }
 \description{
 For a given input cell and destination layer, get all its intervening positions
-from the inter-layer connections in a TARDIS graph. If the cell location is
+from the inter-layer connections in a tardis graph. If the cell location is
 lost in an intervening layer, the path will terminate at its last available
-location, rather than in the target layer. This function works for any TARDIS
+location, rather than in the target layer. This function works for any tardis
 graph, but only produces meaningful rotation paths when locations are not
 homologous between layers (i.e., where locations shift due to plate tectonic
 rotation or some other process).
@@ -43,7 +43,7 @@ rotation or some other process).
 \examples{
 \dontrun{
 #' library(terra)
-library(TARDIS)
+library(rTARDIS)
 
 gal <- galapagos()
 gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)

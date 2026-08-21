@@ -21,7 +21,7 @@ around which to calculate isochrones.}
 included within the isochrone in a point's time-specific origin landscape
 layer, either a single number or a vector with as many elements as points in
 origin to enable different costs for each point. By default, this value is
-in metres, corresponding to the TARDIS default weighting scheme.}
+in metres, corresponding to the rTARDIS default weighting scheme.}
 
 \item{verbose}{\code{logical} Should function progress be reported to the user?}
 }
@@ -36,7 +36,7 @@ time layer which fall within a certain cost of access of that point.
 \examples{
 \dontrun{
 library(terra)
-library(TARDIS)
+library(rTARDIS)
 
 gal <- galapagos()
 gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)

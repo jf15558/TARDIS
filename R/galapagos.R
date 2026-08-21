@@ -30,5 +30,5 @@
 #' @source Modern DEM: documented at https://www.pmel.noaa.gov/eoi/staff/chadwick/galapagos.html,
 #' downloaded from the embedded link in the page: ftp://ftp.pmel.noaa.gov/newport/chadwick/galap_bathy/gala
 galapagos <- function() {
-  rast(system.file("extdata", "galapagos.tif", package = "TARDIS"))
+  rast(system.file("extdata", "galapagos.tif", package = "rTARDIS"))
 }

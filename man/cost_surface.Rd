@@ -29,7 +29,7 @@ calculated as the mean of inbound edges for a given cell.
 \examples{
 \dontrun{
 #library(terra)
-#library(TARDIS)
+#library(rTARDIS)
 
 # load data
 gal <- galapagos()

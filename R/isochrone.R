@@ -14,7 +14,7 @@
 #' included within the isochrone in a point's time-specific origin landscape
 #' layer, either a single number or a vector with as many elements as points in
 #' origin to enable different costs for each point. By default, this value is
-#' in metres, corresponding to the TARDIS default weighting scheme.
+#' in metres, corresponding to the rTARDIS default weighting scheme.
 #' @param verbose `logical` Should function progress be reported to the user?
 #' @return A `SpatVector` containing isochrone polygons, recording to which input
 #' point in `origin` they correspond to (`$feature`) and their time layer (`$layer`)
@@ -24,7 +24,7 @@
 #' @examples
 #' \dontrun{
 #' library(terra)
-#' library(TARDIS)
+#' library(rTARDIS)
 #'
 #' gal <- galapagos()
 #' gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)

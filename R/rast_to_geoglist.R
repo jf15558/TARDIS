@@ -1,7 +1,7 @@
 #' rast_to_geoglist
 #'
 #' Convert a set of rasters to the S3 `geoglist` object compatible with downstream
-#' TARDIS functions. Typically, these rasters will record topography and/or bathymetry
+#' rTARDIS functions. Typically, these rasters will record topography and/or bathymetry
 #' measured in metres, but could record other geographic properties instead.
 #' Some downstream functions will also assume that the raster set records the
 #' geographic area ordered forwards in time (i.e., the first raster in the set
@@ -34,7 +34,7 @@
 #' @export
 #'
 #' @details
-#' Masking is a key feature of TARDIS. Often landscapes will contain
+#' Masking is a key feature of rTARDIS. Often landscapes will contain
 #' areas which we want to exclude from traversal. This is desirable for two reasons.
 #' The first is that operations on these landscapes can be spatially constrained
 #' in a realistic manner (e.g., restricting terrestrial organisms to the land surface,
@@ -59,7 +59,7 @@
 #' @examples
 #' \dontrun{
 #' #library(terra)
-#' #library(TARDIS)
+#' #library(rTARDIS)
 #'
 #' # load a dataset of the Galapagos archipelago through geological time
 #' gal <- galapagos()

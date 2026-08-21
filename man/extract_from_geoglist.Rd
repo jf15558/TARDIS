@@ -15,7 +15,7 @@ will be used to extract values from geog.}
 \item{layer}{\code{numeric}. If not NULL, then an integer specifying from which
 layer in \code{geog} values are to be extracted. This argument is intended for
 use with user-designed \code{geom} objects which do not already contain layer
-assigments, unlike returns from other TARDIS functions.}
+assigments, unlike returns from other rTARDIS functions.}
 }
 \value{
 \verb{sf simple features collection}. A simple features collection of points
@@ -32,7 +32,7 @@ geometry.
 \examples{
 \dontrun{
 library(terra)
-library(TARDIS)
+library(rTARDIS)
 
 gal <- galapagos()
 gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)

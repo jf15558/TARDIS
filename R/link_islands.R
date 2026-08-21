@@ -22,7 +22,7 @@
 #' @export
 #'
 #' @details
-#' Like masking, island linkage is another key feature of TARDIS.
+#' Like masking, island linkage is another key feature of rTARDIS.
 #' Landscapes may contain geographically isolated regions, but practically we
 #' may still want to permit movement between them without considering the
 #' structure of the intervening space. This function assumes that movement across
@@ -52,7 +52,7 @@
 #' @examples
 #' \dontrun{
 #' library(terra)
-#' library(TARDIS)
+#' library(rTARDIS)
 #'
 #' # load a dataset of the Galapagos archipelago through geological time
 #' gal <- galapagos()

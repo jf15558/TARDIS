@@ -11,7 +11,7 @@
 #' @param layer `numeric`. If not NULL, then an integer specifying from which
 #' layer in `geog` values are to be extracted. This argument is intended for
 #' use with user-designed `geom` objects which do not already contain layer
-#' assigments, unlike returns from other TARDIS functions.
+#' assigments, unlike returns from other rTARDIS functions.
 #' @return `sf simple features collection`. A simple features collection of points
 #' corresponding to the centroids of all cells in geog intersected by an input
 #' geometry (denoted by `$feature`) in its specified layer (`$layer`), and the
@@ -22,7 +22,7 @@
 #' @examples
 #' \dontrun{
 #' library(terra)
-#' library(TARDIS)
+#' library(rTARDIS)
 #'
 #' gal <- galapagos()
 #' gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)

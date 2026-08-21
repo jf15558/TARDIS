@@ -1,6 +1,6 @@
 #' weight_tardis
 #'
-#' Generate a custom weighting scheme for a `tardis` object. This may be based
+#' Generate a custom weighting scheme for a `tardis` graph This may be based
 #' on the properties in `tardis` itself or derived from `geoglist` objects recording
 #' alternative properties of a landscape.
 #'
@@ -25,7 +25,7 @@
 #' The `weight_tardis` function is heavily inspired by the weighting function
 #' used in the `gen3sis` R package by Oskar Hagen.
 #'
-#' Internally, weight_tardis generates two `data.frames`, `origin` and `dest`.
+#' Internally, `weight_tardis()` generates two `data.frames`, `origin` and `dest`.
 #' These minimally record the properties for each pair of origin and destination cells
 #' comprising the edges in a graph layer. Each records the cell ID, the type of edge it forms, the horizontal
 #' distance and bearing to its partner cell in metres and degrees respectively,
@@ -36,7 +36,7 @@
 #' If `vars` are supplied, then subsequent columns in both data.frames record the
 #' cell characteristics in each `geoglist`. The columns in these data.frames can
 #' then be used to calculate weights with a custom, user-supplied weighting function.
-#' If the TARDIS graph contains mask links, these can be weighted differently if
+#' If the tardis graph contains mask links, these can be weighted differently if
 #' desired.
 #'
 #' The core of the weighting function can have as many steps as the
@@ -61,10 +61,10 @@
 #' @examples
 #' \dontrun{
 #' library(terra)
-#' library(TARDIS)
+#' library(rTARDIS)
 #'
 #' # load a dataset of the Galapagos archipelago through geological time
-#' gal <- TARDIS::galapagos()
+#' gal <- galapagos()
 #' gal <- crop(gal, ext(-92, -88, -2, 1))
 #'
 #' # create a land-sea mask from the archipelago raster set

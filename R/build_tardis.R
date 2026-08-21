@@ -1,6 +1,6 @@
 #' build_tardis
 #'
-#' Generate a TARDIS graph from a geoglist, representing landscape connectivity
+#' Generate a tardis graph from a geoglist, representing landscape connectivity
 #' across space and through time. Weights in the graph represent the geographic
 #' distances between cells. As such, the function assumes that the input
 #' `geoglist` contains topographic and/or bathymetric data measured in metres.
@@ -24,7 +24,7 @@
 #' @return A `tardis` spatiotemporal object with elements `edges`, `gdat`, `tdat`
 #' and `tlink`. `edges` is the main graph object (see @details), while the other elements record
 #' the spatial, temporal and linkage properties of the graph for internal use by
-#' downstream TARDIS functions.
+#' downstream rTARDIS functions.
 #' @import terra h3jsr sf
 #' @importFrom geosphere distGeo bearing
 #' @importFrom stats complete.cases
@@ -59,7 +59,7 @@
 #' @examples
 #' \dontrun{
 #' #library(terra)
-#' #library(TARDIS)
+#' #library(rTARDIS)
 #'
 #' # load a dataset of the Galapagos archipelago through geological time
 #' gal <- galapagos()

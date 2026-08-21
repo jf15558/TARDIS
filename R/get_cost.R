@@ -16,14 +16,14 @@
 #'
 #' @details
 #' Getting the costs from a set of cells effectively creates a distance matrix.
-#' This can very quickly create large objects. For example, a TARDIS graph with
+#' This can very quickly create large objects. For example, a tardis graph with
 #' ~20,000 accessible cells will give a 20k x 20k matrix approaching a gigabyte
 #' in size. You may wish to optimise the resolution and masking of your landscapes first.
 #'
 #' @examples
 #' \dontrun{
 #' library(terra)
-#' library(TARDIS)
+#' library(rTARDIS)
 #'
 #' gal <- galapagos()
 #' gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
@@ -35,9 +35,7 @@
 #' pairs <- get_cost(htd, origin = "19", dest = "1806")
 #' one_to_many <- get_cost(htd, origin = "19", dest = c("19", "23", "26", "31"))
 #' many_to_many <- get_cost(htd, origin = c("19", "23", "26", "31"), dest = c("19", "23", "26", "31"))
-
 #'}
-#'
 
 get_cost <- function(tardis, weights = "gdist", origin, dest) {
 

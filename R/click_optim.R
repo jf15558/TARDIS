@@ -1,10 +1,9 @@
 #' click_optim
 #'
-#' Interactively calculate and plot an isochrone around a clicked point on the#
+#' Interactively calculate and plot an isochrone around a clicked point on the
 #' landscape displayed by the function. Clicked points falling in masked regions are automatically resolved to the nearest available
 #' cell.
 #'
-#' interactive function under development
 #' @param tardis `tardis`. An object of class 'tardis', produced by create_tardis
 #' @param weights `character`. The name of the weighting scheme column in
 #' `tardis$edges` to use. By default these are true geographic distances
@@ -24,7 +23,7 @@
 #' @examples
 #' \dontrun{
 #' library(terra)
-#' library(TARDIS)
+#' library(rTARDIS)
 #'
 #' gal <- galapagos()
 #' gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)

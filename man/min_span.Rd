@@ -34,7 +34,7 @@ arborescence selected from these sets of pairwise distances.
 \details{
 If geographic distances are used (default), then there will be a single least
 cost path between any two points and the minimum spanning arborescence will be
-equivalent to a minimum spanning tree. However, as TARDIS graphs are
+equivalent to a minimum spanning tree. However, as rTARDIS graphs are
 directed, it is possible that the shortest path from A to B may not be the
 same as the shortest path from B to A depending on the weighting scheme,
 hence why minimum spanning arborescence is used as the more general case.
@@ -44,7 +44,7 @@ minimum spanning arborescence structure.
 \examples{
 \dontrun{
 library(terra)
-library(TARDIS)
+library(rTARDIS)
 
 gal <- galapagos()
 gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)

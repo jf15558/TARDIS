@@ -34,6 +34,7 @@
 #'
 #' @examples
 #' \dontrun{
+#' library(rTARDIS)
 #' rast <- rast(nrows = 2, ncols = 2)
 #' ages <- c(440, 430, 420)
 #' foo <- get_rotations(rast = rast, times = ages, model = "MERDITH2021")

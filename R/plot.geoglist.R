@@ -40,6 +40,9 @@
 #'
 #' @examples
 #' \dontrun{
+#' library(rTARDIS)
+#' library(terra)
+#'
 #' gal <- cretaceous()
 #' gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)
 #' rasts <- rast_to_geoglist(gal, gal_m)

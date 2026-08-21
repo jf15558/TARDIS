@@ -21,12 +21,12 @@ the raster grid is resampled to the new grid geometry.}
 \description{
 Transform a geoglist and its links to a CRS other than lon-lat. This may be
 desirable for plotting purposes, but will render the resulting geoglist
-incompatible with most TARDIS functions.
+incompatible with most rTARDIS functions.
 }
 \examples{
 \dontrun{
 library(terra)
-library(TARDIS)
+library(rTARDIS)
 
 gal <- cretaceous()
 gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)

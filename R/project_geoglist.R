@@ -2,7 +2,7 @@
 #'
 #' Transform a geoglist and its links to a CRS other than lon-lat. This may be
 #' desirable for plotting purposes, but will render the resulting geoglist
-#' incompatible with most TARDIS functions.
+#' incompatible with most rTARDIS functions.
 #'
 #' @param geog `geoglist`. The output of `rast_to_geoglist()`.
 #' @param crs `character`. A valid crs character string to which the geoglist
@@ -16,7 +16,7 @@
 #' @examples
 #' \dontrun{
 #' library(terra)
-#' library(TARDIS)
+#' library(rTARDIS)
 #'
 #' gal <- cretaceous()
 #' gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)

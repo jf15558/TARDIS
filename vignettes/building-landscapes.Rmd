@@ -16,12 +16,12 @@ knitr::opts_chunk$set(
 
 ```{r setup, echo=F}
 library(terra)
-library(TARDIS)
+library(rTARDIS)
 ```
 
 ## The `geoglist` class
 
-`TARDIS` builds an S3 class called a `geoglist` from a raster grid to store its geographic data. A `geoglist` can be built from a single raster layer, or a time-ordered set of raster layers using the function `rast_to_geoglist()`. It is also possible to build a `geoglist` from a single raster layer. The structure of a `geoglist` is deliberately simple to maintain interoperability with other spatial packages like `sf` or `stars` and permit easier manipulation by the user. It consists of a list with two default entries. `$gdat` is a named numeric vector which describes the key properties of the geographic data in a manner common to both grid types. It describes the extent (`xmin`, `xmax`, `ymin`, `ymax`), the total possible cells in a single grid layer (`ncell`), the number of columns in the grid (`ncol`), and the H3 grid resolution (`hex`). In a hexagonally gridded `geoglist`, the `hex` slot in `$gdat` will record that value. For one storing rectangular rasters, it is `NA`. The other slot, `$layers` is either a multi-layer `SpatRaster` if rectangular grids are used, or multi-element `SpatVectorCollection` if re-sampling to hexagonal grids is used.
+`rTARDIS` builds an S3 class called a `geoglist` from a raster grid to store its geographic data. A `geoglist` can be built from a single raster layer, or a time-ordered set of raster layers using the function `rast_to_geoglist()`. It is also possible to build a `geoglist` from a single raster layer. The structure of a `geoglist` is deliberately simple to maintain interoperability with other spatial packages like `sf` or `stars` and permit easier manipulation by the user. It consists of a list with two default entries. `$gdat` is a named numeric vector which describes the key properties of the geographic data in a manner common to both grid types. It describes the extent (`xmin`, `xmax`, `ymin`, `ymax`), the total possible cells in a single grid layer (`ncell`), the number of columns in the grid (`ncol`), and the H3 grid resolution (`hex`). In a hexagonally gridded `geoglist`, the `hex` slot in `$gdat` will record that value. For one storing rectangular rasters, it is `NA`. The other slot, `$layers` is either a multi-layer `SpatRaster` if rectangular grids are used, or multi-element `SpatVectorCollection` if re-sampling to hexagonal grids is used.
 
 ```{r}
 # convert a toy dataset to a geoglist and view its structure
@@ -42,7 +42,7 @@ Masking is fundamental to distinguish between accessible and inaccessible geogra
 
 ### Land surface
 
-One likely case use of TARDIS is to examine movement of terrestrial species across fragmented landmasses, whether at the scale of continents or island systems. A land-sea mask is easily created as follows:
+One likely case use of `rTARDIS` is to examine movement of terrestrial species across fragmented landmasses, whether at the scale of continents or island systems. A land-sea mask is easily created as follows:
 
 ```{r, fig.width=9.5, fig.height=5, dev="svg"}
 # load a dataset of the Galapagos archipelago and select the present day layer
@@ -105,7 +105,7 @@ There may be many reasons for choosing to link islands. In some cases, empirical
 
 ### Minimum spanning trees
 
-The first method uses a Voronoi tesselation to establish 'domains' of influence that extend outwards from island areas. If two domains share a border, their islands are treated as 'in-line-of-sight' of one another and are candidates for linkage. Functions for visualising islands and their domains are available in TARDIS. We will use the `geoglist` from earlier:
+The first method uses a Voronoi tesselation to establish 'domains' of influence that extend outwards from island areas. If two domains share a border, their islands are treated as 'in-line-of-sight' of one another and are candidates for linkage. Functions for visualising islands and their domains are available in `rTARDIS`. We will use the `geoglist` from earlier:
 
 ```{r, fig.width=9.5, fig.height=10, dev="svg"}
 # detect regions (bounds.only = F means that all island cells are returned, rather than just their margins)
@@ -168,7 +168,7 @@ This will let us know if a layer still contains isolated regions (in this case n
 
 ### Interactive linkage
 
-Beyond these core methods, TARDIS offers a function to build links interactively, `click_to_link()`. This function will plot the selected layer in the RStudio window and allow the user to add `nlink` new links by clicking on pairs of cells to connect. All clicks are resolved to the nearest available boundary cells. The inverse operation is also possible. `click_to_snip()` will plot the map and links, and the user can then click either side of `nsnip` links to remove them. You can try this out with the `rst` object created above.
+Beyond these core methods, `rTARDIS` offers a function to build links interactively, `click_to_link()`. This function will plot the selected layer in the RStudio window and allow the user to add `nlink` new links by clicking on pairs of cells to connect. All clicks are resolved to the nearest available boundary cells. The inverse operation is also possible. `click_to_snip()` will plot the map and links, and the user can then click either side of `nsnip` links to remove them. You can try this out with the `rst` object created above.
 
 Ultimately, linkage in this way will not necessarily be guided by geometric principles. It is therefore down the the user to justify the creation of links in this way. It may be useful, however, for manually creating linkage scenarios that fall between between full Voronoi linkage and Delaunay linage in terms of connectivity.\
 
@@ -206,7 +206,7 @@ Islands in hexagonal grids can be linked in precisely the same way as shown abov
 h3 <- link_islands(h3)
 ```
 
-`TARDIS` also offers a function to transform geoglists to projections other than longitude-latitude. This is primarily intended for the sake of making plots as other `TARDIS` functions will not accept geoglists that are not longitude-latitude. As we are dealing with a global map, we will use the Equal Earth projection:
+`rTARDIS` also offers a function to transform geoglists to projections other than longitude-latitude. This is primarily intended for the sake of making plots as other `r`TARDIS` functions will not accept geoglists that are not longitude-latitude. As we are dealing with a global map, we will use the Equal Earth projection:
 
 ```{r, fig.width=9.5, fig.height=10, dev="svg"}
 # project to Equal Earth (you can look up proj strings for other map types online)
@@ -226,7 +226,7 @@ Once we have our geographic spaces masked and linked, we are ready to convert th
 rtd <- build_tardis(rst)
 ```
 
-As with the `geoglist`, a `tardis` object is deliberately simple to enable manipulation and interoperability. It is a list with several elements. `$gdat` records the same landscape properties as the input `geoglist`. `$tdat` and `$tlink` are both `NULL` in this case as we have only one landscape layer and so no temporal data to worry about (we will build a multi-layer `tardis` shortly). `$tgraph` is the most contrived component; it is a list of graph attributes designed for internal use elsewhere in `TARDIS` where functions from the `cppRouting` package are called in order to eliminate the processing overhead of constructing this data from scratch. 
+As with the `geoglist`, a `tardis` object is deliberately simple to enable manipulation and interoperability. It is a list with several elements. `$gdat` records the same landscape properties as the input `geoglist`. `$tdat` and `$tlink` are both `NULL` in this case as we have only one landscape layer and so no temporal data to worry about (we will build a multi-layer `tardis` shortly). `$tgraph` is the most contrived component; it is a list of graph attributes designed for internal use elsewhere in `rTARDIS` where functions from the `cppRouting` package are called in order to eliminate the processing overhead of constructing this data from scratch. 
 
 The main element of the `tardis` class, however is `$edges`. This is a matrix which records the base physical attributes of the landscape it represents:
 
@@ -238,11 +238,11 @@ The matrix is an edgelist, describing the connections between cells and the prop
 
 ## Cell indexing
 
-Now that we have seen the structure of a `geoglist` and a `tardis` object, we can understand how `TARDIS` indexes cells in space and time. For a rectangular grid, the rows and columns (rows * columns) within its extent determines its total cell count, `ncell`. Any coordinate can be resolved to a row-major numeric cell index with the `terra` function `cellFromXY()`, letting us know exactly where it lies within the total cell count (e.g., cell 234 out of `ncell`). 
+Now that we have seen the structure of a `geoglist` and a `tardis` object, we can understand how `rTARDIS` indexes cells in space and time. For a rectangular grid, the rows and columns (rows * columns) within its extent determines its total cell count, `ncell`. Any coordinate can be resolved to a row-major numeric cell index with the `terra` function `cellFromXY()`, letting us know exactly where it lies within the total cell count (e.g., cell 234 out of `ncell`). 
 
 Things are more complicated for hexagonal grids. Any coordinate can be resolved to an H3 cell at a specified H3 resolution with the `h3jsr` function `point_to_cell()`, but we do not know from the cell ID itself (e.g., "83dc8cfffffffff") where it falls in the range of `ncell`. All H3 cell IDs for a given extent and H3 resolution can be consistently retrieved, however, as a character vector with `ncell` elements. Matching an H3 cell ID against this vector then yields a numeric cell index that remains consistent between layers (e.g., 112 out of `ncell`). While this does not share the row-major attribute of a rectangular grid index, all cells in a hexagonally gridded 'geoglist' layer are ordered by their cell ID position in this vector, with masked cells represented by empty geometries and `NA` values to reduce memory footprint, but retain a data structure similar to the 'data.frame' of a rectangular raster grid where all grid cells are recorded, including those with `NA` values.
 
-This spatial consistency permits TARDIS to modify cell indexes to embed temporal position as well. Just as each graph node represents a discrete portion of continuous geographic space, each graph layer represents a discrete interval of continuous time. There can only ever maximally be `1:ncell` non-NA-valued cells indexes in a given spatial layer. Cells `1:ncell` come from the first graph layer, but cells in the second layer are then indexed as `(1:ncell) + (ncell * 1)`. In this way, the first possible grid cell in the subsequent layer has an index of `ncell + 1`. This value falls outside of the range `1:ncell` so we know that it cannot come from the first graph layer. The pattern continues for the third layer `(1:ncell) + (ncell * 2)` and so on. In this way, the temporal index (layer number) can be retrieved by integer division: `cellid %/% ncell + 1`; while the spatial index (grid cell number) can be retrieved by the modulo: `cellid %% ncell`. Some examples are given below, using our new `tardis` object
+This spatial consistency permits `rTARDIS` to modify cell indexes to embed temporal position as well. Just as each graph node represents a discrete portion of continuous geographic space, each graph layer represents a discrete interval of continuous time. There can only ever maximally be `1:ncell` non-NA-valued cells indexes in a given spatial layer. Cells `1:ncell` come from the first graph layer, but cells in the second layer are then indexed as `(1:ncell) + (ncell * 1)`. In this way, the first possible grid cell in the subsequent layer has an index of `ncell + 1`. This value falls outside of the range `1:ncell` so we know that it cannot come from the first graph layer. The pattern continues for the third layer `(1:ncell) + (ncell * 2)` and so on. In this way, the temporal index (layer number) can be retrieved by integer division: `cellid %/% ncell + 1`; while the spatial index (grid cell number) can be retrieved by the modulo: `cellid %% ncell`. Some examples are given below, using our new `tardis` object
 
 ```{r}
 # get a random sample of cell IDs
@@ -261,11 +261,11 @@ Ultimately this system means that nodes in the resulting geospatial graph, which
 head(rtd$tgraph$dict)
 ```
 
-Here, column `ref` contains the TARDIS cell indices while column `id` is just a 0-indexed integer sequence. Ultimately, the edgelist in a `tgraph` object can be converted to graphs from a variety of other R packages for analysis of routes and distance (e.g., `igraph`, `cppRouting`, `rlemon`), cell indexes retrieved from node number, then resolved back to geographic space and temporal context as described above.\
+Here, column `ref` contains the `tardis` cell indices while column `id` is just a 0-indexed integer sequence. Ultimately, the edgelist in a `tgraph` object can be converted to graphs from a variety of other R packages for analysis of routes and distance (e.g., `igraph`, `cppRouting`, `rlemon`), cell indexes retrieved from node number, then resolved back to geographic space and temporal context as described above.\
 
 ## Temporal linkage
 
-So far, we has discussed the idea of multiple, time-ordered geographic layers, but we have not yet implemented this in our landscape representations. `TARDIS` makes this very simple to do with the function `build_tardis()`. All we need is a `geoglist` with multiple layers, and a vector of `nlayers + 1` positive numbers describing the time intervals which each layer covers. These intervals need not be even - the only assumption made is that all intervals are time-contiguous.
+So far, we has discussed the idea of multiple, time-ordered geographic layers, but we have not yet implemented this in our landscape representations. `rTARDIS` makes this very simple to do with the function `build_tardis()`. All we need is a `geoglist` with multiple layers, and a vector of `nlayers + 1` positive numbers describing the time intervals which each layer covers. These intervals need not be even - the only assumption made is that all intervals are time-contiguous.
 
 Lets revisit the Galapagos dataset in full. This is a set of 5 rasters, representing the topography and bathymetry of the archipelago at 0.5 million year (Mya) intervals from 2 million years ago to the present (i.e. slices centered on 2, 1.5, 1, 0.5 and 0 Mya). These share the same extent, and if we plot a couple together, we can clearly see the effect of the hotspot moving east to west within that frame of reference, forcing up the ocean crust and creating new land surface in an east-west manner:
 
@@ -323,4 +323,4 @@ crds <- xyFromCell(gal, spt)
 cbind(smp, tmp, spt, crds)[1:10,]
 ```
 
-Now that we can parameterise the connectivity of a geographic space, we can think about altering this connectivity according to other spatially varying properties or calculating distances and routes within its structure using other functions from `TARDIS`. These are covered by other vignettes.\
+Now that we can parameterise the connectivity of a geographic space, we can think about altering this connectivity according to other spatially varying properties or calculating distances and routes within its structure using other functions from `rTARDIS`. These are covered by other vignettes.\

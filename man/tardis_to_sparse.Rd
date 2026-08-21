@@ -20,12 +20,12 @@ of a weighting scheme added to the tardis object with weight_tardis().}
 }
 \description{
 Create either a sparse weighted adjacency or transition probability matrix
-from a TARDIS graph.
+from a tardis graph.
 }
 \examples{
 \dontrun{
 library(terra)
-library(TARDIS)
+library(rTARDIS)
 
 gal <- galapagos()
 gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)

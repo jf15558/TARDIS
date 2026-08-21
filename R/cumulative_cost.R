@@ -19,7 +19,7 @@
 #' @examples
 #' \dontrun{
 #' #library(terra)
-#' #library(TARDIS)
+#' #library(rTARDIS)
 #'
 #' # load data
 #' gal <- galapagos()

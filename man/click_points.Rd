@@ -32,7 +32,7 @@ cell, including any which fall outside of unmasked areas of the layer.
 \examples{
 \dontrun{
 library(terra)
-library(TARDIS)
+library(rTARDIS)
 
 # load data
 gal <- galapagos()

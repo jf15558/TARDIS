@@ -38,17 +38,14 @@ end point to start point to return a polygon? Defaults to \code{FALSE}.}
 \item{...}{Additional arguments passed to \code{plot.geoglist()}}
 }
 \description{
-Interactively calculate and plot an isochrone around a clicked point on the#
+Interactively calculate and plot an isochrone around a clicked point on the
 landscape displayed by the function. Clicked points falling in masked regions are automatically resolved to the nearest available
 cell.
-}
-\details{
-interactive function under development
 }
 \examples{
 \dontrun{
 library(terra)
-library(TARDIS)
+library(rTARDIS)
 
 gal <- galapagos()
 gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)

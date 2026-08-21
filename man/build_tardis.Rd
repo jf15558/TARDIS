@@ -31,10 +31,10 @@ be useful when dealing with large rasters (high resolution and/or many layers).}
 A \code{tardis} spatiotemporal object with elements \code{edges}, \code{gdat}, \code{tdat}
 and \code{tlink}. \code{edges} is the main graph object (see @details), while the other elements record
 the spatial, temporal and linkage properties of the graph for internal use by
-downstream TARDIS functions.
+downstream rTARDIS functions.
 }
 \description{
-Generate a TARDIS graph from a geoglist, representing landscape connectivity
+Generate a tardis graph from a geoglist, representing landscape connectivity
 across space and through time. Weights in the graph represent the geographic
 distances between cells. As such, the function assumes that the input
 \code{geoglist} contains topographic and/or bathymetric data measured in metres.
@@ -69,7 +69,7 @@ Examples of the rotations object are available via its documentation
 \examples{
 \dontrun{
 #library(terra)
-#library(TARDIS)
+#library(rTARDIS)
 
 # load a dataset of the Galapagos archipelago through geological time
 gal <- galapagos()

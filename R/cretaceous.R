@@ -26,5 +26,5 @@
 #' SP544b
 
 cretaceous <- function() {
-  rast(system.file("extdata", "cretaceous.tif", package = "TARDIS"))
+  rast(system.file("extdata", "cretaceous.tif", package = "rTARDIS"))
 }

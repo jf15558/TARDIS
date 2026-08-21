@@ -1,7 +1,7 @@
 #' tardis_to_sparse
 #'
 #' Create either a sparse weighted adjacency or transition probability matrix
-#' from a TARDIS graph.
+#' from a tardis graph.
 #'
 #' @param tardis A tardis graph
 #' @param weights `character`. A character string denoting the weighting scheme to use. By
@@ -15,7 +15,7 @@
 #' @examples
 #' \dontrun{
 #' library(terra)
-#' library(TARDIS)
+#' library(rTARDIS)
 #'
 #' gal <- galapagos()
 #' gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)

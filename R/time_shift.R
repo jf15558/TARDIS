@@ -1,8 +1,8 @@
 #' time_shift
 #'
-#' Take a set of points in a TARDIS graph and shift them to other time layers,
+#' Take a set of points in a tardis graph and shift them to other time layers,
 #' subject to available inter-layer connections. Points can be shifted forwards
-#' or backwards in time regardless of the time directionality in the TARDIS graph.
+#' or backwards in time regardless of the time directionality in the tardis graph.
 #' Points without cells in their target layer will return NA.
 #'
 #' @param tardis `tardis` A tardis graph as produced by build_tardis().
@@ -26,7 +26,7 @@
 #' @examples
 #' \dontrun{
 #' library(terra)
-#' library(TARDIS)
+#' library(rTARDIS)
 #'
 #' gal <- galapagos()
 #' gal_m <- classify(gal, matrix(c(-Inf, 0, NA, 0, Inf, 1), ncol = 3, byrow = T), right = F)

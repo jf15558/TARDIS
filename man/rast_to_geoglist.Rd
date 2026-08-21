@@ -49,14 +49,14 @@ or a \code{SpatVectorCollection} of hexagonal polygons if resampling was impleme
 }
 \description{
 Convert a set of rasters to the S3 \code{geoglist} object compatible with downstream
-TARDIS functions. Typically, these rasters will record topography and/or bathymetry
+rTARDIS functions. Typically, these rasters will record topography and/or bathymetry
 measured in metres, but could record other geographic properties instead.
 Some downstream functions will also assume that the raster set records the
 geographic area ordered forwards in time (i.e., the first raster in the set
 is the oldest).
 }
 \details{
-Masking is a key feature of TARDIS. Often landscapes will contain
+Masking is a key feature of rTARDIS. Often landscapes will contain
 areas which we want to exclude from traversal. This is desirable for two reasons.
 The first is that operations on these landscapes can be spatially constrained
 in a realistic manner (e.g., restricting terrestrial organisms to the land surface,
@@ -81,7 +81,7 @@ function. Weighting is not meaningful for all functions, e.g., \code{"max"}.
 \examples{
 \dontrun{
 #library(terra)
-#library(TARDIS)
+#library(rTARDIS)
 
 # load a dataset of the Galapagos archipelago through geological time
 gal <- galapagos()
