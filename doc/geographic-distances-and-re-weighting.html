@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Geographic Distances and Re-Weighting</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Geographic Distances and Re-Weighting</h1>
+
+
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="co">#&gt; Linking to GEOS 3.12.1, GDAL 3.8.4, PROJ 9.3.1; sf_use_s2() is TRUE</span></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">library</span>(terra)</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">library</span>(rTARDIS)</span></code></pre></div>
+<div id="geographic-distances" class="section level2">
+<h2>Geographic distances</h2>
+<p>Any geographic raster will have an associated coordinate system,
+enabling distances between locations in that space to be calculated.
+Like in the R package <code>gdistance</code>,
+<code>build_tardis()</code> uses this information to calculate horizonal
+distances in metres between adjacent grid cells in a
+<code>geoglist</code> layer, whether in a rectangular or hexagonal grid.
+<code>rTARDIS</code> offers a couple of functions to visualise the
+resulting cost surface, either between grid cells or relative to a
+single starting point. We will start by building a global, unmasked
+<code>tardis</code> object at 1-degree resolution.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># build a global raster with a constant cell value</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>rst <span class="ot">&lt;-</span> <span class="fu">rast</span>(<span class="at">nrow =</span> <span class="dv">180</span>, <span class="at">ncol =</span> <span class="dv">360</span>, <span class="at">vals =</span> <span class="dv">1</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="co"># convert to a geoglist, then a tardis object</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>rtd <span class="ot">&lt;-</span> <span class="fu">build_tardis</span>(<span class="fu">rast_to_geoglist</span>(rst))</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="co">#&gt; Linking geog [1/1]</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co">#&gt; Building graph</span></span></code></pre></div>
+<p>We can now visualise the average cost of movement through each grid
+cell in this landscape with the function <code>cost_surface()</code>.
+This returns a <code>geoglist</code> which we can plot using the
+standard method <code>TARDIS</code> provides:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># calculate cost surface and plot</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>cs <span class="ot">&lt;-</span> <span class="fu">cost_surface</span>(rtd)</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt; Calculating surface [1/1]</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="fu">plot</span>(cs)</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+<p>This cost surface of geographic distance clearly shows the
+latitudinal distortion which rectangular grids incur at global scales,
+with much smaller distances between grid cells towards the poles
+compared to the equator.</p>
+<p>We can also create a surface describing the cost required to reach
+all cells in <code>geoglist</code> layer from a given starting point,
+using the function <code>cumulative_cost()</code>. Any
+<code>rTARDIS</code> function which requires points for analysis
+requires those points to be checked and formatted using another
+function, <code>point_check()</code>, which ensures that all points can
+be resolved to unmasked cells. In this case, all cells are unmasked, but
+we still need to use the function to format our input point. We will
+choose the intersection of the equator and prime meridian - lon-lat
+[0,0]:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># we supply our point as a two column, lon-lat matrix</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>orig <span class="ot">&lt;-</span> <span class="fu">point_check</span>(rtd, <span class="fu">cbind</span>(<span class="dv">0</span>, <span class="dv">0</span>))</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co">#&gt; Checking point [1/1]</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co"># create a cumulative cost surface from this origin point</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>cc <span class="ot">&lt;-</span> <span class="fu">cumulative_cost</span>(rtd, <span class="at">origin =</span> orig)</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt; Initialising graph</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt; Running cumulative costs</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co"># plot the surface</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="fu">plot</span>(cc)</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+<p>This is again the output that we expect for a global (spherical)
+surface. Costs increase radially from our origin point, with distortion
+of that radius towards the poles, and with the furthest points lying on
+the intersection of the equator and antimeridian on the opposite side of
+the globe.</p>
+<p>By default, <code>build_tardis()</code> will also assume that the
+input <code>geoglist</code> contains bathymetric and/or topographic
+information in metres. Differences in elevation between adjacent grid
+cells are consequently used to calculate the addition distance incurred
+during movement across the grid. At global scales this will be a second
+order effect, but will matter much more for smaller geographic
+areas.</p>
+</div>
+<div id="the-impact-of-masking-and-linking" class="section level2">
+<h2>The impact of masking and linking</h2>
+<p>The above example was a very simple one - a smooth, isotropic sphere,
+i.e., no additional effects of elevational change on distance and
+freedom of movement in all directions to all cells in geographic space.
+<code>rTARDIS</code> is built for representing connectivity and distance
+in much more complex landscapes. Let’s revisit the Galapagos dataset
+from previous vignettes. As before, we will select the modern layer,
+mask it to the land surface and construct our <code>geoglist</code> and
+<code>tardis</code> object:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># load and mask data</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>gal <span class="ot">&lt;-</span> <span class="fu">galapagos</span>()[[<span class="dv">5</span>]]</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>gal_l <span class="ot">&lt;-</span> <span class="fu">classify</span>(gal, <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, <span class="dv">0</span>, <span class="cn">NA</span>, <span class="dv">0</span>, <span class="cn">Inf</span>, <span class="dv">1</span>), <span class="at">ncol =</span> <span class="dv">3</span>, <span class="at">byrow =</span> T), <span class="at">right =</span> F)</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co"># build the geoglist and tardis</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>rst <span class="ot">&lt;-</span> <span class="fu">rast_to_geoglist</span>(gal, gal_l)</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>rtd <span class="ot">&lt;-</span> <span class="fu">build_tardis</span>(rst)</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt; Linking geog [1/1]</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt; Building graph</span></span></code></pre></div>
+<p>Lets derive the cost and cumulative cost surfaces as before. For the
+latter, we will pick a point on the most northerly island, Pinta:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># resolve our land point and get our surface plots</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>pt <span class="ot">&lt;-</span> <span class="fu">point_check</span>(rtd, <span class="fu">rbind</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="fl">90.75</span>, <span class="fl">0.58</span>)))</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co">#&gt; Checking point [1/1]</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>cc <span class="ot">&lt;-</span> <span class="fu">cumulative_cost</span>(rtd, <span class="at">origin =</span> pt)</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt; Initialising graph</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt; Running cumulative costs</span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>cs <span class="ot">&lt;-</span> <span class="fu">cost_surface</span>(rtd)</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt; Calculating surface [1/1]</span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="fu">plot</span>(cs)</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">plot</span>(cc)</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+<p>Even at this scale, grid cells are still around 1 to 1.5 kilometres
+apart, compared to vertical differences of several to tens of metres, so
+the cost surface still looks relatively flat. Even so, we can start to
+see the impact of topography at this scale, with the volcanic caldera in
+the north of the largest island, Isabela. Something seems wrong for the
+other map. Most land is missing, but this is because we did not add in
+any island links, so our cumulative cost calculations relative to our
+origin point are completely restricted to Pinta island.</p>
+<p>To see how linkage affects distance, we will create two different
+<code>tardis</code> models, one with minimum spanning tree (MST)
+linkage, the other with Voronoi linkage and visualise the cumulative
+cost surfaces. Note that links can be added to a <code>geoglist</code>
+even if already contains links - <code>rTARDIS</code> will automatically
+delete duplicate links if present:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="co"># mst</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>rst <span class="ot">&lt;-</span> <span class="fu">link_islands</span>(rst, <span class="at">klink =</span> <span class="dv">1</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="co">#&gt; Resolving layers [1/1]</span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>rtd1 <span class="ot">&lt;-</span> <span class="fu">build_tardis</span>(rst)</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="co">#&gt; Linking geog [1/1]</span></span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="co">#&gt; Building graph</span></span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>cc1 <span class="ot">&lt;-</span> <span class="fu">cumulative_cost</span>(rtd1, <span class="at">origin =</span> pt)</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="co">#&gt; Initialising graph</span></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a><span class="co">#&gt; Running cumulative costs</span></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="co"># voronoi</span></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>rst2 <span class="ot">&lt;-</span> <span class="fu">link_islands</span>(rst, <span class="at">klink =</span> <span class="cn">NULL</span>)</span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="co">#&gt; Resolving layers [1/1]</span></span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>rtd2 <span class="ot">&lt;-</span> <span class="fu">build_tardis</span>(rst2)</span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a><span class="co">#&gt; Linking geog [1/1]</span></span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a><span class="co">#&gt; Building graph</span></span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>cc2 <span class="ot">&lt;-</span> <span class="fu">cumulative_cost</span>(rtd2, <span class="at">origin =</span> pt)</span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a><span class="co">#&gt; Initialising graph</span></span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a><span class="co">#&gt; Running cumulative costs</span></span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a></span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a><span class="co"># plot solutions together</span></span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a><span class="fu">plot</span>(cc1, <span class="at">zlim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">4e5</span>), <span class="at">pal =</span> <span class="fu">sf.colors</span>(<span class="dv">20</span>))</span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a><span class="fu">plot</span>(rst<span class="sc">$</span>links, <span class="at">add =</span> T)</span>
+<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a><span class="fu">plot</span>(cc2, <span class="at">zlim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">4e5</span>), <span class="at">pal =</span> <span class="fu">sf.colors</span>(<span class="dv">20</span>))</span>
+<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a><span class="fu">plot</span>(rst2<span class="sc">$</span>links, <span class="at">add =</span> T)</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+<p>Clearly linkage structure has a big impact on geographic distance in
+our landscapes. The costs to get to more distant locations are reduced
+when Voronoi connectivity is used, compared to MST.</p>
+</div>
+<div id="reweighting" class="section level2">
+<h2>Reweighting</h2>
+<p>Altering linkage structure is one way of affecting movement in
+geographic space. The other way is by altering the cost of movement
+itself. Rather than use the default elevation-adjusted great circle
+distance, we may want to parameterise how movement is shaped by other
+sets of factors. To do this, we need to generate an alternative set of
+weights for the <code>rTARDIS</code> graph with the function
+<code>weight_tardis()</code>. <code>gdistance</code> also permits custom
+weighting, but the inspiration for its implementation in
+<code>TARDIS</code> comes from a different R package,
+<code>gen3sis</code>. Weighting schemes are added as columns in
+<code>tardis$edges</code> under a user-supplied name. From there, these
+alternative weighting schemes can be called by name for use in other
+<code>rTARDIS</code> functions rather than the default geographic
+distance weights (<code>tardis$edges$gdist</code>).</p>
+<p><code>weight_tardis()</code> is itself a very simple function.
+Internally, for each time layer in a <code>tardis</code> object
+(<code>tardis$edges</code>), it splits the edge list in into two
+<code>data.frames</code> corresponding, respectively, to the origin and
+destination nodes of those edges. Each <code>data.frame</code> records
+the cell id and its time layer, along with the edge type, horizontal
+distance, change in elevation, and bearing along the edge it forms. If
+the user has supplied additional data for that geographic space with the
+argument <code>vars</code>, these will also be present as further
+columns in the <code>data.frames</code>:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co"># example</span></span></code></pre></div>
+<p>The power of <code>weight_tardis()</code> comes from its capacity to
+flexibly implement very complex weighting scenarios by handing over
+creative control to the user with their custom function,
+<code>wfun()</code>. This should be designed to take the
+<code>data.frames</code> <code>origin</code> and <code>dest</code> as
+arguments, even if only one or the other is used. The function is then
+applied in a loop to each time layer in <code>tardis</code>, making it
+simple for the function output to vary according to the time layer if
+desired. Some simple examples are given below:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="co"># weighting function for elevation-adjusted great circle distance (tardis default)</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>wfun <span class="ot">&lt;-</span> <span class="cf">function</span>(origin, dest) {</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">sqrt</span>(origin<span class="sc">$</span>hdist<span class="sc">^</span><span class="dv">2</span> <span class="sc">+</span> <span class="fu">abs</span>(origin<span class="sc">$</span>vdist)<span class="sc">^</span><span class="dv">2</span>))</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>}</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a><span class="co"># weighting function for the average of some additional value supplied</span></span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>wfun <span class="ot">&lt;-</span> <span class="cf">function</span>(origin, dest) {</span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>  <span class="fu">return</span>((origin<span class="sc">$</span>value <span class="sc">+</span> dest<span class="sc">$</span>value) <span class="sc">/</span> <span class="dv">2</span>)</span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a>}</span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a><span class="co"># weighting function where base costs increase between layers according to a random multiplier</span></span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a>wfun <span class="ot">&lt;-</span> <span class="cf">function</span>(origin, dest) {</span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a>  base_cost <span class="ot">&lt;-</span> (origin<span class="sc">$</span>value <span class="sc">+</span> dest<span class="sc">$</span>value) <span class="sc">/</span> <span class="dv">2</span></span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a>  multiplier <span class="ot">&lt;-</span> <span class="fu">rgamma</span>(<span class="at">n =</span> <span class="fu">length</span>(base_cost), <span class="at">shape =</span> origin<span class="sc">$</span>layer[<span class="dv">1</span>])</span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a>  <span class="fu">return</span>(base_cost <span class="sc">*</span> multiplier)</span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a>}</span></code></pre></div>
+<p>The function must follow a couple of rules. Firstly, weights must be
+<code>NA</code> or greater than 0, with larger values denoting greater
+costs of movement. Negative weights are incompatible with the graph
+analysis tools that <code>TARDIS</code> uses, while weights of zero are
+reserved for temporal links in a <code>tardis</code> object.
+<code>NA</code> values are permissible, but their corresponding edges
+will be treated as impassable and excluded from the graph. The other
+rule is that it must return a vector. As such, it is advisable that the
+custom function itself comprise vectorised calculations. The rest of the
+vignette will explore some practical examples to illustrate function
+design.</p>
+<div id="example-1-penalising-travel-across-the-mask" class="section level3">
+<h3>Example 1: penalising travel across the mask</h3>
+<p>As the link type is recorded in function inputs, it is very simple to
+penalise the cost of traversal for links which cross across masked
+areas. For example, this could reflect the increased cost of dispersal
+over water compared to movement across the land surface for a
+terrestrial species. As such, we can designate a multiplier for these
+links as follows:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>wfun <span class="ot">&lt;-</span> <span class="cf">function</span>(origin, dest) {</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>  </span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>  <span class="co"># calculate true geographic distance</span></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>  gdist <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(origin<span class="sc">$</span>hdist<span class="sc">^</span><span class="dv">2</span> <span class="sc">+</span> <span class="fu">abs</span>(origin<span class="sc">$</span>vdist)<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>  </span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>  <span class="co"># get the indices of the mask links</span></span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>  mlink <span class="ot">&lt;-</span> <span class="fu">which</span>(origin<span class="sc">$</span>type <span class="sc">==</span> <span class="dv">1</span>)</span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>  </span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a>  <span class="co"># multiply mask link costs by 100</span></span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a>  gdist[mlink] <span class="ot">&lt;-</span> gdist[mlink] <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a>  </span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a>  <span class="co"># return costs</span></span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a>  <span class="fu">return</span>(gdist)</span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a>}</span></code></pre></div>
+<p>Lets apply this to our Galapagos <code>tardis</code> object from
+earlier:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="co"># apply the weighting</span></span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>rtd <span class="ot">&lt;-</span> <span class="fu">weight_tardis</span>(rtd, <span class="at">name =</span> <span class="st">&quot;mask100&quot;</span>, <span class="at">wfun =</span> wfun)</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a><span class="co">#&gt; Weighting layer [1/1]</span></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="co"># view the scheme</span></span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="fu">head</span>(rtd<span class="sc">$</span>edges[,<span class="st">&quot;mask100&quot;</span>])</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a><span class="co">#&gt; [1] 1113.914 1113.914 1106.225 1106.225 1571.045 1571.045</span></span></code></pre></div>
+</div>
+<div id="example-2-the-hiking-function" class="section level3">
+<h3>Example 2: the hiking function</h3>
+<p>Human walking speed and so energy expenditure is affected by slope.
+Walking speed is fastest along gentle, negative gradients (~5% or 3
+degrees), where gravity assists movement but without the need for
+excessive braking. This follows the form:
+<code>speed = 6 * exp(-3.5 * abs(slope + 0.05))</code>. This equation,
+known as Tobler’s hiking function could be a more useful way of costing
+movement across a landscape compared to plain geographic distance where
+change in elevation may not have a huge impact on physical distance
+travelled. We can easily code this for <code>weight_tardis()</code> as
+follows:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>wfun <span class="ot">&lt;-</span> <span class="cf">function</span>(origin, dest) {</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>  </span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>  <span class="co"># get the slope incurred along an edge (rise over run)</span></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>  slope <span class="ot">&lt;-</span> origin<span class="sc">$</span>vdist <span class="sc">/</span> origin<span class="sc">$</span>hdist</span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>  </span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>  <span class="co"># Tobler&#39;s hiking function</span></span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>  speed <span class="ot">&lt;-</span> <span class="dv">6</span> <span class="sc">*</span> <span class="fu">exp</span>(<span class="sc">-</span><span class="fl">3.5</span> <span class="sc">*</span> <span class="fu">abs</span>(slope <span class="sc">+</span> <span class="fl">0.05</span>))</span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a>  </span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a>  <span class="co"># We want higher speeds to reflect a lower cost, so we return the reciprocal</span></span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a>  <span class="fu">return</span>(<span class="dv">1</span> <span class="sc">/</span> speed)</span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a>}</span></code></pre></div>
+<p>A caveat of this function is that it assumes that an underlying unit
+of horizontal movement - i.e., comparing a 3 degree slope versus a -10
+degree slope over the same distance travelled. For small rasters,
+horizontal distances between grid cells will be similar (and more so for
+hexagonal grids than rectangular grids; see <em>Package Overview</em>).
+For larger rasters, however, intercell distances may vary, so we may
+wish to correct for this within our function by normalising according to
+horizontal distance:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>wfun <span class="ot">&lt;-</span> <span class="cf">function</span>(origin, dest) {</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>  </span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a>  <span class="co"># get the slope incurred along an edge (rise over run)</span></span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a>  slope <span class="ot">&lt;-</span> origin<span class="sc">$</span>vdist <span class="sc">/</span> origin<span class="sc">$</span>hdist</span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a>  </span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a>  <span class="co"># Tobler&#39;s hiking function</span></span>
+<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a>  speed <span class="ot">&lt;-</span> <span class="dv">6</span> <span class="sc">*</span> <span class="fu">exp</span>(<span class="sc">-</span><span class="fl">3.5</span> <span class="sc">*</span> <span class="fu">abs</span>(slope <span class="sc">+</span> <span class="fl">0.05</span>))</span>
+<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a>  </span>
+<span id="cb14-9"><a href="#cb14-9" tabindex="-1"></a>  <span class="co"># multiply by normalised horizontal distance</span></span>
+<span id="cb14-10"><a href="#cb14-10" tabindex="-1"></a>  speed_norm <span class="ot">&lt;-</span> speed <span class="sc">*</span> (origin<span class="sc">$</span>hdist <span class="sc">/</span> <span class="fu">max</span>(origin<span class="sc">$</span>hdist))</span>
+<span id="cb14-11"><a href="#cb14-11" tabindex="-1"></a>  </span>
+<span id="cb14-12"><a href="#cb14-12" tabindex="-1"></a>  <span class="co"># return as the reciprocal (resistance rather than conductance)</span></span>
+<span id="cb14-13"><a href="#cb14-13" tabindex="-1"></a>  <span class="fu">return</span>(<span class="dv">1</span> <span class="sc">/</span> speed_norm)</span>
+<span id="cb14-14"><a href="#cb14-14" tabindex="-1"></a>}</span></code></pre></div>
+<p>As before, lets apply this to our Galapagos dataset. This time we
+will also visualise the resulting cost surface:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="co"># apply the weighting</span></span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>rtd <span class="ot">&lt;-</span> <span class="fu">weight_tardis</span>(rtd, <span class="at">name =</span> <span class="st">&quot;tobler&quot;</span>, <span class="at">wfun =</span> wfun)</span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a><span class="co">#&gt; Weighting layer [1/1]</span></span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a><span class="co"># calculate cost surface</span></span>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a>cc <span class="ot">&lt;-</span> <span class="fu">cost_surface</span>(rtd, <span class="at">weights =</span> <span class="st">&quot;tobler&quot;</span>)</span>
+<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a><span class="co">#&gt; Calculating surface [1/1]</span></span>
+<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a></span>
+<span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a><span class="co"># plot</span></span>
+<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a><span class="fu">plot</span>(rst)</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="fu">plot</span>(cc)</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+<p>This shares some similarities with the raw elevation map. The cost
+surface most clearly picks out the slopes of the volcanoes, however,
+where the most extreme gradients are present.</p>
+</div>
+<div id="example-3-weighting-with-alternative-geographic-data" class="section level3">
+<h3>Example 3: weighting with alternative geographic data</h3>
+<p>So far we have used the basic geographic data already present in a
+<code>tardis</code> object to calculate our cost functions. If we want
+to introduce additional variables, we need to use the <code>vars</code>
+argument. This requires a specific format to work. It must be a named
+list of <code>geoglist</code> objects created from our alternative
+raster data. These must match the format of the <code>geoglist</code>
+used to create the <code>tardis</code> object, i.e., same resolution,
+masking, number of layers, and grid type (rectangular versus hexagonal).
+List names must be provided so that the data become indexable layers in
+<code>origin</code> and <code>dest</code>, and must not include any
+terms reserved for internal use by <code>rTARDIS</code>, i.e.,
+<code>cell</code>, <code>type</code>, <code>layer</code>,
+<code>hdist</code>, <code>vdist</code>, or <code>bearing</code>.</p>
+<p>To illustrate how to implement these requirements, we will re-use our
+input elevation data set for the Galapagos, as elevation itself is not
+present in the default <code>origin</code> and <code>dest</code>
+<code>data.frames</code> (only change in elevation along an edge). This
+is already in <code>geoglist</code> format so all we need to do is place
+it into a named list:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="co"># put our geoglist into a base R list</span></span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a>wvars <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">elev =</span> rst)</span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a><span class="co"># a very simple cost function that penalises movement directly according to elevation</span></span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a>wfun <span class="ot">&lt;-</span> <span class="cf">function</span>(origin, dest) {</span>
+<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a>  <span class="fu">return</span>(origin<span class="sc">$</span>elev)</span>
+<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a>}</span>
+<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a></span>
+<span id="cb17-9"><a href="#cb17-9" tabindex="-1"></a><span class="co"># weight the tardis</span></span>
+<span id="cb17-10"><a href="#cb17-10" tabindex="-1"></a>rtd <span class="ot">&lt;-</span> <span class="fu">weight_tardis</span>(rtd, <span class="at">name =</span> <span class="st">&quot;elev&quot;</span>, <span class="at">vars =</span> wvars, <span class="at">wfun =</span> wfun)</span>
+<span id="cb17-11"><a href="#cb17-11" tabindex="-1"></a><span class="co">#&gt; Weighting layer [1/1]</span></span></code></pre></div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
